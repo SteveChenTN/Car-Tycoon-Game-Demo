@@ -1,0 +1,354 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   GLOBAL RESETS & BASE STYLES (Cyan-Tech Design System)
+   ============================================================ */
+
+@layer base {
+  /* Viewport Lock - Enforce full viewport dimensions */
+  html {
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    @apply antialiased;
+    background-color: #0f172a; /* bg-deep */
+    color: #f8fafc; /* text-primary */
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  #root {
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+  }
+
+  * {
+    border-color: rgb(51, 65, 85); /* bg-surface-hover */
+  }
+
+  /* Number styling - ALWAYS monospace */
+  .number {
+    @apply font-mono tabular-nums;
+    font-family: 'JetBrains Mono', 'Roboto Mono', 'Consolas', 'Monaco', 'Courier New', monospace;
+  }
+
+  /* Custom Scrollbar - Cyan on Slate */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: #0f172a; /* bg-deep */
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded;
+    background-color: rgba(6, 182, 212, 0.5); /* accent-primary/50 */
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(6, 182, 212, 0.7); /* accent-primary/70 */
+  }
+
+  ::-webkit-scrollbar-corner {
+    background-color: #0f172a; /* bg-deep */
+  }
+}
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+
+@layer utilities {
+  /* Retro Grid Background (Subtle) */
+  .retro-grid {
+    background-image: 
+      linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Glassmorphism Panel */
+  .glass-panel {
+    @apply bg-slate-900/80 backdrop-blur-sm border border-slate-800;
+  }
+
+  /* Panel Glass - New Design System */
+  .panel-glass {
+    background: rgba(15, 23, 42, 0.8); /* bg-deep with 80% opacity */
+    backdrop-filter: blur(8px);
+    border: 1px solid rgb(51, 65, 85); /* bg-surface-hover */
+  }
+
+  /* Text Glow Effect */
+  .text-glow {
+    text-shadow: 0 0 10px rgba(6, 182, 212, 0.5), 0 0 20px rgba(6, 182, 212, 0.3);
+  }
+
+  /* Cyan Glow Effect (Legacy support) */
+  .cyan-glow {
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.2);
+  }
+
+  /* Technical Border (Thin, crisp) */
+  .tech-border {
+    border: 1px solid rgb(51, 65, 85); /* bg-surface-hover */
+    box-shadow: 0 0 4px rgba(34, 211, 238, 0.1);
+  }
+
+  /* Status Indicator Colors */
+  .status-positive {
+    color: #10b981; /* accent-success */
+  }
+
+  .status-negative {
+    color: #ef4444; /* accent-danger */
+  }
+
+  .status-neutral {
+    color: #94a3b8; /* text-secondary */
+  }
+
+  /* Medium Density Layout (Game UI Standard) */
+  .density-medium {
+    @apply text-sm leading-relaxed;
+  }
+
+  /* CAD/Blueprint Style Sections */
+  .blueprint-section {
+    @apply relative overflow-hidden;
+  }
+
+  .blueprint-section::before {
+    content: '';
+    @apply absolute inset-0 opacity-5 pointer-events-none;
+    background-image: 
+      linear-gradient(rgba(34, 211, 238, 0.5) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(34, 211, 238, 0.5) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Grid Lines - Industrial Tech Look */
+  .grid-lines {
+    background-image: 
+      linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+}
+
+/* ============================================================
+   COMPONENT PATTERNS
+   ============================================================ */
+
+@layer components {
+  /* Panel Header */
+  .panel-header {
+    @apply flex items-center justify-between px-4 py-2 border-b;
+    border-color: rgb(51, 65, 85); /* bg-surface-hover */
+    background-color: rgba(30, 41, 59, 0.5); /* bg-surface/50 */
+  }
+
+  .panel-title {
+    @apply text-sm font-semibold uppercase tracking-wider;
+    color: #06b6d4; /* accent-primary */
+  }
+
+  /* Data Table Row */
+  .data-row {
+    @apply h-10 border-b transition-colors;
+    border-color: rgba(51, 65, 85, 0.5); /* bg-surface-hover/50 */
+  }
+  
+  .data-row:hover {
+    background-color: rgba(51, 65, 85, 0.3); /* bg-surface-hover/30 */
+  }
+
+  /* Button Variants */
+  .btn-primary {
+    @apply px-4 py-2 font-semibold rounded-sm transition-colors;
+    background-color: #06b6d4; /* accent-primary */
+    color: #0f172a; /* slate-950 */
+  }
+  
+  .btn-primary:hover {
+    background-color: #22d3ee; /* accent-glow */
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 border rounded-sm transition-colors;
+    border-color: rgba(34, 211, 238, 0.5); /* accent-glow/50 */
+    color: #06b6d4; /* accent-primary */
+  }
+  
+  .btn-secondary:hover {
+    background-color: rgba(6, 182, 212, 0.1); /* accent-primary/10 */
+  }
+
+  .btn-danger {
+    @apply px-4 py-2 font-semibold rounded-sm transition-colors;
+    background-color: #ef4444; /* accent-danger */
+    color: #f8fafc; /* text-primary */
+  }
+  
+  .btn-danger:hover {
+    background-color: #f87171; /* red-400 */
+  }
+
+  /* Input Field */
+  .input-field {
+    @apply px-3 py-2 rounded-sm text-sm focus:outline-none transition-colors font-mono;
+    background-color: #1e293b; /* bg-surface */
+    border: 1px solid rgb(51, 65, 85); /* bg-surface-hover */
+    color: #f8fafc; /* text-primary */
+  }
+  
+  .input-field::placeholder {
+    color: #475569; /* text-muted */
+  }
+  
+  .input-field:focus {
+    border-color: #22d3ee; /* accent-glow */
+  }
+
+  /* Select Dropdown */
+  .select-field {
+    @apply px-3 py-2 rounded-sm text-sm focus:outline-none transition-colors font-mono;
+    background-color: #1e293b; /* bg-surface */
+    border: 1px solid rgb(51, 65, 85); /* bg-surface-hover */
+    color: #f8fafc; /* text-primary */
+  }
+  
+  .select-field:focus {
+    border-color: #22d3ee; /* accent-glow */
+  }
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+
+@keyframes pulse-cyan {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse-cyan {
+  animation: pulse-cyan 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scroll {
+  animation: scroll-left 30s linear infinite;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* ============================================================
+   FACTORY & PRODUCTION STYLES
+   ============================================================ */
+
+/* Industrial Hazard Stripes (Yellow/Black) */
+@keyframes hazard-slide {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 40px 0;
+  }
+}
+
+.hazard-stripes {
+  background: repeating-linear-gradient(
+    45deg,
+    #eab308,
+    #eab308 10px,
+    #1e293b 10px,
+    #1e293b 20px
+  );
+  background-size: 40px 40px;
+  animation: hazard-slide 1s linear infinite;
+}
+
+/* Receipt Style (for Monthly Report) */
+.receipt-section {
+  @apply bg-surface/50 border border-surface-hover rounded-sm p-4 mb-4;
+}
+
+.receipt-section-title {
+  @apply text-sm font-bold uppercase tracking-wider mb-3 border-b border-dashed pb-2;
+  color: #06b6d4; /* accent-primary */
+  border-color: #475569; /* text-muted */
+}
+
+.receipt-line {
+  @apply flex justify-between items-center text-sm;
+}
+
+/* Market Heatmap Pulse */
+@keyframes heatmap-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.heatmap-cell-active {
+  animation: heatmap-pulse 2s ease-in-out infinite;
+}
+

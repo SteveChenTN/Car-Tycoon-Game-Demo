@@ -1,0 +1,63 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "物理常数 - 用于工程计算",
+  "version": "1.0.0",
+  
+  "fundamental_constants": {
+    "PI": 3.141592653589793,
+    "GRAVITY": 9.81,
+    "AIR_DENSITY": 1.225
+  },
+  
+  "engineering_constants": {
+    "AVERAGE_PANEL_THICKNESS_MM": 0.8,
+    "STRUCTURAL_REINFORCEMENT_FACTOR": 1.3,
+    "FLUIDS_AND_SYSTEMS_KG": 80.0,
+    "CURVATURE_FACTOR": 1.12,
+    "BASE_WEIGHT_PER_LITER": 65.0
+  },
+  
+  "performance_tuning": {
+    "BASE_CYLINDER_LENGTH_FACTOR": 1.5,
+    "BASE_WIDTH_FACTOR": 1.3,
+    "BASE_HEIGHT_FACTOR": 2.0,
+    "TURBO_LENGTH_MULTIPLIER": 1.15,
+    "TURBO_HEIGHT_MULTIPLIER": 1.25,
+    "SUPERCHARGER_LENGTH_MULTIPLIER": 1.10,
+    "SUPERCHARGER_HEIGHT_MULTIPLIER": 1.20
+  },
+  
+  "efficiency_constants": {
+    "COMPRESSION_EFFICIENCY_GAIN": 0.02,
+    "TECH_LEVEL_EFFICIENCY_GAIN": 0.015,
+    "TURBO_EFFICIENCY_FACTOR": 0.95,
+    "SUPERCHARGER_EFFICIENCY_PENALTY": 1.05
+  },
+  
+  "reliability_thresholds": {
+    "LOW_SPECIFIC_OUTPUT_HP_L": 80,
+    "HIGH_SPECIFIC_OUTPUT_HP_L": 120,
+    "LOW_THERMAL_LOAD": 30,
+    "HIGH_THERMAL_LOAD": 60,
+    "OUTPUT_PENALTY_LOW": 0.3,
+    "OUTPUT_PENALTY_HIGH": 0.5,
+    "THERMAL_PENALTY_LOW": 0.2,
+    "THERMAL_PENALTY_HIGH": 0.4
+  },
+  
+  "drivetrain_factors": {
+    "AWD": 1.0,
+    "FR": 1.1,
+    "MR": 1.05,
+    "RR": 1.08,
+    "FF": 1.15
+  },
+  
+  "comments": {
+    "_note1": "所有常数都可以被模组覆盖",
+    "_note2": "修改这些值会影响所有物理计算",
+    "_note3": "建议备份原始文件后再修改"
+  }
+}
+
+

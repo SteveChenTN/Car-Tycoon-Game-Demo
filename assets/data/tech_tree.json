@@ -1,0 +1,234 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "技术树 - 可研究的技术节点",
+  "version": "1.0.0",
+  
+  "nodes": [
+    {
+      "id": "basic_engine_design",
+      "name": "基础引擎设计",
+      "description": "掌握基本的四冲程引擎设计原理",
+      "cost": 5000,
+      "research_time_turns": 2,
+      "unlock_requirements": [],
+      "category": "engine",
+      "effects": {
+        "unlock_configurations": ["INLINE"],
+        "unlock_materials": ["CAST_IRON"],
+        "tech_level_bonus": 0
+      }
+    },
+    {
+      "id": "aluminum_casting",
+      "name": "铝合金铸造",
+      "description": "解锁铝合金引擎制造技术",
+      "cost": 15000,
+      "research_time_turns": 4,
+      "unlock_requirements": ["basic_engine_design"],
+      "category": "materials",
+      "effects": {
+        "unlock_materials": ["ALUMINUM"],
+        "weight_reduction_percent": 5
+      }
+    },
+    {
+      "id": "turbocharging_tech",
+      "name": "涡轮增压技术",
+      "description": "研发涡轮增压系统",
+      "cost": 25000,
+      "research_time_turns": 6,
+      "unlock_requirements": ["basic_engine_design"],
+      "category": "engine",
+      "effects": {
+        "unlock_induction": ["TURBO"],
+        "unlock_components": ["turbocharger_small"]
+      }
+    },
+    {
+      "id": "v_configuration",
+      "name": "V型引擎布局",
+      "description": "掌握V型引擎设计，更紧凑",
+      "cost": 20000,
+      "research_time_turns": 5,
+      "unlock_requirements": ["basic_engine_design"],
+      "category": "engine",
+      "effects": {
+        "unlock_configurations": ["V"]
+      }
+    },
+    {
+      "id": "dohc_valvetrain",
+      "name": "双顶置凸轮轴",
+      "description": "DOHC配气机构，提升高转速性能",
+      "cost": 18000,
+      "research_time_turns": 4,
+      "unlock_requirements": ["basic_engine_design"],
+      "category": "engine",
+      "effects": {
+        "unlock_valvetrain": ["DOHC"],
+        "volumetric_efficiency_bonus": 5
+      }
+    },
+    {
+      "id": "variable_valve_timing",
+      "name": "可变气门正时",
+      "description": "VVT技术，兼顾低转扭矩和高转功率",
+      "cost": 35000,
+      "research_time_turns": 8,
+      "unlock_requirements": ["dohc_valvetrain"],
+      "category": "engine",
+      "effects": {
+        "unlock_valvetrain": ["VARIABLE"],
+        "fuel_efficiency_bonus": 8,
+        "power_bonus_percent": 3
+      }
+    },
+    {
+      "id": "twin_turbo_system",
+      "name": "双涡轮系统",
+      "description": "并联或串联双涡轮，减少涡轮迟滞",
+      "cost": 45000,
+      "research_time_turns": 10,
+      "unlock_requirements": ["turbocharging_tech", "v_configuration"],
+      "category": "engine",
+      "effects": {
+        "unlock_induction": ["TWINTURBO"],
+        "unlock_components": ["twin_turbo"]
+      }
+    },
+    {
+      "id": "carbon_fiber_tech",
+      "name": "碳纤维技术",
+      "description": "碳纤维复合材料，极轻但昂贵",
+      "cost": 80000,
+      "research_time_turns": 12,
+      "unlock_requirements": ["aluminum_casting"],
+      "category": "materials",
+      "effects": {
+        "unlock_materials": ["CARBON"],
+        "weight_reduction_percent": 15,
+        "prestige_bonus": 10
+      }
+    },
+    {
+      "id": "high_strength_steel",
+      "name": "高强度钢",
+      "description": "HSS材料，兼顾强度与成本",
+      "cost": 30000,
+      "research_time_turns": 6,
+      "unlock_requirements": ["basic_engine_design"],
+      "category": "materials",
+      "effects": {
+        "unlock_materials": ["HSS"],
+        "crash_rating_bonus": 10
+      }
+    },
+    {
+      "id": "aerodynamics_basics",
+      "name": "空气动力学基础",
+      "description": "降低风阻系数",
+      "cost": 12000,
+      "research_time_turns": 3,
+      "unlock_requirements": [],
+      "category": "chassis",
+      "effects": {
+        "drag_reduction_percent": 5
+      }
+    },
+    {
+      "id": "advanced_aerodynamics",
+      "name": "高级空气动力学",
+      "description": "进一步优化车身流线",
+      "cost": 40000,
+      "research_time_turns": 8,
+      "unlock_requirements": ["aerodynamics_basics"],
+      "category": "chassis",
+      "effects": {
+        "drag_reduction_percent": 10,
+        "top_speed_bonus_percent": 5
+      }
+    },
+    {
+      "id": "boxer_engine",
+      "name": "水平对置引擎",
+      "description": "BOXER引擎，低重心",
+      "cost": 28000,
+      "research_time_turns": 7,
+      "unlock_requirements": ["v_configuration"],
+      "category": "engine",
+      "effects": {
+        "unlock_configurations": ["BOXER"],
+        "handling_bonus": 5
+      }
+    },
+    {
+      "id": "w_configuration",
+      "name": "W型引擎",
+      "description": "W型紧凑布局，适合多缸大排量",
+      "cost": 60000,
+      "research_time_turns": 10,
+      "unlock_requirements": ["v_configuration", "twin_turbo_system"],
+      "category": "engine",
+      "effects": {
+        "unlock_configurations": ["W"]
+      }
+    },
+    {
+      "id": "lightweight_chassis",
+      "name": "轻量化底盘",
+      "description": "优化底盘结构设计",
+      "cost": 22000,
+      "research_time_turns": 5,
+      "unlock_requirements": ["aerodynamics_basics"],
+      "category": "chassis",
+      "effects": {
+        "chassis_weight_reduction": 10,
+        "rigidity_bonus": 5
+      }
+    },
+    {
+      "id": "hybrid_powertrain",
+      "name": "混合动力系统",
+      "description": "电动+燃油混合动力（未来扩展）",
+      "cost": 100000,
+      "research_time_turns": 15,
+      "unlock_requirements": ["variable_valve_timing", "advanced_aerodynamics"],
+      "category": "engine",
+      "effects": {
+        "unlock_powertrain": ["HYBRID"],
+        "fuel_efficiency_bonus": 30,
+        "prestige_bonus": 20
+      }
+    }
+  ],
+  
+  "categories": {
+    "engine": {
+      "name": "引擎技术",
+      "color": "#FF6B6B"
+    },
+    "materials": {
+      "name": "材料科学",
+      "color": "#4ECDC4"
+    },
+    "chassis": {
+      "name": "底盘技术",
+      "color": "#45B7D1"
+    },
+    "electronics": {
+      "name": "电子系统",
+      "color": "#FFA07A"
+    },
+    "production": {
+      "name": "生产工艺",
+      "color": "#98D8C8"
+    }
+  },
+  
+  "comments": {
+    "_modding_note": "模组可以添加新节点或覆盖现有节点",
+    "_dependencies": "unlock_requirements 中的ID必须存在于技术树中"
+  }
+}
+
+

@@ -1,0 +1,1382 @@
+[2025-12-28 00:31:30] [INFO    ] [automogul:145] ================================================================================
+[2025-12-28 00:31:30] [INFO    ] [automogul:146] AutoMogul v1.0.0 - Logging System Initialized
+[2025-12-28 00:31:30] [INFO    ] [automogul:147] Log Level: INFO
+[2025-12-28 00:31:30] [INFO    ] [automogul:148] Log Directory: logs
+[2025-12-28 00:31:30] [INFO    ] [automogul:149] ================================================================================
+[2025-12-28 00:31:30] [INFO    ] [__main__:804] ================================================================================
+[2025-12-28 00:31:30] [INFO    ] [__main__:805] 回合模拟脚本启动
+[2025-12-28 00:31:30] [INFO    ] [__main__:806] ================================================================================
+[2025-12-28 00:31:30] [ERROR   ] [__main__:883] 模拟过程中发生错误: (sqlite3.OperationalError) unable to open database file
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+Traceback (most recent call last):
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m143[0m, in [35m__init__[0m
+    self._dbapi_connection = [31mengine.raw_connection[0m[1;31m()[0m
+                             [31m~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m3309[0m, in [35mraw_connection[0m
+    return [31mself.pool.connect[0m[1;31m()[0m
+           [31m~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m447[0m, in [35mconnect[0m
+    return [31m_ConnectionFairy._checkout[0m[1;31m(self)[0m
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m1264[0m, in [35m_checkout[0m
+    fairy = _ConnectionRecord.checkout(pool)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m711[0m, in [35mcheckout[0m
+    rec = pool._do_get()
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\impl.py"[0m, line [35m514[0m, in [35m_do_get[0m
+    rec = [1;31mself.connection[0m
+          [1;31m^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py"[0m, line [35m1226[0m, in [35m__get__[0m
+    obj.__dict__[self.__name__] = result = [31mself.fget[0m[1;31m(obj)[0m
+                                           [31m~~~~~~~~~[0m[1;31m^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\impl.py"[0m, line [35m471[0m, in [35mconnection[0m
+    return _ConnectionRecord(self)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m673[0m, in [35m__init__[0m
+    [31mself.__connect[0m[1;31m()[0m
+    [31m~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m899[0m, in [35m__connect[0m
+    with [31mutil.safe_reraise[0m[1;31m()[0m:
+         [31m~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py"[0m, line [35m224[0m, in [35m__exit__[0m
+    raise exc_value.with_traceback(exc_tb)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m895[0m, in [35m__connect[0m
+    self.dbapi_connection = connection = [31mpool._invoke_creator[0m[1;31m(self)[0m
+                                         [31m~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\create.py"[0m, line [35m661[0m, in [35mconnect[0m
+    return [31mdialect.connect[0m[1;31m(*cargs, **cparams)[0m
+           [31m~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py"[0m, line [35m630[0m, in [35mconnect[0m
+    return [31mself.loaded_dbapi.connect[0m[1;31m(*cargs, **cparams)[0m  # type: ignore[no-any-return]  # NOQA: E501
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^[0m
+[1;35msqlite3.OperationalError[0m: [35munable to open database file[0m
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File [35m"C:\project\Car-tycoon-game\backend\scripts\turn_simulation.py"[0m, line [35m812[0m, in [35mmain[0m
+    [31minit_db[0m[1;31m()[0m
+    [31m~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\project\Car-tycoon-game\backend\database.py"[0m, line [35m69[0m, in [35minit_db[0m
+    [31mBase.metadata.create_all[0m[1;31m(bind=engine)[0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\schema.py"[0m, line [35m5928[0m, in [35mcreate_all[0m
+    [31mbind._run_ddl_visitor[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mddl.SchemaGenerator, self, checkfirst=checkfirst, tables=tables[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m3259[0m, in [35m_run_ddl_visitor[0m
+    with [31mself.begin[0m[1;31m()[0m as conn:
+         [31m~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\contextlib.py"[0m, line [35m141[0m, in [35m__enter__[0m
+    return next(self.gen)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m3249[0m, in [35mbegin[0m
+    with [31mself.connect[0m[1;31m()[0m as conn:
+         [31m~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m3285[0m, in [35mconnect[0m
+    return [31mself._connection_cls[0m[1;31m(self)[0m
+           [31m~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m145[0m, in [35m__init__[0m
+    [31mConnection._handle_dbapi_exception_noconnection[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31merr, dialect, engine[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m2448[0m, in [35m_handle_dbapi_exception_noconnection[0m
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m143[0m, in [35m__init__[0m
+    self._dbapi_connection = [31mengine.raw_connection[0m[1;31m()[0m
+                             [31m~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m3309[0m, in [35mraw_connection[0m
+    return [31mself.pool.connect[0m[1;31m()[0m
+           [31m~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m447[0m, in [35mconnect[0m
+    return [31m_ConnectionFairy._checkout[0m[1;31m(self)[0m
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m1264[0m, in [35m_checkout[0m
+    fairy = _ConnectionRecord.checkout(pool)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m711[0m, in [35mcheckout[0m
+    rec = pool._do_get()
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\impl.py"[0m, line [35m514[0m, in [35m_do_get[0m
+    rec = [1;31mself.connection[0m
+          [1;31m^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py"[0m, line [35m1226[0m, in [35m__get__[0m
+    obj.__dict__[self.__name__] = result = [31mself.fget[0m[1;31m(obj)[0m
+                                           [31m~~~~~~~~~[0m[1;31m^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\impl.py"[0m, line [35m471[0m, in [35mconnection[0m
+    return _ConnectionRecord(self)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m673[0m, in [35m__init__[0m
+    [31mself.__connect[0m[1;31m()[0m
+    [31m~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m899[0m, in [35m__connect[0m
+    with [31mutil.safe_reraise[0m[1;31m()[0m:
+         [31m~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py"[0m, line [35m224[0m, in [35m__exit__[0m
+    raise exc_value.with_traceback(exc_tb)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m895[0m, in [35m__connect[0m
+    self.dbapi_connection = connection = [31mpool._invoke_creator[0m[1;31m(self)[0m
+                                         [31m~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\create.py"[0m, line [35m661[0m, in [35mconnect[0m
+    return [31mdialect.connect[0m[1;31m(*cargs, **cparams)[0m
+           [31m~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py"[0m, line [35m630[0m, in [35mconnect[0m
+    return [31mself.loaded_dbapi.connect[0m[1;31m(*cargs, **cparams)[0m  # type: ignore[no-any-return]  # NOQA: E501
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^[0m
+[1;35msqlalchemy.exc.OperationalError[0m: [35m(sqlite3.OperationalError) unable to open database file
+(Background on this error at: https://sqlalche.me/e/20/e3q8)[0m
+[2025-12-28 00:32:37] [INFO    ] [automogul:145] ================================================================================
+[2025-12-28 00:32:37] [INFO    ] [automogul:146] AutoMogul v1.0.0 - Logging System Initialized
+[2025-12-28 00:32:37] [INFO    ] [automogul:147] Log Level: INFO
+[2025-12-28 00:32:37] [INFO    ] [automogul:148] Log Directory: logs
+[2025-12-28 00:32:37] [INFO    ] [automogul:149] ================================================================================
+[2025-12-28 00:32:37] [INFO    ] [__main__:804] ================================================================================
+[2025-12-28 00:32:37] [INFO    ] [__main__:805] 回合模拟脚本启动
+[2025-12-28 00:32:37] [INFO    ] [__main__:806] ================================================================================
+[2025-12-28 00:32:37] [ERROR   ] [__main__:883] 模拟过程中发生错误: (sqlite3.OperationalError) unable to open database file
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+Traceback (most recent call last):
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m143[0m, in [35m__init__[0m
+    self._dbapi_connection = [31mengine.raw_connection[0m[1;31m()[0m
+                             [31m~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m3309[0m, in [35mraw_connection[0m
+    return [31mself.pool.connect[0m[1;31m()[0m
+           [31m~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m447[0m, in [35mconnect[0m
+    return [31m_ConnectionFairy._checkout[0m[1;31m(self)[0m
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m1264[0m, in [35m_checkout[0m
+    fairy = _ConnectionRecord.checkout(pool)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m711[0m, in [35mcheckout[0m
+    rec = pool._do_get()
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\impl.py"[0m, line [35m514[0m, in [35m_do_get[0m
+    rec = [1;31mself.connection[0m
+          [1;31m^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py"[0m, line [35m1226[0m, in [35m__get__[0m
+    obj.__dict__[self.__name__] = result = [31mself.fget[0m[1;31m(obj)[0m
+                                           [31m~~~~~~~~~[0m[1;31m^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\impl.py"[0m, line [35m471[0m, in [35mconnection[0m
+    return _ConnectionRecord(self)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m673[0m, in [35m__init__[0m
+    [31mself.__connect[0m[1;31m()[0m
+    [31m~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m899[0m, in [35m__connect[0m
+    with [31mutil.safe_reraise[0m[1;31m()[0m:
+         [31m~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py"[0m, line [35m224[0m, in [35m__exit__[0m
+    raise exc_value.with_traceback(exc_tb)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m895[0m, in [35m__connect[0m
+    self.dbapi_connection = connection = [31mpool._invoke_creator[0m[1;31m(self)[0m
+                                         [31m~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\create.py"[0m, line [35m661[0m, in [35mconnect[0m
+    return [31mdialect.connect[0m[1;31m(*cargs, **cparams)[0m
+           [31m~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py"[0m, line [35m630[0m, in [35mconnect[0m
+    return [31mself.loaded_dbapi.connect[0m[1;31m(*cargs, **cparams)[0m  # type: ignore[no-any-return]  # NOQA: E501
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^[0m
+[1;35msqlite3.OperationalError[0m: [35munable to open database file[0m
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File [35m"C:\project\Car-tycoon-game\backend\scripts\turn_simulation.py"[0m, line [35m812[0m, in [35mmain[0m
+    [31minit_db[0m[1;31m()[0m
+    [31m~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\project\Car-tycoon-game\backend\database.py"[0m, line [35m69[0m, in [35minit_db[0m
+    [31mBase.metadata.create_all[0m[1;31m(bind=engine)[0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\schema.py"[0m, line [35m5928[0m, in [35mcreate_all[0m
+    [31mbind._run_ddl_visitor[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mddl.SchemaGenerator, self, checkfirst=checkfirst, tables=tables[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m3259[0m, in [35m_run_ddl_visitor[0m
+    with [31mself.begin[0m[1;31m()[0m as conn:
+         [31m~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\contextlib.py"[0m, line [35m141[0m, in [35m__enter__[0m
+    return next(self.gen)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m3249[0m, in [35mbegin[0m
+    with [31mself.connect[0m[1;31m()[0m as conn:
+         [31m~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m3285[0m, in [35mconnect[0m
+    return [31mself._connection_cls[0m[1;31m(self)[0m
+           [31m~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m145[0m, in [35m__init__[0m
+    [31mConnection._handle_dbapi_exception_noconnection[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31merr, dialect, engine[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m2448[0m, in [35m_handle_dbapi_exception_noconnection[0m
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m143[0m, in [35m__init__[0m
+    self._dbapi_connection = [31mengine.raw_connection[0m[1;31m()[0m
+                             [31m~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m3309[0m, in [35mraw_connection[0m
+    return [31mself.pool.connect[0m[1;31m()[0m
+           [31m~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m447[0m, in [35mconnect[0m
+    return [31m_ConnectionFairy._checkout[0m[1;31m(self)[0m
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m1264[0m, in [35m_checkout[0m
+    fairy = _ConnectionRecord.checkout(pool)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m711[0m, in [35mcheckout[0m
+    rec = pool._do_get()
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\impl.py"[0m, line [35m514[0m, in [35m_do_get[0m
+    rec = [1;31mself.connection[0m
+          [1;31m^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py"[0m, line [35m1226[0m, in [35m__get__[0m
+    obj.__dict__[self.__name__] = result = [31mself.fget[0m[1;31m(obj)[0m
+                                           [31m~~~~~~~~~[0m[1;31m^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\impl.py"[0m, line [35m471[0m, in [35mconnection[0m
+    return _ConnectionRecord(self)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m673[0m, in [35m__init__[0m
+    [31mself.__connect[0m[1;31m()[0m
+    [31m~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m899[0m, in [35m__connect[0m
+    with [31mutil.safe_reraise[0m[1;31m()[0m:
+         [31m~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py"[0m, line [35m224[0m, in [35m__exit__[0m
+    raise exc_value.with_traceback(exc_tb)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\pool\base.py"[0m, line [35m895[0m, in [35m__connect[0m
+    self.dbapi_connection = connection = [31mpool._invoke_creator[0m[1;31m(self)[0m
+                                         [31m~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\create.py"[0m, line [35m661[0m, in [35mconnect[0m
+    return [31mdialect.connect[0m[1;31m(*cargs, **cparams)[0m
+           [31m~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py"[0m, line [35m630[0m, in [35mconnect[0m
+    return [31mself.loaded_dbapi.connect[0m[1;31m(*cargs, **cparams)[0m  # type: ignore[no-any-return]  # NOQA: E501
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^[0m
+[1;35msqlalchemy.exc.OperationalError[0m: [35m(sqlite3.OperationalError) unable to open database file
+(Background on this error at: https://sqlalche.me/e/20/e3q8)[0m
+[2025-12-28 00:33:59] [INFO    ] [automogul:145] ================================================================================
+[2025-12-28 00:33:59] [INFO    ] [automogul:146] AutoMogul v1.0.0 - Logging System Initialized
+[2025-12-28 00:33:59] [INFO    ] [automogul:147] Log Level: INFO
+[2025-12-28 00:33:59] [INFO    ] [automogul:148] Log Directory: logs
+[2025-12-28 00:33:59] [INFO    ] [automogul:149] ================================================================================
+[2025-12-28 00:33:59] [INFO    ] [__main__:804] ================================================================================
+[2025-12-28 00:33:59] [INFO    ] [__main__:805] 回合模拟脚本启动
+[2025-12-28 00:33:59] [INFO    ] [__main__:806] ================================================================================
+[2025-12-28 00:33:59] [INFO    ] [__main__:811] 数据库路径: sqlite:///C:\project\Car-tycoon-game\data\automogul.db
+[2025-12-28 00:33:59] [INFO    ] [__main__:812] 数据目录: C:\project\Car-tycoon-game\data
+[2025-12-28 00:33:59] [INFO    ] [__main__:54] 创建游戏状态: ID=2, 名称=Turn Simulation Test
+[2025-12-28 00:33:59] [INFO    ] [__main__:183] 创建地区: NAM - North America (ID=6)
+[2025-12-28 00:33:59] [INFO    ] [__main__:183] 创建地区: EUR - Europe (ID=7)
+[2025-12-28 00:33:59] [INFO    ] [__main__:183] 创建地区: ASI - Asia-Pacific (ID=8)
+[2025-12-28 00:33:59] [INFO    ] [__main__:202] 创建公司: 玩家=1, AI1=2, AI2=3
+[2025-12-28 00:33:59] [ERROR   ] [__main__:889] 模拟过程中发生错误: (sqlite3.IntegrityError) NOT NULL constraint failed: engines.manufacturing_cost
+[SQL: INSERT INTO engines (game_id, company_id, name, code, bore_mm, stroke_mm, cylinder_count, configuration, compression_ratio, induction_type, boost_pressure_bar, material, valvetrain, fuel_type, tech_level, displacement_cc, max_horsepower, max_torque_n ... 285 characters truncated ...  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id]
+[parameters: (2, 1, 'Player V6', 'PLAYER_V6_001', 88.0, 82.0, 6, 'V', 10.5, 'NA', 0.0, 'CAST_IRON', 'OHV', 'GASOLINE', 3, 2998, 180, 280, 5500, 180.0, 650.0, 750.0, 650.0, 0.6, 60.0, 75.0, 6.5, 280.0, 0.0, None, 1, None, 0, '2025-12-27 16:33:59.392707', '2025-12-27 16:33:59.392710')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+Traceback (most recent call last):
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m2125[0m, in [35m_exec_insertmany_context[0m
+    [31mdialect.do_execute[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mcursor,[0m
+        [1;31m^^^^^^^[0m
+    ...<2 lines>...
+        [1;31mcontext,[0m
+        [1;31m^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py"[0m, line [35m952[0m, in [35mdo_execute[0m
+    [31mcursor.execute[0m[1;31m(statement, parameters)[0m
+    [31m~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^^[0m
+[1;35msqlite3.IntegrityError[0m: [35mNOT NULL constraint failed: engines.manufacturing_cost[0m
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File [35m"C:\project\Car-tycoon-game\backend\scripts\turn_simulation.py"[0m, line [35m830[0m, in [35mmain[0m
+    engines = create_test_engines(db, game.id, company_ids)
+  File [35m"C:\project\Car-tycoon-game\backend\scripts\turn_simulation.py"[0m, line [35m315[0m, in [35mcreate_test_engines[0m
+    [31mdb.commit[0m[1;31m()[0m
+    [31m~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m2030[0m, in [35mcommit[0m
+    [31mtrans.commit[0m[1;31m(_to_root=True)[0m
+    [31m~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^[0m
+  File [35m"<string>"[0m, line [35m2[0m, in [35mcommit[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state_changes.py"[0m, line [35m137[0m, in [35m_go[0m
+    ret_value = fn(self, *arg, **kw)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m1311[0m, in [35mcommit[0m
+    [31mself._prepare_impl[0m[1;31m()[0m
+    [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"<string>"[0m, line [35m2[0m, in [35m_prepare_impl[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state_changes.py"[0m, line [35m137[0m, in [35m_go[0m
+    ret_value = fn(self, *arg, **kw)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m1286[0m, in [35m_prepare_impl[0m
+    [31mself.session.flush[0m[1;31m()[0m
+    [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m4331[0m, in [35mflush[0m
+    [31mself._flush[0m[1;31m(objects)[0m
+    [31m~~~~~~~~~~~[0m[1;31m^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m4466[0m, in [35m_flush[0m
+    with [31mutil.safe_reraise[0m[1;31m()[0m:
+         [31m~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py"[0m, line [35m224[0m, in [35m__exit__[0m
+    raise exc_value.with_traceback(exc_tb)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m4427[0m, in [35m_flush[0m
+    [31mflush_context.execute[0m[1;31m()[0m
+    [31m~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\unitofwork.py"[0m, line [35m466[0m, in [35mexecute[0m
+    [31mrec.execute[0m[1;31m(self)[0m
+    [31m~~~~~~~~~~~[0m[1;31m^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\unitofwork.py"[0m, line [35m642[0m, in [35mexecute[0m
+    [31mutil.preloaded.orm_persistence.save_obj[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mself.mapper,[0m
+        [1;31m^^^^^^^^^^^^[0m
+        [1;31muow.states_for_mapper_hierarchy(self.mapper, False, False),[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+        [1;31muow,[0m
+        [1;31m^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\persistence.py"[0m, line [35m93[0m, in [35msave_obj[0m
+    [31m_emit_insert_statements[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mbase_mapper,[0m
+        [1;31m^^^^^^^^^^^^[0m
+    ...<3 lines>...
+        [1;31minsert,[0m
+        [1;31m^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\persistence.py"[0m, line [35m1143[0m, in [35m_emit_insert_statements[0m
+    result = connection.execute(
+        statement, multiparams, execution_options=execution_options
+    )
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m1419[0m, in [35mexecute[0m
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\elements.py"[0m, line [35m527[0m, in [35m_execute_on_connection[0m
+    return [31mconnection._execute_clauseelement[0m[1;31m([0m
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mself, distilled_params, execution_options[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m1641[0m, in [35m_execute_clauseelement[0m
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m1844[0m, in [35m_execute_context[0m
+    return [31mself._exec_insertmany_context[0m[1;31m(dialect, context)[0m
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m2133[0m, in [35m_exec_insertmany_context[0m
+    [31mself._handle_dbapi_exception[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31me,[0m
+        [1;31m^^[0m
+    ...<4 lines>...
+        [1;31mis_sub_exec=True,[0m
+        [1;31m^^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m2363[0m, in [35m_handle_dbapi_exception[0m
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m2125[0m, in [35m_exec_insertmany_context[0m
+    [31mdialect.do_execute[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mcursor,[0m
+        [1;31m^^^^^^^[0m
+    ...<2 lines>...
+        [1;31mcontext,[0m
+        [1;31m^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py"[0m, line [35m952[0m, in [35mdo_execute[0m
+    [31mcursor.execute[0m[1;31m(statement, parameters)[0m
+    [31m~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^^[0m
+[1;35msqlalchemy.exc.IntegrityError[0m: [35m(sqlite3.IntegrityError) NOT NULL constraint failed: engines.manufacturing_cost
+[SQL: INSERT INTO engines (game_id, company_id, name, code, bore_mm, stroke_mm, cylinder_count, configuration, compression_ratio, induction_type, boost_pressure_bar, material, valvetrain, fuel_type, tech_level, displacement_cc, max_horsepower, max_torque_n ... 285 characters truncated ...  ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id]
+[parameters: (2, 1, 'Player V6', 'PLAYER_V6_001', 88.0, 82.0, 6, 'V', 10.5, 'NA', 0.0, 'CAST_IRON', 'OHV', 'GASOLINE', 3, 2998, 180, 280, 5500, 180.0, 650.0, 750.0, 650.0, 0.6, 60.0, 75.0, 6.5, 280.0, 0.0, None, 1, None, 0, '2025-12-27 16:33:59.392707', '2025-12-27 16:33:59.392710')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)[0m
+[2025-12-28 00:37:33] [INFO    ] [automogul:145] ================================================================================
+[2025-12-28 00:37:33] [INFO    ] [automogul:146] AutoMogul v1.0.0 - Logging System Initialized
+[2025-12-28 00:37:33] [INFO    ] [automogul:147] Log Level: INFO
+[2025-12-28 00:37:33] [INFO    ] [automogul:148] Log Directory: logs
+[2025-12-28 00:37:33] [INFO    ] [automogul:149] ================================================================================
+[2025-12-28 00:37:33] [INFO    ] [__main__:816] ================================================================================
+[2025-12-28 00:37:33] [INFO    ] [__main__:817] 回合模拟脚本启动
+[2025-12-28 00:37:33] [INFO    ] [__main__:818] ================================================================================
+[2025-12-28 00:37:33] [INFO    ] [__main__:823] 数据库路径: sqlite:///C:\project\Car-tycoon-game\data\automogul.db
+[2025-12-28 00:37:33] [INFO    ] [__main__:824] 数据目录: C:\project\Car-tycoon-game\data
+[2025-12-28 00:37:33] [INFO    ] [__main__:54] 创建游戏状态: ID=7, 名称=Turn Simulation Test
+[2025-12-28 00:37:33] [INFO    ] [__main__:183] 创建地区: NAM - North America (ID=21)
+[2025-12-28 00:37:33] [INFO    ] [__main__:183] 创建地区: EUR - Europe (ID=22)
+[2025-12-28 00:37:33] [INFO    ] [__main__:183] 创建地区: ASI - Asia-Pacific (ID=23)
+[2025-12-28 00:37:33] [INFO    ] [__main__:202] 创建公司: 玩家=1, AI1=2, AI2=3
+[2025-12-28 00:37:33] [INFO    ] [__main__:321] 创建引擎: Player V6 (ID=13, 公司=1)
+[2025-12-28 00:37:33] [INFO    ] [__main__:321] 创建引擎: AI1 Turbo I4 (ID=14, 公司=2)
+[2025-12-28 00:37:33] [INFO    ] [__main__:321] 创建引擎: AI2 Economy I4 (ID=15, 公司=3)
+[2025-12-28 00:37:33] [INFO    ] [__main__:408] 创建底盘: Player Midsize Platform (ID=9, 公司=1)
+[2025-12-28 00:37:33] [INFO    ] [__main__:408] 创建底盘: AI1 Compact Sport (ID=10, 公司=2)
+[2025-12-28 00:37:33] [INFO    ] [__main__:408] 创建底盘: AI2 Subcompact Economy (ID=11, 公司=3)
+[2025-12-28 00:37:33] [INFO    ] [__main__:470] 创建车型: Player Midsize Platform Trim (ID=5, 公司=1, 价格=15,000)
+[2025-12-28 00:37:33] [INFO    ] [__main__:470] 创建车型: AI1 Compact Sport Trim (ID=6, 公司=2, 价格=20,000)
+[2025-12-28 00:37:33] [INFO    ] [__main__:470] 创建车型: AI2 Subcompact Economy Trim (ID=7, 公司=3, 价格=25,000)
+[2025-12-28 00:37:33] [INFO    ] [__main__:514] 创建分销网络: player -> NAM
+[2025-12-28 00:37:33] [INFO    ] [__main__:514] 创建分销网络: player -> EUR
+[2025-12-28 00:37:33] [INFO    ] [__main__:514] 创建分销网络: player -> ASI
+[2025-12-28 00:37:33] [INFO    ] [__main__:514] 创建分销网络: ai1 -> NAM
+[2025-12-28 00:37:33] [INFO    ] [__main__:514] 创建分销网络: ai1 -> EUR
+[2025-12-28 00:37:34] [INFO    ] [__main__:562] 为地区 NAM 创建了 5 个消费者细分
+[2025-12-28 00:37:34] [INFO    ] [__main__:562] 为地区 EUR 创建了 5 个消费者细分
+[2025-12-28 00:37:34] [INFO    ] [__main__:562] 为地区 ASI 创建了 5 个消费者细分
+[2025-12-28 00:37:34] [ERROR   ] [__main__:901] 模拟过程中发生错误: (sqlite3.IntegrityError) NOT NULL constraint failed: consumer_buckets.bucket_code
+[SQL: INSERT INTO consumer_buckets (game_id, region_id, bucket_code, name, segment, population_count, avg_income, avg_age, purchase_frequency_years, price_sensitivity, brand_loyalty, early_adopter_score, weight_price, weight_performance, weight_comfort, we ... 212 characters truncated ... ALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id]
+[parameters: (7, 21, None, None, 'FAMILY', 60000, 8000.0, None, 8.0, 0.4, 0.5, 0.3, 0.3, 0.15, 0.15, 0.15, 0.1, 0.0, 0.1, 0.05, '["SEDAN", "HATCHBACK"]', 'MEDIUM', 0.3, 0, 0, '2025-12-27 16:37:34.016017', '2025-12-27 16:37:34.016019')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+Traceback (most recent call last):
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m2125[0m, in [35m_exec_insertmany_context[0m
+    [31mdialect.do_execute[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mcursor,[0m
+        [1;31m^^^^^^^[0m
+    ...<2 lines>...
+        [1;31mcontext,[0m
+        [1;31m^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py"[0m, line [35m952[0m, in [35mdo_execute[0m
+    [31mcursor.execute[0m[1;31m(statement, parameters)[0m
+    [31m~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^^[0m
+[1;35msqlite3.IntegrityError[0m: [35mNOT NULL constraint failed: consumer_buckets.bucket_code[0m
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File [35m"C:\project\Car-tycoon-game\backend\scripts\turn_simulation.py"[0m, line [35m857[0m, in [35mmain[0m
+    [31mcreate_consumer_buckets[0m[1;31m(db, game.id, regions)[0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\project\Car-tycoon-game\backend\scripts\turn_simulation.py"[0m, line [35m564[0m, in [35mcreate_consumer_buckets[0m
+    [31mdb.commit[0m[1;31m()[0m
+    [31m~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m2030[0m, in [35mcommit[0m
+    [31mtrans.commit[0m[1;31m(_to_root=True)[0m
+    [31m~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^[0m
+  File [35m"<string>"[0m, line [35m2[0m, in [35mcommit[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state_changes.py"[0m, line [35m137[0m, in [35m_go[0m
+    ret_value = fn(self, *arg, **kw)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m1311[0m, in [35mcommit[0m
+    [31mself._prepare_impl[0m[1;31m()[0m
+    [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"<string>"[0m, line [35m2[0m, in [35m_prepare_impl[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state_changes.py"[0m, line [35m137[0m, in [35m_go[0m
+    ret_value = fn(self, *arg, **kw)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m1286[0m, in [35m_prepare_impl[0m
+    [31mself.session.flush[0m[1;31m()[0m
+    [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m4331[0m, in [35mflush[0m
+    [31mself._flush[0m[1;31m(objects)[0m
+    [31m~~~~~~~~~~~[0m[1;31m^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m4466[0m, in [35m_flush[0m
+    with [31mutil.safe_reraise[0m[1;31m()[0m:
+         [31m~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py"[0m, line [35m224[0m, in [35m__exit__[0m
+    raise exc_value.with_traceback(exc_tb)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m4427[0m, in [35m_flush[0m
+    [31mflush_context.execute[0m[1;31m()[0m
+    [31m~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\unitofwork.py"[0m, line [35m466[0m, in [35mexecute[0m
+    [31mrec.execute[0m[1;31m(self)[0m
+    [31m~~~~~~~~~~~[0m[1;31m^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\unitofwork.py"[0m, line [35m642[0m, in [35mexecute[0m
+    [31mutil.preloaded.orm_persistence.save_obj[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mself.mapper,[0m
+        [1;31m^^^^^^^^^^^^[0m
+        [1;31muow.states_for_mapper_hierarchy(self.mapper, False, False),[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+        [1;31muow,[0m
+        [1;31m^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\persistence.py"[0m, line [35m93[0m, in [35msave_obj[0m
+    [31m_emit_insert_statements[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mbase_mapper,[0m
+        [1;31m^^^^^^^^^^^^[0m
+    ...<3 lines>...
+        [1;31minsert,[0m
+        [1;31m^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\persistence.py"[0m, line [35m1143[0m, in [35m_emit_insert_statements[0m
+    result = connection.execute(
+        statement, multiparams, execution_options=execution_options
+    )
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m1419[0m, in [35mexecute[0m
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\elements.py"[0m, line [35m527[0m, in [35m_execute_on_connection[0m
+    return [31mconnection._execute_clauseelement[0m[1;31m([0m
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mself, distilled_params, execution_options[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m1641[0m, in [35m_execute_clauseelement[0m
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m1844[0m, in [35m_execute_context[0m
+    return [31mself._exec_insertmany_context[0m[1;31m(dialect, context)[0m
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m2133[0m, in [35m_exec_insertmany_context[0m
+    [31mself._handle_dbapi_exception[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31me,[0m
+        [1;31m^^[0m
+    ...<4 lines>...
+        [1;31mis_sub_exec=True,[0m
+        [1;31m^^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m2363[0m, in [35m_handle_dbapi_exception[0m
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m2125[0m, in [35m_exec_insertmany_context[0m
+    [31mdialect.do_execute[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mcursor,[0m
+        [1;31m^^^^^^^[0m
+    ...<2 lines>...
+        [1;31mcontext,[0m
+        [1;31m^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py"[0m, line [35m952[0m, in [35mdo_execute[0m
+    [31mcursor.execute[0m[1;31m(statement, parameters)[0m
+    [31m~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^^[0m
+[1;35msqlalchemy.exc.IntegrityError[0m: [35m(sqlite3.IntegrityError) NOT NULL constraint failed: consumer_buckets.bucket_code
+[SQL: INSERT INTO consumer_buckets (game_id, region_id, bucket_code, name, segment, population_count, avg_income, avg_age, purchase_frequency_years, price_sensitivity, brand_loyalty, early_adopter_score, weight_price, weight_performance, weight_comfort, we ... 212 characters truncated ... ALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id]
+[parameters: (7, 21, None, None, 'FAMILY', 60000, 8000.0, None, 8.0, 0.4, 0.5, 0.3, 0.3, 0.15, 0.15, 0.15, 0.1, 0.0, 0.1, 0.05, '["SEDAN", "HATCHBACK"]', 'MEDIUM', 0.3, 0, 0, '2025-12-27 16:37:34.016017', '2025-12-27 16:37:34.016019')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)[0m
+[2025-12-28 00:39:34] [INFO    ] [automogul:145] ================================================================================
+[2025-12-28 00:39:34] [INFO    ] [automogul:146] AutoMogul v1.0.0 - Logging System Initialized
+[2025-12-28 00:39:34] [INFO    ] [automogul:147] Log Level: INFO
+[2025-12-28 00:39:34] [INFO    ] [automogul:148] Log Directory: logs
+[2025-12-28 00:39:34] [INFO    ] [automogul:149] ================================================================================
+[2025-12-28 00:39:34] [INFO    ] [__main__:822] ================================================================================
+[2025-12-28 00:39:34] [INFO    ] [__main__:823] 回合模拟脚本启动
+[2025-12-28 00:39:34] [INFO    ] [__main__:824] ================================================================================
+[2025-12-28 00:39:34] [INFO    ] [__main__:829] 数据库路径: sqlite:///C:\project\Car-tycoon-game\data\automogul.db
+[2025-12-28 00:39:34] [INFO    ] [__main__:830] 数据目录: C:\project\Car-tycoon-game\data
+[2025-12-28 00:39:34] [INFO    ] [__main__:54] 创建游戏状态: ID=10, 名称=Turn Simulation Test
+[2025-12-28 00:39:34] [INFO    ] [__main__:183] 创建地区: NAM - North America (ID=30)
+[2025-12-28 00:39:34] [INFO    ] [__main__:183] 创建地区: EUR - Europe (ID=31)
+[2025-12-28 00:39:34] [INFO    ] [__main__:183] 创建地区: ASI - Asia-Pacific (ID=32)
+[2025-12-28 00:39:34] [INFO    ] [__main__:202] 创建公司: 玩家=1, AI1=2, AI2=3
+[2025-12-28 00:39:34] [INFO    ] [__main__:321] 创建引擎: Player V6 (ID=22, 公司=1)
+[2025-12-28 00:39:34] [INFO    ] [__main__:321] 创建引擎: AI1 Turbo I4 (ID=23, 公司=2)
+[2025-12-28 00:39:34] [INFO    ] [__main__:321] 创建引擎: AI2 Economy I4 (ID=24, 公司=3)
+[2025-12-28 00:39:34] [INFO    ] [__main__:408] 创建底盘: Player Midsize Platform (ID=18, 公司=1)
+[2025-12-28 00:39:34] [INFO    ] [__main__:408] 创建底盘: AI1 Compact Sport (ID=19, 公司=2)
+[2025-12-28 00:39:34] [INFO    ] [__main__:408] 创建底盘: AI2 Subcompact Economy (ID=20, 公司=3)
+[2025-12-28 00:39:34] [INFO    ] [__main__:470] 创建车型: Player Midsize Platform Trim (ID=14, 公司=1, 价格=15,000)
+[2025-12-28 00:39:34] [INFO    ] [__main__:470] 创建车型: AI1 Compact Sport Trim (ID=15, 公司=2, 价格=20,000)
+[2025-12-28 00:39:34] [INFO    ] [__main__:470] 创建车型: AI2 Subcompact Economy Trim (ID=16, 公司=3, 价格=25,000)
+[2025-12-28 00:39:34] [INFO    ] [__main__:514] 创建分销网络: player -> NAM
+[2025-12-28 00:39:34] [INFO    ] [__main__:514] 创建分销网络: player -> EUR
+[2025-12-28 00:39:34] [INFO    ] [__main__:514] 创建分销网络: player -> ASI
+[2025-12-28 00:39:34] [INFO    ] [__main__:514] 创建分销网络: ai1 -> NAM
+[2025-12-28 00:39:34] [INFO    ] [__main__:514] 创建分销网络: ai1 -> EUR
+[2025-12-28 00:39:34] [INFO    ] [__main__:568] 为地区 NAM 创建了 5 个消费者细分
+[2025-12-28 00:39:34] [INFO    ] [__main__:568] 为地区 EUR 创建了 5 个消费者细分
+[2025-12-28 00:39:34] [INFO    ] [__main__:568] 为地区 ASI 创建了 5 个消费者细分
+[2025-12-28 00:39:34] [ERROR   ] [__main__:907] 模拟过程中发生错误: (sqlite3.IntegrityError) NOT NULL constraint failed: consumer_buckets.avg_age
+[SQL: INSERT INTO consumer_buckets (game_id, region_id, bucket_code, name, segment, population_count, avg_income, avg_age, purchase_frequency_years, price_sensitivity, brand_loyalty, early_adopter_score, weight_price, weight_performance, weight_comfort, we ... 212 characters truncated ... ALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id]
+[parameters: (10, 30, 'NAM_FAMILY_10', 'North America FAMILY Segment', 'FAMILY', 60000, 8000.0, None, 8.0, 0.4, 0.5, 0.3, 0.3, 0.15, 0.15, 0.15, 0.1, 0.0, 0.1, 0.05, '["SEDAN", "HATCHBACK"]', 'MEDIUM', 0.3, 0, 0, '2025-12-27 16:39:34.335769', '2025-12-27 16:39:34.335771')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+Traceback (most recent call last):
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m2125[0m, in [35m_exec_insertmany_context[0m
+    [31mdialect.do_execute[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mcursor,[0m
+        [1;31m^^^^^^^[0m
+    ...<2 lines>...
+        [1;31mcontext,[0m
+        [1;31m^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py"[0m, line [35m952[0m, in [35mdo_execute[0m
+    [31mcursor.execute[0m[1;31m(statement, parameters)[0m
+    [31m~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^^[0m
+[1;35msqlite3.IntegrityError[0m: [35mNOT NULL constraint failed: consumer_buckets.avg_age[0m
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File [35m"C:\project\Car-tycoon-game\backend\scripts\turn_simulation.py"[0m, line [35m863[0m, in [35mmain[0m
+    [31mcreate_consumer_buckets[0m[1;31m(db, game.id, regions)[0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\project\Car-tycoon-game\backend\scripts\turn_simulation.py"[0m, line [35m570[0m, in [35mcreate_consumer_buckets[0m
+    [31mdb.commit[0m[1;31m()[0m
+    [31m~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m2030[0m, in [35mcommit[0m
+    [31mtrans.commit[0m[1;31m(_to_root=True)[0m
+    [31m~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^[0m
+  File [35m"<string>"[0m, line [35m2[0m, in [35mcommit[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state_changes.py"[0m, line [35m137[0m, in [35m_go[0m
+    ret_value = fn(self, *arg, **kw)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m1311[0m, in [35mcommit[0m
+    [31mself._prepare_impl[0m[1;31m()[0m
+    [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"<string>"[0m, line [35m2[0m, in [35m_prepare_impl[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\state_changes.py"[0m, line [35m137[0m, in [35m_go[0m
+    ret_value = fn(self, *arg, **kw)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m1286[0m, in [35m_prepare_impl[0m
+    [31mself.session.flush[0m[1;31m()[0m
+    [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m4331[0m, in [35mflush[0m
+    [31mself._flush[0m[1;31m(objects)[0m
+    [31m~~~~~~~~~~~[0m[1;31m^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m4466[0m, in [35m_flush[0m
+    with [31mutil.safe_reraise[0m[1;31m()[0m:
+         [31m~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\util\langhelpers.py"[0m, line [35m224[0m, in [35m__exit__[0m
+    raise exc_value.with_traceback(exc_tb)
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\session.py"[0m, line [35m4427[0m, in [35m_flush[0m
+    [31mflush_context.execute[0m[1;31m()[0m
+    [31m~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\unitofwork.py"[0m, line [35m466[0m, in [35mexecute[0m
+    [31mrec.execute[0m[1;31m(self)[0m
+    [31m~~~~~~~~~~~[0m[1;31m^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\unitofwork.py"[0m, line [35m642[0m, in [35mexecute[0m
+    [31mutil.preloaded.orm_persistence.save_obj[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mself.mapper,[0m
+        [1;31m^^^^^^^^^^^^[0m
+        [1;31muow.states_for_mapper_hierarchy(self.mapper, False, False),[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+        [1;31muow,[0m
+        [1;31m^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\persistence.py"[0m, line [35m93[0m, in [35msave_obj[0m
+    [31m_emit_insert_statements[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mbase_mapper,[0m
+        [1;31m^^^^^^^^^^^^[0m
+    ...<3 lines>...
+        [1;31minsert,[0m
+        [1;31m^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\orm\persistence.py"[0m, line [35m1143[0m, in [35m_emit_insert_statements[0m
+    result = connection.execute(
+        statement, multiparams, execution_options=execution_options
+    )
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m1419[0m, in [35mexecute[0m
+    return meth(
+        self,
+        distilled_parameters,
+        execution_options or NO_OPTIONS,
+    )
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\sql\elements.py"[0m, line [35m527[0m, in [35m_execute_on_connection[0m
+    return [31mconnection._execute_clauseelement[0m[1;31m([0m
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mself, distilled_params, execution_options[0m
+        [1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m1641[0m, in [35m_execute_clauseelement[0m
+    ret = self._execute_context(
+        dialect,
+    ...<8 lines>...
+        cache_hit=cache_hit,
+    )
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m1844[0m, in [35m_execute_context[0m
+    return [31mself._exec_insertmany_context[0m[1;31m(dialect, context)[0m
+           [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m2133[0m, in [35m_exec_insertmany_context[0m
+    [31mself._handle_dbapi_exception[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31me,[0m
+        [1;31m^^[0m
+    ...<4 lines>...
+        [1;31mis_sub_exec=True,[0m
+        [1;31m^^^^^^^^^^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m2363[0m, in [35m_handle_dbapi_exception[0m
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\base.py"[0m, line [35m2125[0m, in [35m_exec_insertmany_context[0m
+    [31mdialect.do_execute[0m[1;31m([0m
+    [31m~~~~~~~~~~~~~~~~~~[0m[1;31m^[0m
+        [1;31mcursor,[0m
+        [1;31m^^^^^^^[0m
+    ...<2 lines>...
+        [1;31mcontext,[0m
+        [1;31m^^^^^^^^[0m
+    [1;31m)[0m
+    [1;31m^[0m
+  File [35m"C:\Users\18194\AppData\Local\Programs\Python\Python313\Lib\site-packages\sqlalchemy\engine\default.py"[0m, line [35m952[0m, in [35mdo_execute[0m
+    [31mcursor.execute[0m[1;31m(statement, parameters)[0m
+    [31m~~~~~~~~~~~~~~[0m[1;31m^^^^^^^^^^^^^^^^^^^^^^^[0m
+[1;35msqlalchemy.exc.IntegrityError[0m: [35m(sqlite3.IntegrityError) NOT NULL constraint failed: consumer_buckets.avg_age
+[SQL: INSERT INTO consumer_buckets (game_id, region_id, bucket_code, name, segment, population_count, avg_income, avg_age, purchase_frequency_years, price_sensitivity, brand_loyalty, early_adopter_score, weight_price, weight_performance, weight_comfort, we ... 212 characters truncated ... ALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id]
+[parameters: (10, 30, 'NAM_FAMILY_10', 'North America FAMILY Segment', 'FAMILY', 60000, 8000.0, None, 8.0, 0.4, 0.5, 0.3, 0.3, 0.15, 0.15, 0.15, 0.1, 0.0, 0.1, 0.05, '["SEDAN", "HATCHBACK"]', 'MEDIUM', 0.3, 0, 0, '2025-12-27 16:39:34.335769', '2025-12-27 16:39:34.335771')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)[0m
+[2025-12-28 00:40:13] [INFO    ] [automogul:145] ================================================================================
+[2025-12-28 00:40:13] [INFO    ] [automogul:146] AutoMogul v1.0.0 - Logging System Initialized
+[2025-12-28 00:40:13] [INFO    ] [automogul:147] Log Level: INFO
+[2025-12-28 00:40:13] [INFO    ] [automogul:148] Log Directory: logs
+[2025-12-28 00:40:13] [INFO    ] [automogul:149] ================================================================================
+[2025-12-28 00:40:13] [INFO    ] [__main__:838] ================================================================================
+[2025-12-28 00:40:13] [INFO    ] [__main__:839] 回合模拟脚本启动
+[2025-12-28 00:40:13] [INFO    ] [__main__:840] ================================================================================
+[2025-12-28 00:40:13] [INFO    ] [__main__:845] 数据库路径: sqlite:///C:\project\Car-tycoon-game\data\automogul.db
+[2025-12-28 00:40:13] [INFO    ] [__main__:846] 数据目录: C:\project\Car-tycoon-game\data
+[2025-12-28 00:40:13] [INFO    ] [__main__:54] 创建游戏状态: ID=12, 名称=Turn Simulation Test
+[2025-12-28 00:40:13] [INFO    ] [__main__:183] 创建地区: NAM - North America (ID=36)
+[2025-12-28 00:40:13] [INFO    ] [__main__:183] 创建地区: EUR - Europe (ID=37)
+[2025-12-28 00:40:13] [INFO    ] [__main__:183] 创建地区: ASI - Asia-Pacific (ID=38)
+[2025-12-28 00:40:13] [INFO    ] [__main__:202] 创建公司: 玩家=1, AI1=2, AI2=3
+[2025-12-28 00:40:13] [INFO    ] [__main__:321] 创建引擎: Player V6 (ID=28, 公司=1)
+[2025-12-28 00:40:13] [INFO    ] [__main__:321] 创建引擎: AI1 Turbo I4 (ID=29, 公司=2)
+[2025-12-28 00:40:13] [INFO    ] [__main__:321] 创建引擎: AI2 Economy I4 (ID=30, 公司=3)
+[2025-12-28 00:40:13] [INFO    ] [__main__:408] 创建底盘: Player Midsize Platform (ID=24, 公司=1)
+[2025-12-28 00:40:13] [INFO    ] [__main__:408] 创建底盘: AI1 Compact Sport (ID=25, 公司=2)
+[2025-12-28 00:40:13] [INFO    ] [__main__:408] 创建底盘: AI2 Subcompact Economy (ID=26, 公司=3)
+[2025-12-28 00:40:13] [INFO    ] [__main__:470] 创建车型: Player Midsize Platform Trim (ID=20, 公司=1, 价格=15,000)
+[2025-12-28 00:40:13] [INFO    ] [__main__:470] 创建车型: AI1 Compact Sport Trim (ID=21, 公司=2, 价格=20,000)
+[2025-12-28 00:40:13] [INFO    ] [__main__:470] 创建车型: AI2 Subcompact Economy Trim (ID=22, 公司=3, 价格=25,000)
+[2025-12-28 00:40:13] [INFO    ] [__main__:514] 创建分销网络: player -> NAM
+[2025-12-28 00:40:13] [INFO    ] [__main__:514] 创建分销网络: player -> EUR
+[2025-12-28 00:40:13] [INFO    ] [__main__:514] 创建分销网络: player -> ASI
+[2025-12-28 00:40:13] [INFO    ] [__main__:514] 创建分销网络: ai1 -> NAM
+[2025-12-28 00:40:13] [INFO    ] [__main__:514] 创建分销网络: ai1 -> EUR
+[2025-12-28 00:40:13] [INFO    ] [__main__:584] 为地区 NAM 创建了 5 个消费者细分
+[2025-12-28 00:40:13] [INFO    ] [__main__:584] 为地区 EUR 创建了 5 个消费者细分
+[2025-12-28 00:40:13] [INFO    ] [__main__:584] 为地区 ASI 创建了 5 个消费者细分
+[2025-12-28 00:40:13] [INFO    ] [__main__:609] 创建初始品牌认知数据
+[2025-12-28 00:40:13] [INFO    ] [__main__:900] 
+AI公司人格设置:
+[2025-12-28 00:40:13] [INFO    ] [__main__:904]   ai1 (ID=2): 侵略性=70, 创新性=60, 风险承受=65, 忠诚度=50
+[2025-12-28 00:40:13] [INFO    ] [__main__:904]   ai2 (ID=3): 侵略性=40, 创新性=50, 风险承受=30, 忠诚度=70
+[2025-12-28 00:40:13] [INFO    ] [__main__:634] 
+================================================================================
+[2025-12-28 00:40:13] [INFO    ] [__main__:635] 开始12个月回合模拟
+[2025-12-28 00:40:13] [INFO    ] [__main__:636] ================================================================================
+[2025-12-28 00:40:13] [INFO    ] [__main__:641] 
+--- 第 1 月 (回合 0) ---
+[2025-12-28 00:40:13] [INFO    ] [__main__:642] 日期: 1950-01
+[2025-12-28 00:40:13] [INFO    ] [AI_CEO_2:108] AI公司 2 开始第 0 回合决策
+[2025-12-28 00:40:13] [INFO    ] [AI_CEO_2:139]   决策: MARKETING - BRAND_REPAIR_CAMPAIGN | 理由: 品牌健康度仅46.1，启动品牌修复
+[2025-12-28 00:40:13] [INFO    ] [AI_CEO_3:108] AI公司 3 开始第 0 回合决策
+[2025-12-28 00:40:13] [INFO    ] [AI_CEO_3:139]   决策: MARKETING - LAUNCH_CAMPAIGN | 理由: 市场份额下降7.8%，启动营销反击
+[2025-12-28 00:40:13] [INFO    ] [AI_CEO_3:139]   决策: MARKETING - LAUNCH_CAMPAIGN | 理由: 市场份额下降7.8%，启动营销反击
+[2025-12-28 00:40:13] [INFO    ] [AI_CEO_3:139]   决策: MARKETING - LAUNCH_CAMPAIGN | 理由: 市场份额下降7.8%，启动营销反击
+[2025-12-28 00:40:13] [INFO    ] [AIDecisionExecutor:575] AI公司 3 启动营销活动: 地区36, 预算900,000
+[2025-12-28 00:40:13] [INFO    ] [__main__:666]   ✓ ai2 启动营销活动: 市场份额下降7.8%，启动营销反击
+[2025-12-28 00:40:13] [INFO    ] [AIDecisionExecutor:575] AI公司 3 启动营销活动: 地区37, 预算900,000
+[2025-12-28 00:40:13] [INFO    ] [__main__:666]   ✓ ai2 启动营销活动: 市场份额下降7.8%，启动营销反击
+[2025-12-28 00:40:13] [INFO    ] [AIDecisionExecutor:575] AI公司 3 启动营销活动: 地区38, 预算900,000
+[2025-12-28 00:40:13] [INFO    ] [__main__:666]   ✓ ai2 启动营销活动: 市场份额下降7.8%，启动营销反击
+[2025-12-28 00:40:13] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 36 的月度销售（回合 0）
+[2025-12-28 00:40:13] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 36 市场解析完成 | 需求: 2,088 | 新车销量: 2,088 | 二手车: 0 | 耗时: 48.20ms
+[2025-12-28 00:40:13] [INFO    ] [__main__:686]   地区 NAM: 需求=2,088, 新车销量=2,088, 二手车=0
+[2025-12-28 00:40:13] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 37 的月度销售（回合 0）
+[2025-12-28 00:40:13] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 37 市场解析完成 | 需求: 3,626 | 新车销量: 3,626 | 二手车: 0 | 耗时: 45.97ms
+[2025-12-28 00:40:13] [INFO    ] [__main__:686]   地区 EUR: 需求=3,626, 新车销量=3,626, 二手车=0
+[2025-12-28 00:40:13] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 38 的月度销售（回合 0）
+[2025-12-28 00:40:13] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 38 市场解析完成 | 需求: 8,846 | 新车销量: 5,000 | 二手车: 1,508 | 耗时: 53.88ms
+[2025-12-28 00:40:13] [INFO    ] [__main__:686]   地区 ASI: 需求=8,846, 新车销量=5,000, 二手车=1,508
+[2025-12-28 00:40:13] [INFO    ] [__main__:641] 
+--- 第 2 月 (回合 1) ---
+[2025-12-28 00:40:13] [INFO    ] [__main__:642] 日期: 1950-02
+[2025-12-28 00:40:13] [INFO    ] [AI_CEO_2:108] AI公司 2 开始第 1 回合决策
+[2025-12-28 00:40:13] [INFO    ] [AI_CEO_3:108] AI公司 3 开始第 1 回合决策
+[2025-12-28 00:40:13] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 36 的月度销售（回合 1）
+[2025-12-28 00:40:13] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 36 市场解析完成 | 需求: 2,055 | 新车销量: 2,055 | 二手车: 0 | 耗时: 39.82ms
+[2025-12-28 00:40:13] [INFO    ] [__main__:686]   地区 NAM: 需求=2,055, 新车销量=2,055, 二手车=0
+[2025-12-28 00:40:13] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 37 的月度销售（回合 1）
+[2025-12-28 00:40:13] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 37 市场解析完成 | 需求: 3,586 | 新车销量: 3,586 | 二手车: 0 | 耗时: 48.07ms
+[2025-12-28 00:40:13] [INFO    ] [__main__:686]   地区 EUR: 需求=3,586, 新车销量=3,586, 二手车=0
+[2025-12-28 00:40:13] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 38 的月度销售（回合 1）
+[2025-12-28 00:40:13] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 38 市场解析完成 | 需求: 8,603 | 新车销量: 5,000 | 二手车: 1,463 | 耗时: 52.41ms
+[2025-12-28 00:40:13] [INFO    ] [__main__:686]   地区 ASI: 需求=8,603, 新车销量=5,000, 二手车=1,463
+[2025-12-28 00:40:13] [INFO    ] [__main__:641] 
+--- 第 3 月 (回合 2) ---
+[2025-12-28 00:40:13] [INFO    ] [__main__:642] 日期: 1950-03
+[2025-12-28 00:40:13] [INFO    ] [AI_CEO_2:108] AI公司 2 开始第 2 回合决策
+[2025-12-28 00:40:13] [INFO    ] [AI_CEO_2:139]   决策: MARKETING - BRAND_REPAIR_CAMPAIGN | 理由: 品牌健康度仅41.7，启动品牌修复
+[2025-12-28 00:40:13] [INFO    ] [AI_CEO_3:108] AI公司 3 开始第 2 回合决策
+[2025-12-28 00:40:13] [INFO    ] [AI_CEO_3:139]   决策: MARKETING - BRAND_REPAIR_CAMPAIGN | 理由: 品牌健康度仅46.9，启动品牌修复
+[2025-12-28 00:40:13] [INFO    ] [AI_CEO_3:139]   决策: PRICING - INCREASE_PRICES | 理由: 市场份额上升，适度提价增加利润率
+[2025-12-28 00:40:13] [INFO    ] [AIDecisionExecutor:603] AI公司 3 调整价格（待实现）
+[2025-12-28 00:40:13] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 36 的月度销售（回合 2）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 36 市场解析完成 | 需求: 2,145 | 新车销量: 2,145 | 二手车: 0 | 耗时: 39.39ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 NAM: 需求=2,145, 新车销量=2,145, 二手车=0
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 37 的月度销售（回合 2）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 37 市场解析完成 | 需求: 3,492 | 新车销量: 3,492 | 二手车: 0 | 耗时: 48.50ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 EUR: 需求=3,492, 新车销量=3,492, 二手车=0
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 38 的月度销售（回合 2）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 38 市场解析完成 | 需求: 8,467 | 新车销量: 5,000 | 二手车: 1,375 | 耗时: 55.11ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 ASI: 需求=8,467, 新车销量=5,000, 二手车=1,375
+[2025-12-28 00:40:14] [INFO    ] [__main__:641] 
+--- 第 4 月 (回合 3) ---
+[2025-12-28 00:40:14] [INFO    ] [__main__:642] 日期: 1950-04
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:108] AI公司 2 开始第 3 回合决策
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:139]   决策: MARKETING - BRAND_REPAIR_CAMPAIGN | 理由: 品牌健康度仅43.4，启动品牌修复
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:139]   决策: PRICING - INCREASE_DISCOUNTS | 理由: 市场份额下降，侵略性CEO发起降价反击
+[2025-12-28 00:40:14] [INFO    ] [AIDecisionExecutor:603] AI公司 2 调整价格（待实现）
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_3:108] AI公司 3 开始第 3 回合决策
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 36 的月度销售（回合 3）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 36 市场解析完成 | 需求: 1,979 | 新车销量: 1,979 | 二手车: 0 | 耗时: 40.39ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 NAM: 需求=1,979, 新车销量=1,979, 二手车=0
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 37 的月度销售（回合 3）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 37 市场解析完成 | 需求: 3,471 | 新车销量: 3,471 | 二手车: 0 | 耗时: 47.01ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 EUR: 需求=3,471, 新车销量=3,471, 二手车=0
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 38 的月度销售（回合 3）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 38 市场解析完成 | 需求: 8,955 | 新车销量: 5,000 | 二手车: 1,575 | 耗时: 55.89ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 ASI: 需求=8,955, 新车销量=5,000, 二手车=1,575
+[2025-12-28 00:40:14] [INFO    ] [__main__:641] 
+--- 第 5 月 (回合 4) ---
+[2025-12-28 00:40:14] [INFO    ] [__main__:642] 日期: 1950-05
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:108] AI公司 2 开始第 4 回合决策
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:139]   决策: MARKETING - LAUNCH_CAMPAIGN | 理由: 市场份额下降6.3%，启动营销反击
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:139]   决策: MARKETING - LAUNCH_CAMPAIGN | 理由: 市场份额下降6.3%，启动营销反击
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:139]   决策: MARKETING - LAUNCH_CAMPAIGN | 理由: 市场份额下降6.3%，启动营销反击
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:139]   决策: PRICING - INCREASE_DISCOUNTS | 理由: 市场份额下降，侵略性CEO发起降价反击
+[2025-12-28 00:40:14] [INFO    ] [AIDecisionExecutor:575] AI公司 2 启动营销活动: 地区36, 预算1,200,000
+[2025-12-28 00:40:14] [INFO    ] [__main__:666]   ✓ ai1 启动营销活动: 市场份额下降6.3%，启动营销反击
+[2025-12-28 00:40:14] [INFO    ] [AIDecisionExecutor:575] AI公司 2 启动营销活动: 地区37, 预算1,200,000
+[2025-12-28 00:40:14] [INFO    ] [__main__:666]   ✓ ai1 启动营销活动: 市场份额下降6.3%，启动营销反击
+[2025-12-28 00:40:14] [INFO    ] [AIDecisionExecutor:575] AI公司 2 启动营销活动: 地区38, 预算1,200,000
+[2025-12-28 00:40:14] [INFO    ] [__main__:666]   ✓ ai1 启动营销活动: 市场份额下降6.3%，启动营销反击
+[2025-12-28 00:40:14] [INFO    ] [AIDecisionExecutor:603] AI公司 2 调整价格（待实现）
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_3:108] AI公司 3 开始第 4 回合决策
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_3:139]   决策: PRICING - INCREASE_PRICES | 理由: 市场份额上升，适度提价增加利润率
+[2025-12-28 00:40:14] [INFO    ] [AIDecisionExecutor:603] AI公司 3 调整价格（待实现）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 36 的月度销售（回合 4）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 36 市场解析完成 | 需求: 2,091 | 新车销量: 2,091 | 二手车: 0 | 耗时: 39.58ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 NAM: 需求=2,091, 新车销量=2,091, 二手车=0
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 37 的月度销售（回合 4）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 37 市场解析完成 | 需求: 3,370 | 新车销量: 3,370 | 二手车: 0 | 耗时: 47.61ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 EUR: 需求=3,370, 新车销量=3,370, 二手车=0
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 38 的月度销售（回合 4）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 38 市场解析完成 | 需求: 8,550 | 新车销量: 5,000 | 二手车: 1,463 | 耗时: 54.97ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 ASI: 需求=8,550, 新车销量=5,000, 二手车=1,463
+[2025-12-28 00:40:14] [INFO    ] [__main__:641] 
+--- 第 6 月 (回合 5) ---
+[2025-12-28 00:40:14] [INFO    ] [__main__:642] 日期: 1950-06
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:108] AI公司 2 开始第 5 回合决策
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:139]   决策: PRICING - INCREASE_PRICES | 理由: 市场份额上升，适度提价增加利润率
+[2025-12-28 00:40:14] [INFO    ] [AIDecisionExecutor:603] AI公司 2 调整价格（待实现）
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_3:108] AI公司 3 开始第 5 回合决策
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 36 的月度销售（回合 5）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 36 市场解析完成 | 需求: 2,085 | 新车销量: 2,085 | 二手车: 0 | 耗时: 47.49ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 NAM: 需求=2,085, 新车销量=2,085, 二手车=0
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 37 的月度销售（回合 5）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 37 市场解析完成 | 需求: 3,639 | 新车销量: 3,639 | 二手车: 0 | 耗时: 49.00ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 EUR: 需求=3,639, 新车销量=3,639, 二手车=0
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 38 的月度销售（回合 5）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 38 市场解析完成 | 需求: 8,402 | 新车销量: 5,000 | 二手车: 1,337 | 耗时: 53.05ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 ASI: 需求=8,402, 新车销量=5,000, 二手车=1,337
+[2025-12-28 00:40:14] [INFO    ] [__main__:641] 
+--- 第 7 月 (回合 6) ---
+[2025-12-28 00:40:14] [INFO    ] [__main__:642] 日期: 1950-07
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:108] AI公司 2 开始第 6 回合决策
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_3:108] AI公司 3 开始第 6 回合决策
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_3:139]   决策: PRICING - INCREASE_PRICES | 理由: 市场份额上升，适度提价增加利润率
+[2025-12-28 00:40:14] [INFO    ] [AIDecisionExecutor:603] AI公司 3 调整价格（待实现）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 36 的月度销售（回合 6）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 36 市场解析完成 | 需求: 2,042 | 新车销量: 2,042 | 二手车: 0 | 耗时: 41.18ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 NAM: 需求=2,042, 新车销量=2,042, 二手车=0
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 37 的月度销售（回合 6）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 37 市场解析完成 | 需求: 3,461 | 新车销量: 3,461 | 二手车: 0 | 耗时: 48.03ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 EUR: 需求=3,461, 新车销量=3,461, 二手车=0
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 38 的月度销售（回合 6）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 38 市场解析完成 | 需求: 8,430 | 新车销量: 5,000 | 二手车: 1,372 | 耗时: 56.59ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 ASI: 需求=8,430, 新车销量=5,000, 二手车=1,372
+[2025-12-28 00:40:14] [INFO    ] [__main__:641] 
+--- 第 8 月 (回合 7) ---
+[2025-12-28 00:40:14] [INFO    ] [__main__:642] 日期: 1950-08
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:108] AI公司 2 开始第 7 回合决策
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:139]   决策: EXPANSION - BUILD_FACTORY | 理由: 产能利用率91.1%，在Europe建厂
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:139]   决策: PRICING - INCREASE_PRICES | 理由: 市场份额上升，适度提价增加利润率
+[2025-12-28 00:40:14] [INFO    ] [AIDecisionExecutor:592] AI公司 2 计划扩张（待实现）
+[2025-12-28 00:40:14] [INFO    ] [AIDecisionExecutor:603] AI公司 2 调整价格（待实现）
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_3:108] AI公司 3 开始第 7 回合决策
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_3:139]   决策: MARKETING - BRAND_REPAIR_CAMPAIGN | 理由: 品牌健康度仅46.3，启动品牌修复
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 36 的月度销售（回合 7）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 36 市场解析完成 | 需求: 2,172 | 新车销量: 2,172 | 二手车: 0 | 耗时: 44.33ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 NAM: 需求=2,172, 新车销量=2,172, 二手车=0
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 37 的月度销售（回合 7）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 37 市场解析完成 | 需求: 3,681 | 新车销量: 3,681 | 二手车: 0 | 耗时: 53.18ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 EUR: 需求=3,681, 新车销量=3,681, 二手车=0
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 38 的月度销售（回合 7）
+[2025-12-28 00:40:14] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 38 市场解析完成 | 需求: 8,569 | 新车销量: 5,000 | 二手车: 1,451 | 耗时: 55.69ms
+[2025-12-28 00:40:14] [INFO    ] [__main__:686]   地区 ASI: 需求=8,569, 新车销量=5,000, 二手车=1,451
+[2025-12-28 00:40:14] [INFO    ] [__main__:641] 
+--- 第 9 月 (回合 8) ---
+[2025-12-28 00:40:14] [INFO    ] [__main__:642] 日期: 1950-09
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:108] AI公司 2 开始第 8 回合决策
+[2025-12-28 00:40:14] [INFO    ] [AI_CEO_2:139]   决策: PRICING - INCREASE_DISCOUNTS | 理由: 市场份额下降，侵略性CEO发起降价反击
+[2025-12-28 00:40:15] [INFO    ] [AIDecisionExecutor:603] AI公司 2 调整价格（待实现）
+[2025-12-28 00:40:15] [INFO    ] [AI_CEO_3:108] AI公司 3 开始第 8 回合决策
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 36 的月度销售（回合 8）
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 36 市场解析完成 | 需求: 2,127 | 新车销量: 2,127 | 二手车: 0 | 耗时: 51.24ms
+[2025-12-28 00:40:15] [INFO    ] [__main__:686]   地区 NAM: 需求=2,127, 新车销量=2,127, 二手车=0
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 37 的月度销售（回合 8）
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 37 市场解析完成 | 需求: 3,533 | 新车销量: 3,533 | 二手车: 0 | 耗时: 68.06ms
+[2025-12-28 00:40:15] [INFO    ] [__main__:686]   地区 EUR: 需求=3,533, 新车销量=3,533, 二手车=0
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 38 的月度销售（回合 8）
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 38 市场解析完成 | 需求: 8,625 | 新车销量: 5,000 | 二手车: 1,450 | 耗时: 68.90ms
+[2025-12-28 00:40:15] [INFO    ] [__main__:686]   地区 ASI: 需求=8,625, 新车销量=5,000, 二手车=1,450
+[2025-12-28 00:40:15] [INFO    ] [__main__:641] 
+--- 第 10 月 (回合 9) ---
+[2025-12-28 00:40:15] [INFO    ] [__main__:642] 日期: 1950-10
+[2025-12-28 00:40:15] [INFO    ] [AI_CEO_2:108] AI公司 2 开始第 9 回合决策
+[2025-12-28 00:40:15] [INFO    ] [AI_CEO_2:139]   决策: PRICING - INCREASE_DISCOUNTS | 理由: 市场份额下降，侵略性CEO发起降价反击
+[2025-12-28 00:40:15] [INFO    ] [AIDecisionExecutor:603] AI公司 2 调整价格（待实现）
+[2025-12-28 00:40:15] [INFO    ] [AI_CEO_3:108] AI公司 3 开始第 9 回合决策
+[2025-12-28 00:40:15] [INFO    ] [AI_CEO_3:139]   决策: MARKETING - BRAND_REPAIR_CAMPAIGN | 理由: 品牌健康度仅41.6，启动品牌修复
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 36 的月度销售（回合 9）
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 36 市场解析完成 | 需求: 1,996 | 新车销量: 1,996 | 二手车: 0 | 耗时: 38.54ms
+[2025-12-28 00:40:15] [INFO    ] [__main__:686]   地区 NAM: 需求=1,996, 新车销量=1,996, 二手车=0
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 37 的月度销售（回合 9）
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 37 市场解析完成 | 需求: 3,483 | 新车销量: 3,483 | 二手车: 0 | 耗时: 48.96ms
+[2025-12-28 00:40:15] [INFO    ] [__main__:686]   地区 EUR: 需求=3,483, 新车销量=3,483, 二手车=0
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 38 的月度销售（回合 9）
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 38 市场解析完成 | 需求: 8,342 | 新车销量: 5,000 | 二手车: 1,352 | 耗时: 53.85ms
+[2025-12-28 00:40:15] [INFO    ] [__main__:686]   地区 ASI: 需求=8,342, 新车销量=5,000, 二手车=1,352
+[2025-12-28 00:40:15] [INFO    ] [__main__:641] 
+--- 第 11 月 (回合 10) ---
+[2025-12-28 00:40:15] [INFO    ] [__main__:642] 日期: 1950-11
+[2025-12-28 00:40:15] [INFO    ] [AI_CEO_2:108] AI公司 2 开始第 10 回合决策
+[2025-12-28 00:40:15] [INFO    ] [AI_CEO_2:139]   决策: PRICING - INCREASE_DISCOUNTS | 理由: 市场份额下降，侵略性CEO发起降价反击
+[2025-12-28 00:40:15] [INFO    ] [AIDecisionExecutor:603] AI公司 2 调整价格（待实现）
+[2025-12-28 00:40:15] [INFO    ] [AI_CEO_3:108] AI公司 3 开始第 10 回合决策
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 36 的月度销售（回合 10）
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 36 市场解析完成 | 需求: 2,046 | 新车销量: 2,046 | 二手车: 0 | 耗时: 38.74ms
+[2025-12-28 00:40:15] [INFO    ] [__main__:686]   地区 NAM: 需求=2,046, 新车销量=2,046, 二手车=0
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 37 的月度销售（回合 10）
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 37 市场解析完成 | 需求: 3,585 | 新车销量: 3,585 | 二手车: 0 | 耗时: 50.49ms
+[2025-12-28 00:40:15] [INFO    ] [__main__:686]   地区 EUR: 需求=3,585, 新车销量=3,585, 二手车=0
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 38 的月度销售（回合 10）
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 38 市场解析完成 | 需求: 8,591 | 新车销量: 5,000 | 二手车: 1,457 | 耗时: 53.77ms
+[2025-12-28 00:40:15] [INFO    ] [__main__:686]   地区 ASI: 需求=8,591, 新车销量=5,000, 二手车=1,457
+[2025-12-28 00:40:15] [INFO    ] [__main__:641] 
+--- 第 12 月 (回合 11) ---
+[2025-12-28 00:40:15] [INFO    ] [__main__:642] 日期: 1950-12
+[2025-12-28 00:40:15] [INFO    ] [AI_CEO_2:108] AI公司 2 开始第 11 回合决策
+[2025-12-28 00:40:15] [INFO    ] [AI_CEO_2:139]   决策: PRICING - INCREASE_PRICES | 理由: 市场份额上升，适度提价增加利润率
+[2025-12-28 00:40:15] [INFO    ] [AIDecisionExecutor:603] AI公司 2 调整价格（待实现）
+[2025-12-28 00:40:15] [INFO    ] [AI_CEO_3:108] AI公司 3 开始第 11 回合决策
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 36 的月度销售（回合 11）
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 36 市场解析完成 | 需求: 2,053 | 新车销量: 2,053 | 二手车: 0 | 耗时: 38.66ms
+[2025-12-28 00:40:15] [INFO    ] [__main__:686]   地区 NAM: 需求=2,053, 新车销量=2,053, 二手车=0
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 37 的月度销售（回合 11）
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 37 市场解析完成 | 需求: 3,597 | 新车销量: 3,597 | 二手车: 0 | 耗时: 47.96ms
+[2025-12-28 00:40:15] [INFO    ] [__main__:686]   地区 EUR: 需求=3,597, 新车销量=3,597, 二手车=0
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:94] 开始计算地区 38 的月度销售（回合 11）
+[2025-12-28 00:40:15] [INFO    ] [backend.core.economics.market_simulation:129] ✓ 地区 38 市场解析完成 | 需求: 8,268 | 新车销量: 5,000 | 二手车: 1,324 | 耗时: 52.68ms
+[2025-12-28 00:40:15] [INFO    ] [__main__:686]   地区 ASI: 需求=8,268, 新车销量=5,000, 二手车=1,324
+[2025-12-28 00:40:15] [INFO    ] [__main__:734] 
+================================================================================
+[2025-12-28 00:40:15] [INFO    ] [__main__:735] 观察点分析
+[2025-12-28 00:40:15] [INFO    ] [__main__:736] ================================================================================
+[2025-12-28 00:40:15] [INFO    ] [__main__:739] 
+【观察点1】销售网络对销量的影响
+[2025-12-28 00:40:15] [INFO    ] [__main__:740] --------------------------------------------------------------------------------
+[2025-12-28 00:40:15] [INFO    ] [__main__:754] 发现销量为0的公司:
+[2025-12-28 00:40:15] [INFO    ] [__main__:756]   第1月: ai2 (ID=3)
+[2025-12-28 00:40:15] [INFO    ] [__main__:756]   第2月: ai2 (ID=3)
+[2025-12-28 00:40:15] [INFO    ] [__main__:756]   第3月: ai2 (ID=3)
+[2025-12-28 00:40:15] [INFO    ] [__main__:756]   第4月: ai2 (ID=3)
+[2025-12-28 00:40:15] [INFO    ] [__main__:756]   第5月: ai2 (ID=3)
+[2025-12-28 00:40:15] [INFO    ] [__main__:756]   第6月: ai2 (ID=3)
+[2025-12-28 00:40:15] [INFO    ] [__main__:756]   第7月: ai2 (ID=3)
+[2025-12-28 00:40:15] [INFO    ] [__main__:756]   第8月: ai2 (ID=3)
+[2025-12-28 00:40:15] [INFO    ] [__main__:756]   第9月: ai2 (ID=3)
+[2025-12-28 00:40:15] [INFO    ] [__main__:756]   第10月: ai2 (ID=3)
+[2025-12-28 00:40:15] [INFO    ] [__main__:756]   第11月: ai2 (ID=3)
+[2025-12-28 00:40:15] [INFO    ] [__main__:756]   第12月: ai2 (ID=3)
+[2025-12-28 00:40:15] [INFO    ] [__main__:757]   → 结论: 这些公司可能没有建立分销网络，导致无法销售
+[2025-12-28 00:40:15] [INFO    ] [__main__:762] 
+【观察点2】销量波动与经济指数关系
+[2025-12-28 00:40:15] [INFO    ] [__main__:763] --------------------------------------------------------------------------------
+[2025-12-28 00:40:15] [INFO    ] [__main__:774] 
+player (ID=1):
+[2025-12-28 00:40:15] [INFO    ] [__main__:775]   总销量: 110,542
+[2025-12-28 00:40:15] [INFO    ] [__main__:776]   平均月销量: 9,212
+[2025-12-28 00:40:15] [INFO    ] [__main__:777]   月度销量: ['9,288', '9,287', '9,180', '9,074', '9,109', '9,284', '9,084', '9,419', '9,290', '9,080', '9,280', '9,167']
+[2025-12-28 00:40:15] [INFO    ] [__main__:784]   波动范围: 9,074 - 9,419 (差异: 345)
+[2025-12-28 00:40:15] [INFO    ] [__main__:787]   经济指数变化:
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第1月: GDP增长=3.5%, 失业率=4.0%, 需求修正=0.99
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第1月: GDP增长=3.0%, 失业率=6.0%, 需求修正=0.97
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第1月: GDP增长=6.0%, 失业率=5.0%, 需求修正=1.04
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第2月: GDP增长=3.5%, 失业率=4.0%, 需求修正=0.99
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第2月: GDP增长=3.0%, 失业率=6.0%, 需求修正=0.97
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第2月: GDP增长=6.0%, 失业率=5.0%, 需求修正=1.04
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第3月: GDP增长=3.5%, 失业率=4.0%, 需求修正=0.99
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第3月: GDP增长=3.0%, 失业率=6.0%, 需求修正=0.97
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第3月: GDP增长=6.0%, 失业率=5.0%, 需求修正=1.04
+[2025-12-28 00:40:15] [INFO    ] [__main__:774] 
+ai1 (ID=2):
+[2025-12-28 00:40:15] [INFO    ] [__main__:775]   总销量: 16,861
+[2025-12-28 00:40:15] [INFO    ] [__main__:776]   平均月销量: 1,405
+[2025-12-28 00:40:15] [INFO    ] [__main__:777]   月度销量: ['1,426', '1,354', '1,457', '1,376', '1,352', '1,440', '1,419', '1,434', '1,370', '1,399', '1,351', '1,483']
+[2025-12-28 00:40:15] [INFO    ] [__main__:784]   波动范围: 1,351 - 1,483 (差异: 132)
+[2025-12-28 00:40:15] [INFO    ] [__main__:787]   经济指数变化:
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第1月: GDP增长=3.5%, 失业率=4.0%, 需求修正=0.99
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第1月: GDP增长=3.0%, 失业率=6.0%, 需求修正=0.97
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第1月: GDP增长=6.0%, 失业率=5.0%, 需求修正=1.04
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第2月: GDP增长=3.5%, 失业率=4.0%, 需求修正=0.99
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第2月: GDP增长=3.0%, 失业率=6.0%, 需求修正=0.97
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第2月: GDP增长=6.0%, 失业率=5.0%, 需求修正=1.04
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第3月: GDP增长=3.5%, 失业率=4.0%, 需求修正=0.99
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第3月: GDP增长=3.0%, 失业率=6.0%, 需求修正=0.97
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第3月: GDP增长=6.0%, 失业率=5.0%, 需求修正=1.04
+[2025-12-28 00:40:15] [INFO    ] [__main__:774] 
+ai2 (ID=3):
+[2025-12-28 00:40:15] [INFO    ] [__main__:775]   总销量: 0
+[2025-12-28 00:40:15] [INFO    ] [__main__:776]   平均月销量: 0
+[2025-12-28 00:40:15] [INFO    ] [__main__:777]   月度销量: ['0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0', '0']
+[2025-12-28 00:40:15] [INFO    ] [__main__:784]   波动范围: 0 - 0 (差异: 0)
+[2025-12-28 00:40:15] [INFO    ] [__main__:787]   经济指数变化:
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第1月: GDP增长=3.5%, 失业率=4.0%, 需求修正=0.99
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第1月: GDP增长=3.0%, 失业率=6.0%, 需求修正=0.97
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第1月: GDP增长=6.0%, 失业率=5.0%, 需求修正=1.04
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第2月: GDP增长=3.5%, 失业率=4.0%, 需求修正=0.99
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第2月: GDP增长=3.0%, 失业率=6.0%, 需求修正=0.97
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第2月: GDP增长=6.0%, 失业率=5.0%, 需求修正=1.04
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第3月: GDP增长=3.5%, 失业率=4.0%, 需求修正=0.99
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第3月: GDP增长=3.0%, 失业率=6.0%, 需求修正=0.97
+[2025-12-28 00:40:15] [INFO    ] [__main__:790]     第3月: GDP增长=6.0%, 失业率=5.0%, 需求修正=1.04
+[2025-12-28 00:40:15] [INFO    ] [__main__:798] 
+【观察点3】AI营销活动发布
+[2025-12-28 00:40:15] [INFO    ] [__main__:799] --------------------------------------------------------------------------------
+[2025-12-28 00:40:15] [INFO    ] [__main__:802] 共发现 6 个营销活动:
+[2025-12-28 00:40:15] [INFO    ] [__main__:804]   第1月: ai2 (ID=3) 启动营销活动
+[2025-12-28 00:40:15] [INFO    ] [__main__:808]     理由: 市场份额下降7.8%，启动营销反击
+[2025-12-28 00:40:15] [INFO    ] [__main__:809]     参数: {'region_id': 36, 'target_bucket': 'PRACTICAL', 'focus': 'BRAND_AWARENESS', 'budget': 900000.0, 'duration_turns': 3}
+[2025-12-28 00:40:15] [INFO    ] [__main__:804]   第1月: ai2 (ID=3) 启动营销活动
+[2025-12-28 00:40:15] [INFO    ] [__main__:808]     理由: 市场份额下降7.8%，启动营销反击
+[2025-12-28 00:40:15] [INFO    ] [__main__:809]     参数: {'region_id': 37, 'target_bucket': 'PRACTICAL', 'focus': 'BRAND_AWARENESS', 'budget': 900000.0, 'duration_turns': 3}
+[2025-12-28 00:40:15] [INFO    ] [__main__:804]   第1月: ai2 (ID=3) 启动营销活动
+[2025-12-28 00:40:15] [INFO    ] [__main__:808]     理由: 市场份额下降7.8%，启动营销反击
+[2025-12-28 00:40:15] [INFO    ] [__main__:809]     参数: {'region_id': 38, 'target_bucket': 'PRACTICAL', 'focus': 'BRAND_AWARENESS', 'budget': 900000.0, 'duration_turns': 3}
+[2025-12-28 00:40:15] [INFO    ] [__main__:804]   第5月: ai1 (ID=2) 启动营销活动
+[2025-12-28 00:40:15] [INFO    ] [__main__:808]     理由: 市场份额下降6.3%，启动营销反击
+[2025-12-28 00:40:15] [INFO    ] [__main__:809]     参数: {'region_id': 36, 'target_bucket': 'PRACTICAL', 'focus': 'BRAND_AWARENESS', 'budget': 1200000.0, 'duration_turns': 3}
+[2025-12-28 00:40:15] [INFO    ] [__main__:804]   第5月: ai1 (ID=2) 启动营销活动
+[2025-12-28 00:40:15] [INFO    ] [__main__:808]     理由: 市场份额下降6.3%，启动营销反击
+[2025-12-28 00:40:15] [INFO    ] [__main__:809]     参数: {'region_id': 37, 'target_bucket': 'PRACTICAL', 'focus': 'BRAND_AWARENESS', 'budget': 1200000.0, 'duration_turns': 3}
+[2025-12-28 00:40:15] [INFO    ] [__main__:804]   第5月: ai1 (ID=2) 启动营销活动
+[2025-12-28 00:40:15] [INFO    ] [__main__:808]     理由: 市场份额下降6.3%，启动营销反击
+[2025-12-28 00:40:15] [INFO    ] [__main__:809]     参数: {'region_id': 38, 'target_bucket': 'PRACTICAL', 'focus': 'BRAND_AWARENESS', 'budget': 1200000.0, 'duration_turns': 3}
+[2025-12-28 00:40:15] [INFO    ] [__main__:815] 
+================================================================================
+[2025-12-28 00:40:15] [INFO    ] [__main__:816] 月度销量汇总表
+[2025-12-28 00:40:15] [INFO    ] [__main__:817] ================================================================================
+[2025-12-28 00:40:15] [INFO    ] [__main__:818] 月份     玩家           AI1          AI2          总需求         
+[2025-12-28 00:40:15] [INFO    ] [__main__:819] --------------------------------------------------------------------------------
+[2025-12-28 00:40:15] [INFO    ] [__main__:828] 1      9,288        1,426        0            14,560      
+[2025-12-28 00:40:15] [INFO    ] [__main__:828] 2      9,287        1,354        0            14,244      
+[2025-12-28 00:40:15] [INFO    ] [__main__:828] 3      9,180        1,457        0            14,104      
+[2025-12-28 00:40:15] [INFO    ] [__main__:828] 4      9,074        1,376        0            14,405      
+[2025-12-28 00:40:15] [INFO    ] [__main__:828] 5      9,109        1,352        0            14,011      
+[2025-12-28 00:40:15] [INFO    ] [__main__:828] 6      9,284        1,440        0            14,126      
+[2025-12-28 00:40:15] [INFO    ] [__main__:828] 7      9,084        1,419        0            13,933      
+[2025-12-28 00:40:15] [INFO    ] [__main__:828] 8      9,419        1,434        0            14,422      
+[2025-12-28 00:40:15] [INFO    ] [__main__:828] 9      9,290        1,370        0            14,285      
+[2025-12-28 00:40:15] [INFO    ] [__main__:828] 10     9,080        1,399        0            13,821      
+[2025-12-28 00:40:15] [INFO    ] [__main__:828] 11     9,280        1,351        0            14,222      
+[2025-12-28 00:40:15] [INFO    ] [__main__:828] 12     9,167        1,483        0            13,918      
+[2025-12-28 00:40:15] [INFO    ] [__main__:918] 
+================================================================================
+[2025-12-28 00:40:15] [INFO    ] [__main__:919] 模拟完成！
+[2025-12-28 00:40:15] [INFO    ] [__main__:920] ================================================================================
+[2025-12-28 04:37:42] [INFO    ] [automogul:145] ================================================================================
+[2025-12-28 04:37:42] [INFO    ] [automogul:146] AutoMogul v1.0.0 - Logging System Initialized
+[2025-12-28 04:37:42] [INFO    ] [automogul:147] Log Level: INFO
+[2025-12-28 04:37:42] [INFO    ] [automogul:148] Log Directory: logs
+[2025-12-28 04:37:42] [INFO    ] [automogul:149] ================================================================================
+[2025-12-28 04:37:42] [INFO    ] [__main__:24] ================================================================================
+[2025-12-28 04:37:42] [INFO    ] [__main__:25] 创建模板数据库
+[2025-12-28 04:37:42] [INFO    ] [__main__:26] ================================================================================
+[2025-12-28 04:37:42] [INFO    ] [__main__:31] ✓ 模板数据库创建成功: C:\project\Car-tycoon-game\data\template.db
+[2025-12-28 04:37:42] [INFO    ] [__main__:32] 
+[2025-12-28 04:37:42] [INFO    ] [__main__:33] 模板数据库包含以下表结构：
+[2025-12-28 04:37:42] [INFO    ] [__main__:47] 
+[2025-12-28 04:37:42] [INFO    ] [__main__:48] ================================================================================
+[2025-12-28 04:37:42] [INFO    ] [__main__:49] ✓ 完成！
+[2025-12-28 04:37:42] [INFO    ] [__main__:50] ================================================================================
+[2025-12-28 04:41:42] [INFO    ] [automogul:145] ================================================================================
+[2025-12-28 04:41:42] [INFO    ] [automogul:146] AutoMogul v1.0.0 - Logging System Initialized
+[2025-12-28 04:41:42] [INFO    ] [automogul:147] Log Level: INFO
+[2025-12-28 04:41:42] [INFO    ] [automogul:148] Log Directory: logs
+[2025-12-28 04:41:42] [INFO    ] [automogul:149] ================================================================================
+[2025-12-28 04:41:42] [INFO    ] [__main__:24] ================================================================================
+[2025-12-28 04:41:42] [INFO    ] [__main__:25] 创建模板数据库
+[2025-12-28 04:41:42] [INFO    ] [__main__:26] ================================================================================
+[2025-12-28 04:41:43] [INFO    ] [__main__:31] ✓ 模板数据库创建成功: C:\project\Car-tycoon-game\data\template.db
+[2025-12-28 04:41:43] [INFO    ] [__main__:32] 
+[2025-12-28 04:41:43] [INFO    ] [__main__:33] 模板数据库包含以下表结构：
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - b2b_component_listings
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - b2b_transactions
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - brand_perceptions
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - car_trims
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - chassis
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - companies
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - company_supplier_relations
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - company_technologies
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - consumer_buckets
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - directives
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - distribution_networks
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - engines
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - event_logs
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - event_templates
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - factories
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - financial_history
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - game_configs
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - game_events
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - game_state
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - intelligence_reports
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - inventories
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - loans
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - marketing_campaigns
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - material_market
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - material_markets
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - part_suppliers
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - prototype_projects
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - recall_events
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - regions
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - regulations
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - sales_history
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - staff
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - supplier_contracts
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - tax_records
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - tech_nodes
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - testing_facilities
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - used_car_inventory
+[2025-12-28 04:41:43] [INFO    ] [__main__:43]   - vehicle_compliance
+[2025-12-28 04:41:43] [INFO    ] [__main__:47] 
+[2025-12-28 04:41:43] [INFO    ] [__main__:48] ================================================================================
+[2025-12-28 04:41:43] [INFO    ] [__main__:49] ✓ 完成！
+[2025-12-28 04:41:43] [INFO    ] [__main__:50] ================================================================================
+[2025-12-28 22:11:42] [INFO    ] [__main__:23] ======================================================================
+[2025-12-28 22:11:42] [INFO    ] [__main__:24] 开始数据库迁移：工程熟悉度系统
+[2025-12-28 22:11:42] [INFO    ] [__main__:25] ======================================================================
+[2025-12-28 22:11:42] [ERROR   ] [__main__:74] ❌ 迁移失败: 'SaveManager' object has no attribute 'get_current_db_path'
+Traceback (most recent call last):
+  File [35m"C:\project\Car-tycoon-game\backend\scripts\migrate_engineering_familiarity.py"[0m, line [35m33[0m, in [35mrun_migration[0m
+    db_path = [1;31msave_mgr.get_current_db_path[0m()
+              [1;31m^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[1;35mAttributeError[0m: [35m'SaveManager' object has no attribute 'get_current_db_path'[0m
+[2025-12-28 22:11:42] [ERROR   ] [__main__:84] 
+❌ 迁移失败！
+[2025-12-28 22:12:00] [INFO    ] [__main__:23] ======================================================================
+[2025-12-28 22:12:00] [INFO    ] [__main__:24] 开始数据库迁移：工程熟悉度系统
+[2025-12-28 22:12:00] [INFO    ] [__main__:25] ======================================================================
+[2025-12-28 22:12:00] [INFO    ] [__main__:51] 使用数据库: C:\project\Car-tycoon-game\data\template.db
+[2025-12-28 22:12:00] [INFO    ] [__main__:58] 创建 engineering_familiarity 表...
+[2025-12-28 22:12:00] [INFO    ] [__main__:61] ✅ 迁移完成！
+[2025-12-28 22:12:00] [INFO    ] [__main__:62] 
+新增表：
+[2025-12-28 22:12:00] [INFO    ] [__main__:63]   - engineering_familiarity (工程熟悉度)
+[2025-12-28 22:12:00] [INFO    ] [__main__:71]   ✓ engineering_familiarity 表已创建
+[2025-12-28 22:12:00] [INFO    ] [__main__:77]   ✓ 表包含 16 个列
+[2025-12-28 22:12:00] [INFO    ] [__main__:92] 
+✅ 迁移成功完成！
+[2025-12-28 22:12:17] [INFO    ] [__main__:23] ======================================================================
+[2025-12-28 22:12:17] [INFO    ] [__main__:24] 开始数据库迁移：工程熟悉度系统
+[2025-12-28 22:12:17] [INFO    ] [__main__:25] ======================================================================
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 模板数据库: C:\project\Car-tycoon-game\data\template.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:17] [INFO    ] [__main__:72]   ✓ 模板数据库 - engineering_familiarity 表已创建
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_02da0eca.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_02da0eca.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:17] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_02da0eca.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_160fb111.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_160fb111.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:17] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_160fb111.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_1fdb7fcd.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_1fdb7fcd.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:17] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_1fdb7fcd.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_20d190dd.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_20d190dd.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:17] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_20d190dd.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_3994da77.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_3994da77.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:17] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_3994da77.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_3be45ba5.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_3be45ba5.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:17] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_3be45ba5.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_448bf3db.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_448bf3db.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:17] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_448bf3db.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_4c5d5f2d.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_4c5d5f2d.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:17] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_4c5d5f2d.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_59aa4efd.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_59aa4efd.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:17] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_59aa4efd.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_5b3cc3ee.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_5b3cc3ee.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:17] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_5b3cc3ee.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_63241ccd.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_63241ccd.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:17] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_63241ccd.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_65467569.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_65467569.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:17] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_65467569.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_66bae496.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_66bae496.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:17] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_66bae496.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:17] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_7118366c.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_7118366c.db
+[2025-12-28 22:12:17] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_7118366c.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_74531609.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_74531609.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_74531609.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_76d897c7.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_76d897c7.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_76d897c7.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_7d947286.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_7d947286.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_7d947286.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_7df95b9c.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_7df95b9c.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_7df95b9c.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_88c5ed4a.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_88c5ed4a.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_88c5ed4a.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_8d1cc478.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_8d1cc478.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_8d1cc478.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_8d29e68c.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_8d29e68c.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_8d29e68c.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_8f98bb15.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_8f98bb15.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_8f98bb15.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_8fafb7ae.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_8fafb7ae.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_8fafb7ae.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_9a8f3b71.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_9a8f3b71.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_9a8f3b71.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_9ea6b08d.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_9ea6b08d.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_9ea6b08d.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_aa992552.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_aa992552.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_aa992552.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_afdf8769.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_afdf8769.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_afdf8769.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_b1c81e33.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_b1c81e33.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_b1c81e33.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_b354e9eb.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_b354e9eb.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_b354e9eb.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_b7f7216f.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_b7f7216f.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:18] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_b7f7216f.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:18] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_b8d865cd.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_b8d865cd.db
+[2025-12-28 22:12:18] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:19] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_b8d865cd.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:19] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_b99ebbf7.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_b99ebbf7.db
+[2025-12-28 22:12:19] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:19] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_b99ebbf7.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:19] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_bc86e2d8.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_bc86e2d8.db
+[2025-12-28 22:12:19] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:19] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_bc86e2d8.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:19] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_be1ffb6a.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_be1ffb6a.db
+[2025-12-28 22:12:19] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:19] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_be1ffb6a.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:19] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_c10eabbe.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_c10eabbe.db
+[2025-12-28 22:12:19] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:19] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_c10eabbe.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:19] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_c3cef76e.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_c3cef76e.db
+[2025-12-28 22:12:19] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:19] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_c3cef76e.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:19] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_c8602b07.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_c8602b07.db
+[2025-12-28 22:12:19] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:19] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_c8602b07.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:19] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_dccb0dcf.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_dccb0dcf.db
+[2025-12-28 22:12:19] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:19] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_dccb0dcf.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:19] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_e132751d.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_e132751d.db
+[2025-12-28 22:12:19] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:19] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_e132751d.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:19] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_e202dcb9.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_e202dcb9.db
+[2025-12-28 22:12:19] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:19] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_e202dcb9.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:19] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_e6d89795.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_e6d89795.db
+[2025-12-28 22:12:19] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:19] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_e6d89795.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:19] [INFO    ] [__main__:58] 
+处理 存档: Player Company_1946_f990c3c4.db: C:\project\Car-tycoon-game\data\saves\Player Company_1946_f990c3c4.db
+[2025-12-28 22:12:19] [INFO    ] [__main__:63]   创建 engineering_familiarity 表...
+[2025-12-28 22:12:19] [INFO    ] [__main__:72]   ✓ 存档: Player Company_1946_f990c3c4.db - engineering_familiarity 表已创建
+[2025-12-28 22:12:19] [INFO    ] [__main__:84] ✅ 迁移完成！
+[2025-12-28 22:12:19] [INFO    ] [__main__:85] 
+新增表：
+[2025-12-28 22:12:19] [INFO    ] [__main__:86]   - engineering_familiarity (工程熟悉度)
+[2025-12-28 22:12:19] [INFO    ] [__main__:94]   ✓ engineering_familiarity 表已创建
+[2025-12-28 22:12:19] [INFO    ] [__main__:100]   ✓ 表包含 16 个列
+[2025-12-28 22:12:19] [INFO    ] [__main__:115] 
+✅ 迁移成功完成！

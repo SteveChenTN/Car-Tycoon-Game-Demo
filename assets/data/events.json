@@ -1,0 +1,317 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "游戏事件模板 - 随机事件和历史事件",
+  "version": "1.0.0",
+  
+  "events": [
+    {
+      "id": "oil_crisis_1973",
+      "event_type": "ECONOMIC",
+      "severity": "HIGH",
+      "title": "石油危机",
+      "description": "中东石油禁运导致油价暴涨，消费者偏好转向小排量省油车型。",
+      "trigger_conditions": {
+        "min_turn": 1,
+        "year_range": [1973, 1974]
+      },
+      "trigger_probability": 1.0,
+      "effects": {
+        "fuel_price_multiplier": 3.0,
+        "small_car_demand_bonus": 40,
+        "large_car_demand_penalty": -30,
+        "duration_turns": 12
+      },
+      "min_year": 1973,
+      "max_year": 1974
+    },
+    {
+      "id": "tech_breakthrough_turbo",
+      "event_type": "TECHNOLOGY",
+      "severity": "INFO",
+      "title": "涡轮技术突破",
+      "description": "行业内出现涡轮增压技术重大进展，研发成本降低。",
+      "trigger_conditions": {
+        "min_turn": 10,
+        "tech_level_min": 4
+      },
+      "trigger_probability": 0.15,
+      "effects": {
+        "turbo_research_cost_reduction": 20,
+        "turbo_reliability_bonus": 5
+      },
+      "min_year": null,
+      "max_year": null
+    },
+    {
+      "id": "factory_fire",
+      "event_type": "DISASTER",
+      "severity": "CRITICAL",
+      "title": "工厂火灾",
+      "description": "您的一座工厂发生火灾，生产线受损，需要维修。",
+      "trigger_conditions": {
+        "min_turn": 5
+      },
+      "trigger_probability": 0.05,
+      "effects": {
+        "production_capacity_loss": 30,
+        "cash_cost": -5000000,
+        "reputation_loss": -10,
+        "duration_turns": 6
+      },
+      "min_year": null,
+      "max_year": null
+    },
+    {
+      "id": "supplier_bankruptcy",
+      "event_type": "SUPPLY_CHAIN",
+      "severity": "MEDIUM",
+      "title": "供应商破产",
+      "description": "您的主要零部件供应商破产，短期内零件成本上升。",
+      "trigger_conditions": {
+        "min_turn": 8
+      },
+      "trigger_probability": 0.08,
+      "effects": {
+        "component_cost_increase": 25,
+        "duration_turns": 4
+      },
+      "min_year": null,
+      "max_year": null
+    },
+    {
+      "id": "government_subsidy",
+      "event_type": "POLICY",
+      "severity": "POSITIVE",
+      "title": "政府补贴",
+      "description": "政府为推动汽车产业发展，提供研发补贴。",
+      "trigger_conditions": {
+        "min_turn": 3
+      },
+      "trigger_probability": 0.10,
+      "effects": {
+        "research_cost_reduction": 30,
+        "cash_bonus": 2000000,
+        "duration_turns": 8
+      },
+      "min_year": null,
+      "max_year": null
+    },
+    {
+      "id": "emissions_regulation",
+      "event_type": "REGULATION",
+      "severity": "HIGH",
+      "title": "新排放法规",
+      "description": "政府出台更严格的排放标准，不达标车型禁售。",
+      "trigger_conditions": {
+        "min_turn": 15
+      },
+      "trigger_probability": 0.20,
+      "effects": {
+        "fuel_efficiency_requirement_increase": 15,
+        "non_compliant_sales_ban": true,
+        "duration_turns": 999
+      },
+      "min_year": null,
+      "max_year": null
+    },
+    {
+      "id": "quality_recall",
+      "event_type": "QUALITY",
+      "severity": "HIGH",
+      "title": "质量召回",
+      "description": "您的某款车型被发现存在安全隐患，必须召回。",
+      "trigger_conditions": {
+        "min_turn": 10,
+        "vehicle_reliability_max": 60
+      },
+      "trigger_probability": 0.12,
+      "effects": {
+        "cash_cost": -8000000,
+        "reputation_loss": -25,
+        "brand_prestige_loss": -15
+      },
+      "min_year": null,
+      "max_year": null
+    },
+    {
+      "id": "racing_victory",
+      "event_type": "MARKETING",
+      "severity": "POSITIVE",
+      "title": "赛车胜利",
+      "description": "您的车队在国际赛事中夺冠，品牌声望大涨！",
+      "trigger_conditions": {
+        "min_turn": 12,
+        "performance_tier": "high"
+      },
+      "trigger_probability": 0.08,
+      "effects": {
+        "brand_prestige_bonus": 30,
+        "sports_car_demand_bonus": 20,
+        "reputation_bonus": 15
+      },
+      "min_year": null,
+      "max_year": null
+    },
+    {
+      "id": "economic_boom",
+      "event_type": "ECONOMIC",
+      "severity": "POSITIVE",
+      "title": "经济繁荣",
+      "description": "全球经济强劲增长，消费者购买力提升。",
+      "trigger_conditions": {
+        "min_turn": 5
+      },
+      "trigger_probability": 0.12,
+      "effects": {
+        "gdp_growth": 5.0,
+        "luxury_car_demand_bonus": 30,
+        "overall_demand_bonus": 15,
+        "duration_turns": 12
+      },
+      "min_year": null,
+      "max_year": null
+    },
+    {
+      "id": "recession",
+      "event_type": "ECONOMIC",
+      "severity": "HIGH",
+      "title": "经济衰退",
+      "description": "全球经济陷入衰退，汽车销量大幅下滑。",
+      "trigger_conditions": {
+        "min_turn": 8
+      },
+      "trigger_probability": 0.10,
+      "effects": {
+        "gdp_decline": -3.0,
+        "overall_demand_penalty": -25,
+        "budget_car_demand_bonus": 10,
+        "duration_turns": 10
+      },
+      "min_year": null,
+      "max_year": null
+    },
+    {
+      "id": "labor_strike",
+      "event_type": "LABOR",
+      "severity": "MEDIUM",
+      "title": "工人罢工",
+      "description": "工人要求加薪，工厂停工。",
+      "trigger_conditions": {
+        "min_turn": 6,
+        "employee_morale_max": 0.5
+      },
+      "trigger_probability": 0.15,
+      "effects": {
+        "production_halt_turns": 2,
+        "wage_increase_required": 15,
+        "reputation_loss": -5
+      },
+      "min_year": null,
+      "max_year": null
+    },
+    {
+      "id": "innovation_award",
+      "event_type": "ACHIEVEMENT",
+      "severity": "POSITIVE",
+      "title": "创新大奖",
+      "description": "您的技术创新获得行业大奖，吸引人才和投资。",
+      "trigger_conditions": {
+        "min_turn": 15,
+        "tech_level_min": 7
+      },
+      "trigger_probability": 0.10,
+      "effects": {
+        "brand_prestige_bonus": 20,
+        "research_speed_bonus": 15,
+        "talent_attraction_bonus": 20,
+        "duration_turns": 12
+      },
+      "min_year": null,
+      "max_year": null
+    },
+    {
+      "id": "competitor_bankruptcy",
+      "event_type": "MARKET",
+      "severity": "INFO",
+      "title": "竞争对手破产",
+      "description": "一家主要竞争对手宣布破产，市场份额重新洗牌。",
+      "trigger_conditions": {
+        "min_turn": 10
+      },
+      "trigger_probability": 0.08,
+      "effects": {
+        "market_share_opportunity": 15,
+        "used_car_market_flood": true,
+        "duration_turns": 8
+      },
+      "min_year": null,
+      "max_year": null
+    },
+    {
+      "id": "material_shortage",
+      "event_type": "SUPPLY_CHAIN",
+      "severity": "MEDIUM",
+      "title": "原材料短缺",
+      "description": "全球钢材/铝材供应紧张，价格飙升。",
+      "trigger_conditions": {
+        "min_turn": 7
+      },
+      "trigger_probability": 0.12,
+      "effects": {
+        "material_cost_increase": 40,
+        "production_delay_risk": 20,
+        "duration_turns": 6
+      },
+      "min_year": null,
+      "max_year": null
+    },
+    {
+      "id": "celebrity_endorsement",
+      "event_type": "MARKETING",
+      "severity": "POSITIVE",
+      "title": "名人代言",
+      "description": "知名人士公开驾驶您的车型，免费宣传！",
+      "trigger_conditions": {
+        "min_turn": 5
+      },
+      "trigger_probability": 0.07,
+      "effects": {
+        "brand_awareness_bonus": 25,
+        "sales_boost": 10,
+        "duration_turns": 4
+      },
+      "min_year": null,
+      "max_year": null
+    }
+  ],
+  
+  "event_categories": {
+    "ECONOMIC": "经济事件",
+    "TECHNOLOGY": "技术事件",
+    "DISASTER": "灾害事件",
+    "SUPPLY_CHAIN": "供应链事件",
+    "POLICY": "政策事件",
+    "REGULATION": "法规事件",
+    "QUALITY": "质量事件",
+    "MARKETING": "营销事件",
+    "LABOR": "劳工事件",
+    "ACHIEVEMENT": "成就事件",
+    "MARKET": "市场事件"
+  },
+  
+  "severity_levels": {
+    "INFO": "信息",
+    "POSITIVE": "正面",
+    "MEDIUM": "中等",
+    "HIGH": "严重",
+    "CRITICAL": "危急"
+  },
+  
+  "comments": {
+    "_modding": "模组可以添加自定义事件",
+    "_historical": "设置 min_year/max_year 可创建历史事件",
+    "_probability": "trigger_probability 为0-1之间的小数"
+  }
+}
+
+

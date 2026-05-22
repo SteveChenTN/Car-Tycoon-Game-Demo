@@ -1,0 +1,244 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "组件统计数据 - 材料、燃料、部件",
+  "version": "1.0.0",
+  
+  "body_materials": [
+    {
+      "id": "STEEL",
+      "name": "Steel",
+      "description": "传统钢材，便宜但重",
+      "density_kg_m3": 7850,
+      "cost_per_m2": 25.0,
+      "strength_multiplier": 1.0,
+      "tech_level_required": 1
+    },
+    {
+      "id": "ALUMINUM",
+      "name": "Aluminum",
+      "description": "铝合金，轻35%但贵3倍",
+      "density_kg_m3": 2700,
+      "cost_per_m2": 75.0,
+      "strength_multiplier": 0.85,
+      "tech_level_required": 4
+    },
+    {
+      "id": "CARBON",
+      "name": "Carbon Fiber",
+      "description": "碳纤维，超轻但极贵",
+      "density_kg_m3": 1600,
+      "cost_per_m2": 450.0,
+      "strength_multiplier": 1.5,
+      "tech_level_required": 8
+    },
+    {
+      "id": "HSS",
+      "name": "High Strength Steel",
+      "description": "高强度钢，重量相同但强度更高",
+      "density_kg_m3": 7850,
+      "cost_per_m2": 40.0,
+      "strength_multiplier": 1.3,
+      "tech_level_required": 6
+    }
+  ],
+  
+  "engine_materials": [
+    {
+      "id": "CAST_IRON",
+      "name": "Cast Iron",
+      "description": "铸铁，传统引擎材料",
+      "density_kg_m3": 7200,
+      "weight_factor": 1.0,
+      "cost_factor": 1.0,
+      "max_piston_speed_ms": 18.0,
+      "piston_speed_tech_bonus": 0.5,
+      "reliability_bonus": 0,
+      "tech_level_required": 1
+    },
+    {
+      "id": "ALUMINUM",
+      "name": "Aluminum",
+      "description": "铝合金，轻35%",
+      "density_kg_m3": 2700,
+      "weight_factor": 0.65,
+      "cost_factor": 1.5,
+      "max_piston_speed_ms": 22.0,
+      "piston_speed_tech_bonus": 0.8,
+      "reliability_bonus": 3,
+      "tech_level_required": 3
+    },
+    {
+      "id": "MAGNESIUM",
+      "name": "Magnesium",
+      "description": "镁合金，最轻但可靠性一般",
+      "density_kg_m3": 1800,
+      "weight_factor": 0.50,
+      "cost_factor": 2.2,
+      "max_piston_speed_ms": 25.0,
+      "piston_speed_tech_bonus": 1.0,
+      "reliability_bonus": 1,
+      "tech_level_required": 7
+    }
+  ],
+  
+  "fuel_properties": [
+    {
+      "id": "GASOLINE",
+      "name": "Gasoline",
+      "energy_density_mj_kg": 43.4,
+      "density_kg_l": 0.75,
+      "power_factor": 1.0,
+      "torque_factor": 1.0,
+      "bsfc_base_g_kwh": 270,
+      "octane_rating": 91
+    },
+    {
+      "id": "DIESEL",
+      "name": "Diesel",
+      "energy_density_mj_kg": 45.6,
+      "density_kg_l": 0.85,
+      "power_factor": 0.95,
+      "torque_factor": 1.20,
+      "bsfc_base_g_kwh": 220,
+      "cetane_rating": 50
+    },
+    {
+      "id": "E85",
+      "name": "Ethanol E85",
+      "energy_density_mj_kg": 33.1,
+      "density_kg_l": 0.79,
+      "power_factor": 1.05,
+      "torque_factor": 1.05,
+      "bsfc_base_g_kwh": 280,
+      "octane_rating": 105
+    },
+    {
+      "id": "LPG",
+      "name": "Liquefied Petroleum Gas",
+      "energy_density_mj_kg": 46.1,
+      "density_kg_l": 0.54,
+      "power_factor": 0.95,
+      "torque_factor": 0.93,
+      "bsfc_base_g_kwh": 275,
+      "octane_rating": 110
+    }
+  ],
+  
+  "components": [
+    {
+      "id": "turbocharger_small",
+      "name": "Small Turbocharger",
+      "type": "turbo",
+      "description": "适合小排量引擎",
+      "cost": 800,
+      "weight_kg": 15,
+      "boost_multiplier": 1.0,
+      "max_boost_bar": 1.0,
+      "tech_level_required": 3
+    },
+    {
+      "id": "turbocharger_large",
+      "name": "Large Turbocharger",
+      "type": "turbo",
+      "description": "大功率涡轮",
+      "cost": 1500,
+      "weight_kg": 25,
+      "boost_multiplier": 1.2,
+      "max_boost_bar": 2.0,
+      "tech_level_required": 5
+    },
+    {
+      "id": "twin_turbo",
+      "name": "Twin Turbocharger",
+      "type": "twinturbo",
+      "description": "双涡轮系统",
+      "cost": 2500,
+      "weight_kg": 35,
+      "boost_multiplier": 1.3,
+      "max_boost_bar": 1.5,
+      "tech_level_required": 7
+    },
+    {
+      "id": "supercharger_roots",
+      "name": "Roots Supercharger",
+      "type": "supercharger",
+      "description": "机械增压",
+      "cost": 1200,
+      "weight_kg": 20,
+      "boost_multiplier": 1.0,
+      "max_boost_bar": 0.8,
+      "power_consumption_factor": 0.15,
+      "tech_level_required": 4
+    }
+  ],
+  
+  "valvetrain_types": [
+    {
+      "id": "OHV",
+      "name": "Overhead Valve",
+      "volumetric_efficiency": 0.75,
+      "cost": 0,
+      "tech_level_required": 1
+    },
+    {
+      "id": "SOHC",
+      "name": "Single Overhead Camshaft",
+      "volumetric_efficiency": 0.85,
+      "cost": 150,
+      "tech_level_required": 2
+    },
+    {
+      "id": "DOHC",
+      "name": "Dual Overhead Camshaft",
+      "volumetric_efficiency": 0.92,
+      "cost": 300,
+      "tech_level_required": 4
+    },
+    {
+      "id": "VARIABLE",
+      "name": "Variable Valve Timing",
+      "volumetric_efficiency": 0.98,
+      "cost": 600,
+      "tech_level_required": 6
+    }
+  ],
+  
+  "cost_multipliers": {
+    "configuration": {
+      "INLINE": 1.0,
+      "V": 1.3,
+      "BOXER": 1.4,
+      "VR": 1.35,
+      "W": 1.6
+    },
+    "induction": {
+      "NA": 1.0,
+      "TURBO": 1.15,
+      "TWINTURBO": 1.30,
+      "SUPERCHARGED": 1.20
+    },
+    "body_style": {
+      "SEDAN": 1.0,
+      "COUPE": 1.1,
+      "HATCHBACK": 0.95,
+      "WAGON": 1.05,
+      "SUV": 1.2,
+      "TRUCK": 1.15,
+      "CONVERTIBLE": 1.3,
+      "VAN": 1.1
+    }
+  },
+  
+  "drag_coefficients_base": {
+    "SEDAN": 0.35,
+    "COUPE": 0.32,
+    "HATCHBACK": 0.36,
+    "WAGON": 0.38,
+    "SUV": 0.42,
+    "TRUCK": 0.48,
+    "CONVERTIBLE": 0.38,
+    "VAN": 0.40
+  }
+}
+
+

@@ -1,0 +1,88 @@
+{
+  "mod_info": {
+    "name": "Super Materials Pack",
+    "version": "1.0.0",
+    "author": "Example Modder",
+    "description": "添加未来科技材料",
+    "compatible_game_version": "1.0.0"
+  },
+  
+  "body_materials": [
+    {
+      "id": "TITANIUM",
+      "name": "Titanium Alloy",
+      "description": "钛合金，轻且强",
+      "density_kg_m3": 4500,
+      "cost_per_m2": 200.0,
+      "strength_multiplier": 1.4,
+      "tech_level_required": 9
+    },
+    {
+      "id": "GRAPHENE",
+      "name": "Graphene Composite",
+      "description": "石墨烯复合材料，未来科技",
+      "density_kg_m3": 1200,
+      "cost_per_m2": 800.0,
+      "strength_multiplier": 2.0,
+      "tech_level_required": 10
+    }
+  ],
+  
+  "tech_nodes": [
+    {
+      "id": "titanium_tech",
+      "name": "钛合金技术",
+      "description": "解锁钛合金材料",
+      "cost": 90000,
+      "research_time_turns": 14,
+      "unlock_requirements": ["carbon_fiber_tech"],
+      "category": "materials",
+      "effects": {
+        "unlock_materials": ["TITANIUM"],
+        "weight_reduction_percent": 12
+      }
+    },
+    {
+      "id": "graphene_revolution",
+      "name": "石墨烯革命",
+      "description": "终极材料技术",
+      "cost": 150000,
+      "research_time_turns": 20,
+      "unlock_requirements": ["titanium_tech"],
+      "category": "materials",
+      "effects": {
+        "unlock_materials": ["GRAPHENE"],
+        "weight_reduction_percent": 25,
+        "prestige_bonus": 50
+      }
+    }
+  ],
+  
+  "events": [
+    {
+      "id": "graphene_breakthrough",
+      "event_type": "TECHNOLOGY",
+      "severity": "POSITIVE",
+      "title": "石墨烯量产突破",
+      "description": "科学家实现石墨烯材料的低成本量产，汽车工业迎来革命！",
+      "trigger_conditions": {
+        "min_turn": 50,
+        "tech_level_min": 9
+      },
+      "trigger_probability": 0.05,
+      "effects": {
+        "graphene_cost_reduction": 50,
+        "prestige_bonus": 30
+      },
+      "min_year": null,
+      "max_year": null
+    }
+  ],
+  
+  "comments": {
+    "_note": "这是一个示例模组，展示如何扩展游戏内容",
+    "_usage": "将此文件放在 assets/data/mods/ 目录下即可自动加载"
+  }
+}
+
+

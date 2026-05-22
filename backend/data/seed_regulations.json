@@ -1,0 +1,242 @@
+{
+  "regulations": [
+    {
+      "regulation_name": "US Clean Air Act 1970",
+      "short_code": "CAA_1970",
+      "regulation_type": "EMISSION",
+      "region_code": "NAM",
+      "effective_year": 1970,
+      "effective_month": 1,
+      "requirements": {
+        "max_co_ppm": 3400,
+        "max_hc_ppm": 400,
+        "max_nox_ppm": 1500,
+        "description": "First comprehensive federal emission standards"
+      },
+      "fine_per_violation": 0.5,
+      "can_ban_sales": false,
+      "grace_period_months": 24,
+      "description": "首个联邦排放标准，要求大幅降低一氧化碳、碳氢化合物和氮氧化物排放",
+      "historical_context": "环保运动兴起，公众对空气污染的关注度提高"
+    },
+    {
+      "regulation_name": "US Clean Air Act Amendment 1975",
+      "short_code": "CAA_1975",
+      "regulation_type": "EMISSION",
+      "region_code": "NAM",
+      "effective_year": 1975,
+      "effective_month": 1,
+      "requirements": {
+        "max_co_g_mi": 15,
+        "max_hc_g_mi": 1.5,
+        "max_nox_g_mi": 3.1,
+        "catalyst_required": true,
+        "description": "Mandatory catalytic converters"
+      },
+      "fine_per_violation": 1.0,
+      "can_ban_sales": true,
+      "grace_period_months": 12,
+      "description": "强制要求安装催化转换器，大幅收紧排放限制",
+      "historical_context": "石油危机后，环保与能源效率成为双重关注点"
+    },
+    {
+      "regulation_name": "Euro 1 Standard",
+      "short_code": "EURO_1",
+      "regulation_type": "EMISSION",
+      "region_code": "EUR",
+      "effective_year": 1993,
+      "effective_month": 1,
+      "requirements": {
+        "max_co_g_km": 2.72,
+        "max_hc_nox_g_km": 0.97,
+        "max_particulate_g_km": 0.14,
+        "description": "First European emission standard"
+      },
+      "fine_per_violation": 2.0,
+      "can_ban_sales": true,
+      "grace_period_months": 6,
+      "description": "欧洲首个统一排放标准",
+      "historical_context": "欧盟统一市场建立，环境法规协调化"
+    },
+    {
+      "regulation_name": "Euro 3 Standard",
+      "short_code": "EURO_3",
+      "regulation_type": "EMISSION",
+      "region_code": "EUR",
+      "effective_year": 2000,
+      "effective_month": 1,
+      "requirements": {
+        "max_co_g_km": 2.3,
+        "max_hc_g_km": 0.2,
+        "max_nox_g_km": 0.15,
+        "max_particulate_g_km": 0.05,
+        "obd_required": true,
+        "description": "On-board diagnostics mandatory"
+      },
+      "fine_per_violation": 3.0,
+      "can_ban_sales": true,
+      "grace_period_months": 6,
+      "description": "要求车载诊断系统(OBD)，进一步收紧排放",
+      "historical_context": "全球气候变化议题升温"
+    },
+    {
+      "regulation_name": "CAFE Standards 1978",
+      "short_code": "CAFE_1978",
+      "regulation_type": "FUEL_ECONOMY",
+      "region_code": "NAM",
+      "effective_year": 1978,
+      "effective_month": 1,
+      "requirements": {
+        "min_mpg_passenger": 18.0,
+        "min_mpg_light_truck": 15.0,
+        "fleet_average_required": true,
+        "description": "Corporate Average Fuel Economy standards"
+      },
+      "fine_per_violation": 5.0,
+      "can_ban_sales": false,
+      "grace_period_months": 0,
+      "description": "企业平均燃油经济性(CAFE)标准，应对石油危机",
+      "historical_context": "1973年石油危机后的能源独立政策"
+    },
+    {
+      "regulation_name": "CAFE Standards 2011",
+      "short_code": "CAFE_2011",
+      "regulation_type": "FUEL_ECONOMY",
+      "region_code": "NAM",
+      "effective_year": 2011,
+      "effective_month": 1,
+      "requirements": {
+        "min_mpg_passenger": 30.2,
+        "min_mpg_light_truck": 24.1,
+        "fleet_average_required": true,
+        "co2_limit_g_mi": 295,
+        "description": "Obama-era fuel economy increase"
+      },
+      "fine_per_violation": 10.0,
+      "can_ban_sales": false,
+      "grace_period_months": 0,
+      "description": "奥巴马政府大幅提高燃油经济性要求",
+      "historical_context": "应对气候变化与减少石油依赖"
+    },
+    {
+      "regulation_name": "FMVSS 208 - Airbag Mandate",
+      "short_code": "FMVSS_208",
+      "regulation_type": "SAFETY",
+      "region_code": "NAM",
+      "effective_year": 1998,
+      "effective_month": 9,
+      "requirements": {
+        "frontal_airbags_required": true,
+        "driver_side": true,
+        "passenger_side": true,
+        "min_crash_test_score": 60,
+        "description": "Mandatory frontal airbags"
+      },
+      "fine_per_violation": 5.0,
+      "can_ban_sales": true,
+      "grace_period_months": 36,
+      "description": "强制要求驾驶员和乘客侧正面安全气囊",
+      "historical_context": "汽车安全技术成熟，消费者安全意识提高"
+    },
+    {
+      "regulation_name": "Euro NCAP 5-Star Standard",
+      "short_code": "EURONCAP_5STAR",
+      "regulation_type": "SAFETY",
+      "region_code": "EUR",
+      "effective_year": 2009,
+      "effective_month": 1,
+      "requirements": {
+        "min_adult_protection": 80,
+        "min_child_protection": 75,
+        "min_pedestrian_protection": 60,
+        "esc_required": true,
+        "description": "Electronic Stability Control mandatory for 5 stars"
+      },
+      "fine_per_violation": 0.0,
+      "can_ban_sales": false,
+      "grace_period_months": 0,
+      "description": "Euro NCAP 5星评级标准（自愿性，但影响市场竞争力）",
+      "historical_context": "消费者越来越重视安全评级"
+    },
+    {
+      "regulation_name": "China National V Emission Standard",
+      "short_code": "CN_V",
+      "regulation_type": "EMISSION",
+      "region_code": "ASI",
+      "effective_year": 2018,
+      "effective_month": 1,
+      "requirements": {
+        "max_co_g_km": 1.0,
+        "max_hc_g_km": 0.1,
+        "max_nox_g_km": 0.06,
+        "max_pm_g_km": 0.0045,
+        "description": "China V emission standard (equivalent to Euro 5)"
+      },
+      "fine_per_violation": 8.0,
+      "can_ban_sales": true,
+      "grace_period_months": 12,
+      "description": "中国国五排放标准（相当于欧五）",
+      "historical_context": "中国治理空气污染，北京等大城市雾霾严重"
+    },
+    {
+      "regulation_name": "Japan Top Runner Program 2020",
+      "short_code": "JP_TOPRUNNER_2020",
+      "regulation_type": "FUEL_ECONOMY",
+      "region_code": "ASI",
+      "effective_year": 2020,
+      "effective_month": 4,
+      "requirements": {
+        "min_fuel_efficiency_km_l": 20.3,
+        "weight_based_targets": true,
+        "hybrid_credits": true,
+        "description": "Weight-based fuel economy targets"
+      },
+      "fine_per_violation": 3.0,
+      "can_ban_sales": false,
+      "grace_period_months": 0,
+      "description": "日本Top Runner计划：基于车重的燃油经济性目标",
+      "historical_context": "日本能源高度依赖进口，推动高效能源利用"
+    },
+    {
+      "regulation_name": "California ZEV Mandate 1990",
+      "short_code": "CA_ZEV",
+      "regulation_type": "EMISSION",
+      "region_code": "NAM",
+      "effective_year": 1990,
+      "effective_month": 1,
+      "requirements": {
+        "zev_percentage": 2,
+        "credits_system": true,
+        "ev_range_min_km": 80,
+        "description": "Zero Emission Vehicle mandate - 2% of sales must be ZEV"
+      },
+      "fine_per_violation": 5.0,
+      "can_ban_sales": false,
+      "grace_period_months": 48,
+      "description": "加州零排放车辆法案：强制要求一定比例的电动车销售",
+      "historical_context": "加州空气质量问题严重，推动电动汽车发展"
+    },
+    {
+      "regulation_name": "UN Regulation No. 94 - Frontal Crash",
+      "short_code": "UN_R94",
+      "regulation_type": "SAFETY",
+      "region_code": "GLOBAL",
+      "effective_year": 1995,
+      "effective_month": 1,
+      "requirements": {
+        "frontal_crash_test_required": true,
+        "test_speed_kmh": 56,
+        "barrier_type": "offset_deformable",
+        "min_score": 65,
+        "description": "UN frontal crash protection regulation"
+      },
+      "fine_per_violation": 2.0,
+      "can_ban_sales": true,
+      "grace_period_months": 24,
+      "description": "联合国正面碰撞保护法规（许多国家采用）",
+      "historical_context": "全球汽车安全标准协调化努力"
+    }
+  ]
+}
+
+

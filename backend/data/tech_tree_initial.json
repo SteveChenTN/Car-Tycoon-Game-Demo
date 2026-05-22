@@ -1,0 +1,297 @@
+[
+  {
+    "tech_code": "TECH_BASIC_MANUFACTURING",
+    "name": "基础制造工艺",
+    "category": "MANUFACTURING",
+    "description": "基本的汽车装配线和制造流程，所有公司的起点",
+    "prerequisite_techs": [],
+    "min_year": 1950,
+    "min_tech_level": 1,
+    "base_research_cost": 0.0,
+    "base_research_time": 0,
+    "difficulty_rating": 1.0,
+    "unlocks_parts": [],
+    "unlocks_features": ["BASIC_ASSEMBLY"],
+    "stat_modifiers": {},
+    "tree_position_x": 50,
+    "tree_position_y": 50
+  },
+  {
+    "tech_code": "TECH_MONOCOQUE_CHASSIS",
+    "name": "单体壳车身",
+    "category": "CHASSIS",
+    "description": "现代化的单体壳车身结构，取代传统车架，提高刚性和安全性",
+    "prerequisite_techs": ["TECH_BASIC_MANUFACTURING"],
+    "min_year": 1955,
+    "min_tech_level": 2,
+    "base_research_cost": 15.0,
+    "base_research_time": 12,
+    "difficulty_rating": 1.5,
+    "unlocks_parts": ["CHASSIS_MONOCOQUE"],
+    "unlocks_features": ["UNIBODY_CONSTRUCTION"],
+    "stat_modifiers": {
+      "chassis_rigidity_bonus": 1.15,
+      "weight_reduction": 0.95
+    },
+    "tree_position_x": 150,
+    "tree_position_y": 100
+  },
+  {
+    "tech_code": "TECH_DISC_BRAKES",
+    "name": "盘式制动器",
+    "category": "SAFETY",
+    "description": "现代盘式刹车系统，显著提升制动性能和散热能力",
+    "prerequisite_techs": ["TECH_BASIC_MANUFACTURING"],
+    "min_year": 1960,
+    "min_tech_level": 2,
+    "base_research_cost": 8.0,
+    "base_research_time": 8,
+    "difficulty_rating": 1.2,
+    "unlocks_parts": ["BRAKES_DISC_FRONT", "BRAKES_DISC_REAR"],
+    "unlocks_features": ["DISC_BRAKE_SYSTEM"],
+    "stat_modifiers": {
+      "braking_performance": 1.25
+    },
+    "tree_position_x": 150,
+    "tree_position_y": 50
+  },
+  {
+    "tech_code": "TECH_OHC_VALVETRAIN",
+    "name": "顶置凸轮轴",
+    "category": "ENGINE",
+    "description": "OHC（Overhead Camshaft）配气机构，提升发动机转速上限和效率",
+    "prerequisite_techs": ["TECH_BASIC_MANUFACTURING"],
+    "min_year": 1958,
+    "min_tech_level": 2,
+    "base_research_cost": 12.0,
+    "base_research_time": 10,
+    "difficulty_rating": 1.3,
+    "unlocks_parts": ["ENGINE_OHC"],
+    "unlocks_features": ["OHC_ENGINES"],
+    "stat_modifiers": {
+      "engine_efficiency": 1.08,
+      "max_rpm_bonus": 1.15
+    },
+    "tree_position_x": 150,
+    "tree_position_y": 150
+  },
+  {
+    "tech_code": "TECH_TURBOCHARGING",
+    "name": "涡轮增压技术",
+    "category": "ENGINE",
+    "description": "利用废气驱动涡轮增压进气，大幅提升发动机功率密度",
+    "prerequisite_techs": ["TECH_OHC_VALVETRAIN"],
+    "min_year": 1965,
+    "min_tech_level": 3,
+    "base_research_cost": 25.0,
+    "base_research_time": 15,
+    "difficulty_rating": 2.0,
+    "unlocks_parts": ["ENGINE_TURBO", "PART_TURBOCHARGER", "PART_INTERCOOLER"],
+    "unlocks_features": ["TURBOCHARGED_ENGINES"],
+    "stat_modifiers": {
+      "power_density": 1.5,
+      "fuel_efficiency_boost": 1.1
+    },
+    "tree_position_x": 250,
+    "tree_position_y": 150
+  },
+  {
+    "tech_code": "TECH_FUEL_INJECTION",
+    "name": "燃油喷射系统",
+    "category": "ENGINE",
+    "description": "电子控制燃油喷射，取代化油器，提升燃油经济性和动力输出",
+    "prerequisite_techs": ["TECH_OHC_VALVETRAIN"],
+    "min_year": 1970,
+    "min_tech_level": 3,
+    "base_research_cost": 18.0,
+    "base_research_time": 12,
+    "difficulty_rating": 1.8,
+    "unlocks_parts": ["ENGINE_FUEL_INJECTION"],
+    "unlocks_features": ["ELECTRONIC_FUEL_INJECTION"],
+    "stat_modifiers": {
+      "fuel_efficiency": 1.15,
+      "emissions_reduction": 0.85
+    },
+    "tree_position_x": 250,
+    "tree_position_y": 180
+  },
+  {
+    "tech_code": "TECH_ALUMINUM_BLOCK",
+    "name": "铝合金缸体",
+    "category": "MATERIALS",
+    "description": "使用铝合金替代铸铁制造发动机缸体，显著减轻重量",
+    "prerequisite_techs": ["TECH_BASIC_MANUFACTURING"],
+    "min_year": 1962,
+    "min_tech_level": 3,
+    "base_research_cost": 20.0,
+    "base_research_time": 14,
+    "difficulty_rating": 1.7,
+    "unlocks_parts": ["ENGINE_ALUMINUM"],
+    "unlocks_features": ["ALUMINUM_ENGINE_BLOCKS"],
+    "stat_modifiers": {
+      "engine_weight_reduction": 0.75
+    },
+    "tree_position_x": 150,
+    "tree_position_y": 200
+  },
+  {
+    "tech_code": "TECH_DOHC_VALVETRAIN",
+    "name": "双顶置凸轮轴",
+    "category": "ENGINE",
+    "description": "DOHC（Double Overhead Camshaft）配气机构，进一步提升性能和效率",
+    "prerequisite_techs": ["TECH_OHC_VALVETRAIN", "TECH_FUEL_INJECTION"],
+    "min_year": 1975,
+    "min_tech_level": 4,
+    "base_research_cost": 22.0,
+    "base_research_time": 13,
+    "difficulty_rating": 1.6,
+    "unlocks_parts": ["ENGINE_DOHC"],
+    "unlocks_features": ["DOHC_ENGINES"],
+    "stat_modifiers": {
+      "engine_efficiency": 1.12,
+      "max_rpm_bonus": 1.25
+    },
+    "tree_position_x": 350,
+    "tree_position_y": 165
+  },
+  {
+    "tech_code": "TECH_VARIABLE_VALVE_TIMING",
+    "name": "可变气门正时",
+    "category": "ENGINE",
+    "description": "VVT技术，根据转速调整气门正时，兼顾低转扭矩和高转功率",
+    "prerequisite_techs": ["TECH_DOHC_VALVETRAIN"],
+    "min_year": 1985,
+    "min_tech_level": 5,
+    "base_research_cost": 30.0,
+    "base_research_time": 16,
+    "difficulty_rating": 2.2,
+    "unlocks_parts": ["ENGINE_VVT"],
+    "unlocks_features": ["VARIABLE_VALVE_TIMING"],
+    "stat_modifiers": {
+      "engine_efficiency": 1.18,
+      "torque_curve_optimization": 1.15
+    },
+    "tree_position_x": 450,
+    "tree_position_y": 165
+  },
+  {
+    "tech_code": "TECH_PLATFORM_ENGINEERING",
+    "name": "平台化工程",
+    "category": "MANUFACTURING",
+    "description": "模块化平台设计理念，允许多款车型共享基础平台，大幅降低研发和制造成本",
+    "prerequisite_techs": ["TECH_MONOCOQUE_CHASSIS"],
+    "min_year": 1980,
+    "min_tech_level": 4,
+    "base_research_cost": 35.0,
+    "base_research_time": 18,
+    "difficulty_rating": 2.0,
+    "unlocks_parts": [],
+    "unlocks_features": ["PLATFORM_SHARING", "MODULAR_DESIGN"],
+    "stat_modifiers": {
+      "development_cost_reduction": 0.70,
+      "production_efficiency": 1.20
+    },
+    "tree_position_x": 250,
+    "tree_position_y": 100
+  },
+  {
+    "tech_code": "TECH_DIRECT_INJECTION",
+    "name": "缸内直喷技术",
+    "category": "ENGINE",
+    "description": "将燃油直接喷入燃烧室，进一步提升燃油经济性和功率输出",
+    "prerequisite_techs": ["TECH_FUEL_INJECTION", "TECH_TURBOCHARGING"],
+    "min_year": 1990,
+    "min_tech_level": 5,
+    "base_research_cost": 28.0,
+    "base_research_time": 14,
+    "difficulty_rating": 2.3,
+    "unlocks_parts": ["ENGINE_GDI"],
+    "unlocks_features": ["GASOLINE_DIRECT_INJECTION"],
+    "stat_modifiers": {
+      "fuel_efficiency": 1.20,
+      "power_boost": 1.10
+    },
+    "tree_position_x": 350,
+    "tree_position_y": 150
+  },
+  {
+    "tech_code": "TECH_CARBON_FIBER",
+    "name": "碳纤维技术",
+    "category": "MATERIALS",
+    "description": "碳纤维复合材料应用于车身和底盘，极致轻量化但成本高昂",
+    "prerequisite_techs": ["TECH_ALUMINUM_BLOCK"],
+    "min_year": 1995,
+    "min_tech_level": 6,
+    "base_research_cost": 50.0,
+    "base_research_time": 20,
+    "difficulty_rating": 2.8,
+    "unlocks_parts": ["CHASSIS_CARBON", "BODY_CARBON"],
+    "unlocks_features": ["CARBON_FIBER_CONSTRUCTION"],
+    "stat_modifiers": {
+      "weight_reduction": 0.70
+    },
+    "tree_position_x": 250,
+    "tree_position_y": 220
+  },
+  {
+    "tech_code": "TECH_HYBRID_POWERTRAIN",
+    "name": "混合动力系统",
+    "category": "ENGINE",
+    "description": "油电混合动力技术，显著提升燃油经济性并降低排放",
+    "prerequisite_techs": ["TECH_DIRECT_INJECTION", "TECH_VARIABLE_VALVE_TIMING"],
+    "min_year": 2000,
+    "min_tech_level": 6,
+    "base_research_cost": 60.0,
+    "base_research_time": 24,
+    "difficulty_rating": 3.0,
+    "unlocks_parts": ["POWERTRAIN_HYBRID", "BATTERY_NIMH"],
+    "unlocks_features": ["HYBRID_ELECTRIC_VEHICLE"],
+    "stat_modifiers": {
+      "fuel_efficiency": 1.40,
+      "emissions_reduction": 0.60
+    },
+    "tree_position_x": 550,
+    "tree_position_y": 165
+  },
+  {
+    "tech_code": "TECH_ADVANCED_ABS_ESC",
+    "name": "高级ABS与ESC",
+    "category": "SAFETY",
+    "description": "先进的防抱死制动系统和电子稳定控制，大幅提升主动安全性",
+    "prerequisite_techs": ["TECH_DISC_BRAKES"],
+    "min_year": 1985,
+    "min_tech_level": 4,
+    "base_research_cost": 18.0,
+    "base_research_time": 12,
+    "difficulty_rating": 1.8,
+    "unlocks_parts": ["SAFETY_ABS", "SAFETY_ESC"],
+    "unlocks_features": ["ABS_SYSTEM", "ESC_SYSTEM"],
+    "stat_modifiers": {
+      "safety_rating": 1.30
+    },
+    "tree_position_x": 250,
+    "tree_position_y": 50
+  },
+  {
+    "tech_code": "TECH_AERODYNAMICS",
+    "name": "先进空气动力学",
+    "category": "AERODYNAMICS",
+    "description": "计算流体力学（CFD）和风洞测试技术，优化车身空气动力学",
+    "prerequisite_techs": ["TECH_MONOCOQUE_CHASSIS"],
+    "min_year": 1988,
+    "min_tech_level": 4,
+    "base_research_cost": 22.0,
+    "base_research_time": 14,
+    "difficulty_rating": 1.9,
+    "unlocks_parts": [],
+    "unlocks_features": ["WIND_TUNNEL_TESTING", "CFD_SIMULATION"],
+    "stat_modifiers": {
+      "drag_reduction": 0.88,
+      "top_speed_bonus": 1.08
+    },
+    "tree_position_x": 250,
+    "tree_position_y": 120
+  }
+]
+
+
