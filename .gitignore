@@ -39,6 +39,8 @@ Thumbs.db
 # 项目特定
 data/*.db
 data/*.db-journal
+data/saves/*.db
+data/saves/*.db-journal
 logs/*.log
 .env
 
