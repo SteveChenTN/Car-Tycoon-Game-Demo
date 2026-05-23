@@ -19,8 +19,8 @@ export function NextTurnButton({ onTurnComplete, disabled = false }: NextTurnBut
   const [isProcessing, setIsProcessing] = useState(false);
   const [flashComplete, setFlashComplete] = useState(false);
   
-  const holdTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const startTimeRef = useRef<number>(0);
 
   const clearTimers = () => {
@@ -214,4 +214,3 @@ export function NextTurnButton({ onTurnComplete, disabled = false }: NextTurnBut
     </div>
   );
 }
-

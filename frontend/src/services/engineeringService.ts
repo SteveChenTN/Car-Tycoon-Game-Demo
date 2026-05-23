@@ -104,14 +104,16 @@ export interface ComponentInfo {
 /**
  * 获取解锁的组件列表
  */
+export type ComponentEntry = ComponentInfo | string;
+
 export interface UnlockedComponentsResponse {
   success: boolean;
   components: {
-    fuel_systems: ComponentInfo[];
-    materials: ComponentInfo[];
-    valvetrains: ComponentInfo[];
-    induction_types: ComponentInfo[];
-    configurations: ComponentInfo[];
+    fuel_systems: ComponentEntry[];
+    materials: ComponentEntry[];
+    valvetrains: ComponentEntry[];
+    induction_types: ComponentEntry[];
+    configurations: ComponentEntry[];
   };
   current_year: number;
 }
@@ -137,7 +139,22 @@ export async function createEngine(payload: EngineDesignPayload): Promise<Engine
 /**
  * 获取引擎详情
  */
-export async function getEngine(engineId: number): Promise<any> {
+export interface EngineListItem {
+  id: number;
+  name: string;
+  code: string;
+  displacement_cc: number;
+  horsepower: number;
+  torque_nm: number;
+  configuration: EngineDesign['configuration'];
+  cylinder_count: number;
+  reliability_score: number;
+  cost: number;
+}
+
+type RequestParams = Record<string, string | number | boolean>;
+
+export async function getEngine(engineId: number): Promise<EngineResponse> {
   const response = await axios.get(`${API_BASE}/api/v1/engineering/engine/${engineId}`);
   return response.data;
 }
@@ -145,8 +162,8 @@ export async function getEngine(engineId: number): Promise<any> {
 /**
  * 列出所有引擎
  */
-export async function listEngines(companyId?: number, availableOnly: boolean = false): Promise<any[]> {
-  const params: any = {};
+export async function listEngines(companyId?: number, availableOnly: boolean = false): Promise<EngineListItem[]> {
+  const params: RequestParams = {};
   if (companyId) params.company_id = companyId;
   if (availableOnly) params.available_only = true;
   
@@ -191,8 +208,31 @@ export async function createChassis(payload: ChassisDesignPayload): Promise<Chas
 /**
  * 列出所有底盘
  */
-export async function listChassis(companyId?: number, availableOnly: boolean = false): Promise<any[]> {
-  const params: any = {};
+export interface ChassisListItem {
+  id: number;
+  name: string;
+  code: string;
+  wheelbase_mm: number;
+  track_front_mm?: number;
+  track_rear_mm?: number;
+  layout: ChassisDesign['layout'];
+  material: ChassisDesign['material'];
+  is_platform: boolean;
+  platform_family?: string | null;
+  cost: number;
+  source_type: 'MODULAR_PLATFORM' | 'BESPOKE' | 'CLONED';
+  is_available: boolean;
+  development_turn?: number | null;
+  reusability?: string | number | null;
+  legal_risk_factor?: number | null;
+  quality_cap?: number | null;
+  original_competitor_id?: number | null;
+  manufacturing_efficiency?: number;
+  reliability_penalty?: number;
+}
+
+export async function listChassis(companyId?: number, availableOnly: boolean = false): Promise<ChassisListItem[]> {
+  const params: RequestParams = {};
   if (companyId) params.company_id = companyId;
   if (availableOnly) params.available_only = true;
   
@@ -259,7 +299,7 @@ export async function checkCompatibility(
 ): Promise<{
   compatible: boolean;
   message: string;
-  details: any;
+  details: Record<string, unknown>;
 }> {
   const response = await axios.post(`${API_BASE}/api/v1/engineering/compatibility/check`, null, {
     params: { engine_id: engineId, chassis_id: chassisId },
@@ -270,8 +310,20 @@ export async function checkCompatibility(
 /**
  * 列出所有车辆
  */
-export async function listVehicles(companyId?: number, inProduction: boolean = false): Promise<any[]> {
-  const params: any = {};
+export interface VehicleListItem {
+  id: number;
+  name: string;
+  model_name?: string;
+  trim_code?: string;
+  body_style: string;
+  segment?: string;
+  msrp?: number;
+  manufacturing_cost?: number;
+  in_production?: boolean;
+}
+
+export async function listVehicles(companyId?: number, inProduction: boolean = false): Promise<VehicleListItem[]> {
+  const params: RequestParams = {};
   if (companyId) params.company_id = companyId;
   if (inProduction) params.in_production = true;
   
@@ -286,7 +338,7 @@ export async function listVehicles(companyId?: number, inProduction: boolean = f
 /**
  * 统一错误处理
  */
-export function handleEngineeringError(error: any): string {
+export function handleEngineeringError(error: unknown): string {
   if (axios.isAxiosError(error)) {
     if (error.response) {
       // 服务器返回错误
@@ -301,6 +353,5 @@ export function handleEngineeringError(error: any): string {
       return '无法连接到服务器，请检查后端是否运行';
     }
   }
-  return error.message || '未知错误';
+  return error instanceof Error ? error.message : '未知错误';
 }
-

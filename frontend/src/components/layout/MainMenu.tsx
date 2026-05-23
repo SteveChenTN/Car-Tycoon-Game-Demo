@@ -299,26 +299,22 @@ function LoadGameScreen({ onBack, onLoad }: LoadGameScreenProps) {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-cyan-400 font-semibold text-lg">
-                      {save.save_name || save.file_name || '未命名存档'}
+                      {save.save_name || '未命名存档'}
                     </p>
-                    {(save.metadata || save.game_year) && (
+                    {save.metadata && (
                       <p className="text-slate-400 text-sm font-mono">
-                        {save.metadata 
-                          ? `${save.metadata.current_year}/${save.metadata.current_month} - Turn ${save.metadata.turn_number}`
-                          : save.game_year 
-                            ? `${save.game_year} - Turn ${save.turn_number || 0}`
-                            : ''}
+                        {`${save.metadata.current_year}/${save.metadata.current_month} - Turn ${save.metadata.turn_number}`}
                       </p>
                     )}
                   </div>
                   <div className="text-right">
                     <p className="text-slate-400 text-xs">
-                      {save.saved_at || save.modified_time 
-                        ? new Date(save.saved_at || save.modified_time || '').toLocaleString()
+                      {save.saved_at
+                        ? new Date(save.saved_at).toLocaleString()
                         : '未知时间'}
                     </p>
                     <p className="text-slate-500 text-xs">
-                      {(save.file_size_mb ?? save.size_mb ?? 0).toFixed(2)} MB
+                      {save.file_size_mb.toFixed(2)} MB
                     </p>
                   </div>
                 </div>
@@ -344,4 +340,3 @@ function LoadGameScreen({ onBack, onLoad }: LoadGameScreenProps) {
     </ErrorBoundary>
   );
 }
-

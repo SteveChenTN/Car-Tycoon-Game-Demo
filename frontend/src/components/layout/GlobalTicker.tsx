@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { EventLog } from '@/types';
 
@@ -78,4 +78,3 @@ export function GlobalTicker({ events }: GlobalTickerProps) {
     </div>
   );
 }
-

@@ -1,47 +1,47 @@
 /**
- * ExecutiveRoom - 高管套房
- * 管理董事会成员、外交关系、竞争对手互动
+ * ExecutiveRoom - executive suite.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useGameContext } from '@/contexts/GameContext';
 import {
-  getCompanyStaff,
-  getCompanyRelations,
   fireStaff,
+  getCompanyRelations,
+  getCompanyStaff,
   performDiplomacyAction,
-  type StaffMember,
   type CompanyRelation,
+  type StaffMember,
+  type StaffPosition,
 } from '@/services/executiveService';
 import {
-  Users,
-  TrendingUp,
   DollarSign,
+  Eye,
+  Handshake,
   Heart,
-  AlertTriangle,
+  Skull,
   UserMinus,
   UserPlus,
-  Handshake,
-  Skull,
-  Eye,
+  Users,
 } from 'lucide-react';
 
 export const ExecutiveRoom: React.FC = () => {
   const { gameState } = useGameContext();
+  const companyId = gameState?.playerCompanyId ?? gameState?.player_company_id ?? gameState?.playerCompany?.id ?? null;
   const [activeTab, setActiveTab] = useState<'board' | 'diplomacy'>('board');
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [relations, setRelations] = useState<CompanyRelation[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  const loadData = useCallback(async () => {
+    if (!companyId) {
+      setStaff([]);
+      setRelations([]);
+      setLoading(false);
+      return;
+    }
 
-  const loadData = async () => {
     setLoading(true);
     try {
-      // TODO: 从 GameContext 获取 companyId
-      const companyId = 1;
       const [staffData, relationsData] = await Promise.all([
         getCompanyStaff(companyId),
         getCompanyRelations(companyId),
@@ -53,26 +53,39 @@ export const ExecutiveRoom: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [companyId]);
+
+  useEffect(() => {
+    void loadData();
+  }, [loadData]);
 
   const handleFireStaff = async (staffMember: StaffMember) => {
-    if (!confirm(`确定要解雇 ${staffMember.name}？需要支付离职费 $${staffMember.severance_cost?.toLocaleString()}`)) {
+    if (!companyId) return;
+
+    const severanceCost = staffMember.severance_cost ?? staffMember.annual_salary;
+    if (
+      !confirm(
+        `确定要解雇 ${staffMember.full_name}？需要支付离职费 $${severanceCost.toLocaleString()}M`
+      )
+    ) {
       return;
     }
 
-    const companyId = 1;
     const result = await fireStaff(companyId, staffMember.id);
 
     if (result.success) {
-      setStaff(staff.filter((s) => s.id !== staffMember.id));
-      alert(`已解雇 ${staffMember.name}，支付离职费 $${result.severance_paid?.toLocaleString()}`);
+      setStaff((currentStaff) => currentStaff.filter((member) => member.id !== staffMember.id));
+      alert(
+        `已解雇 ${staffMember.full_name}，支付离职费 $${(result.severance_paid ?? 0).toLocaleString()}M`
+      );
     } else {
       alert(`解雇失败: ${result.error}`);
     }
   };
 
   const handleDiplomacyAction = async (relation: CompanyRelation, action: string) => {
-    const companyId = 1;
+    if (!companyId) return;
+
     let actionType: 'insult' | 'praise' | 'propose_alliance' | 'spy' | 'headhunt';
     let description = '';
     let cost = 0;
@@ -81,7 +94,6 @@ export const ExecutiveRoom: React.FC = () => {
       case 'insult':
         actionType = 'insult';
         description = '公开批评对手';
-        cost = 0;
         break;
       case 'ally':
         actionType = 'propose_alliance';
@@ -109,14 +121,14 @@ export const ExecutiveRoom: React.FC = () => {
     });
 
     if (result.success) {
-      alert(`行动成功！${result.result || ''}`);
-      loadData(); // 重新加载数据
+      alert(`行动成功：${result.result || ''}`);
+      await loadData();
     } else {
       alert(`行动失败: ${result.error}`);
     }
   };
 
-  if (loading) {
+  if (!companyId || loading) {
     return (
       <div className="h-full flex items-center justify-center bg-slate-950">
         <div className="text-center">
@@ -129,7 +141,6 @@ export const ExecutiveRoom: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col bg-slate-950">
-      {/* Header */}
       <div className="bg-slate-900 border-b border-slate-800 p-6">
         <h1 className="text-2xl font-bold text-cyan-400 font-mono flex items-center gap-3">
           <Users className="w-6 h-6" />
@@ -140,7 +151,6 @@ export const ExecutiveRoom: React.FC = () => {
         </p>
       </div>
 
-      {/* Tab Navigation */}
       <div className="bg-slate-900/50 border-b border-slate-800 px-6 flex gap-2">
         <button
           onClick={() => setActiveTab('board')}
@@ -164,7 +174,6 @@ export const ExecutiveRoom: React.FC = () => {
         </button>
       </div>
 
-      {/* Content */}
       <div className="flex-1 overflow-auto p-6">
         {activeTab === 'board' && (
           <BoardOfDirectors staff={staff} onFireStaff={handleFireStaff} />
@@ -177,10 +186,6 @@ export const ExecutiveRoom: React.FC = () => {
   );
 };
 
-// ============================================================
-// Board of Directors Component
-// ============================================================
-
 interface BoardOfDirectorsProps {
   staff: StaffMember[];
   onFireStaff: (staff: StaffMember) => void;
@@ -188,13 +193,12 @@ interface BoardOfDirectorsProps {
 
 const BoardOfDirectors: React.FC<BoardOfDirectorsProps> = ({ staff, onFireStaff }) => {
   return (
-    <div className="grid grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
       {staff.map((member) => (
         <StaffCard key={member.id} staff={member} onFire={onFireStaff} />
       ))}
 
-      {/* Hire New Staff Card */}
-      <div className="bg-slate-900/30 border-2 border-dashed border-slate-700 rounded-lg p-6 flex flex-col items-center justify-center hover:border-cyan-500 transition-all cursor-pointer">
+      <div className="bg-slate-900/30 border-2 border-dashed border-slate-700 rounded-lg p-6 min-h-[260px] flex flex-col items-center justify-center hover:border-cyan-500 transition-all cursor-pointer">
         <UserPlus className="w-12 h-12 text-slate-600 mb-4" />
         <span className="text-slate-500 font-mono text-sm">招聘新成员</span>
         <span className="text-xs text-slate-700 mt-2">即将推出</span>
@@ -203,29 +207,26 @@ const BoardOfDirectors: React.FC<BoardOfDirectorsProps> = ({ staff, onFireStaff 
   );
 };
 
-// ============================================================
-// Staff Card Component
-// ============================================================
-
 interface StaffCardProps {
   staff: StaffMember;
   onFire: (staff: StaffMember) => void;
 }
 
 const StaffCard: React.FC<StaffCardProps> = ({ staff, onFire }) => {
-  const isPlayer = staff.role === 'CEO';
+  const isPlayer = staff.position === 'CEO';
+  const loyalty = clampScore(staff.current_loyalty);
+  const morale = clampScore(staff.current_morale);
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 hover:border-cyan-500/50 transition-all">
-      {/* Header */}
       <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center text-3xl">
-            {staff.portrait_icon}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center text-cyan-300 font-mono font-bold">
+            {getPositionAvatar(staff.position)}
           </div>
-          <div>
-            <h3 className="font-bold text-cyan-400 font-mono">{staff.name}</h3>
-            <span className="text-xs text-slate-500 font-mono">{staff.role}</span>
+          <div className="min-w-0">
+            <h3 className="font-bold text-cyan-400 font-mono truncate">{staff.full_name}</h3>
+            <span className="text-xs text-slate-500 font-mono">{staff.position}</span>
           </div>
         </div>
 
@@ -240,62 +241,56 @@ const StaffCard: React.FC<StaffCardProps> = ({ staff, onFire }) => {
         )}
       </div>
 
-      {/* Loyalty Bar */}
-      <div className="mb-4">
-        <div className="flex items-center justify-between text-xs mb-1">
-          <span className="text-slate-500 flex items-center gap-1">
-            <Heart className="w-3 h-3" />
-            忠诚度
-          </span>
-          <span className="text-slate-300 font-mono font-bold">{staff.loyalty}%</span>
-        </div>
-        <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
-          <div
-            className={`h-full transition-all ${
-              staff.loyalty >= 70
-                ? 'bg-emerald-500'
-                : staff.loyalty >= 40
-                ? 'bg-amber-500'
-                : 'bg-rose-500'
-            }`}
-            style={{ width: `${staff.loyalty}%` }}
-          />
-        </div>
+      <div className="space-y-3 mb-4">
+        <MetricBar label="忠诚度" value={loyalty} tone={getLoyaltyTone(loyalty)} />
+        <MetricBar label="士气" value={morale} tone="cyan" />
       </div>
 
-      {/* Skills */}
       <div className="space-y-2 mb-4">
-        {staff.skill_engineering !== undefined && (
-          <SkillBar label="工程" value={staff.skill_engineering} />
-        )}
-        {staff.skill_finance !== undefined && (
-          <SkillBar label="财务" value={staff.skill_finance} />
-        )}
-        {staff.skill_marketing !== undefined && (
-          <SkillBar label="市场" value={staff.skill_marketing} />
-        )}
-        {staff.skill_operations !== undefined && (
-          <SkillBar label="运营" value={staff.skill_operations} />
-        )}
+        <SkillBar label="工程" value={staff.skill_engineering} />
+        <SkillBar label="财务" value={staff.skill_finance} />
+        <SkillBar label="市场" value={staff.skill_marketing} />
+        <SkillBar label="运营" value={staff.skill_operations} />
+        <SkillBar label="领导" value={staff.skill_leadership} />
       </div>
 
-      {/* Salary */}
-      <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
-        <span className="text-xs text-slate-500 flex items-center gap-1">
-          <DollarSign className="w-3 h-3" />
-          月薪
-        </span>
-        <span className="text-sm text-amber-400 font-mono font-bold">
-          ${staff.salary_monthly.toLocaleString()}
-        </span>
+      <div className="pt-4 border-t border-slate-800 grid grid-cols-2 gap-4">
+        <FinanceMetric label="年薪" value={staff.annual_salary} />
+        <FinanceMetric label="市场价" value={staff.market_value} />
       </div>
     </div>
   );
 };
 
-// ============================================================
-// Skill Bar Component
-// ============================================================
+interface MetricBarProps {
+  label: string;
+  value: number;
+  tone: 'emerald' | 'amber' | 'rose' | 'cyan';
+}
+
+const MetricBar: React.FC<MetricBarProps> = ({ label, value, tone }) => {
+  const toneClass = {
+    emerald: 'bg-emerald-500',
+    amber: 'bg-amber-500',
+    rose: 'bg-rose-500',
+    cyan: 'bg-cyan-500',
+  }[tone];
+
+  return (
+    <div>
+      <div className="flex items-center justify-between text-xs mb-1">
+        <span className="text-slate-500 flex items-center gap-1">
+          <Heart className="w-3 h-3" />
+          {label}
+        </span>
+        <span className="text-slate-300 font-mono font-bold">{value}%</span>
+      </div>
+      <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+        <div className={`h-full transition-all ${toneClass}`} style={{ width: `${value}%` }} />
+      </div>
+    </div>
+  );
+};
 
 interface SkillBarProps {
   label: string;
@@ -303,25 +298,39 @@ interface SkillBarProps {
 }
 
 const SkillBar: React.FC<SkillBarProps> = ({ label, value }) => {
+  const score = clampScore(value);
+
   return (
     <div>
       <div className="flex items-center justify-between text-xs mb-1">
         <span className="text-slate-500">{label}</span>
-        <span className="text-slate-300 font-mono">{value}</span>
+        <span className="text-slate-300 font-mono">{score}</span>
       </div>
       <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-cyan-500"
-          style={{ width: `${value}%` }}
-        />
+        <div className="h-full bg-cyan-500" style={{ width: `${score}%` }} />
       </div>
     </div>
   );
 };
 
-// ============================================================
-// Diplomacy Panel Component
-// ============================================================
+interface FinanceMetricProps {
+  label: string;
+  value: number;
+}
+
+const FinanceMetric: React.FC<FinanceMetricProps> = ({ label, value }) => {
+  return (
+    <div className="flex items-center justify-between gap-2 min-w-0">
+      <span className="text-xs text-slate-500 flex items-center gap-1">
+        <DollarSign className="w-3 h-3" />
+        {label}
+      </span>
+      <span className="text-sm text-amber-400 font-mono font-bold truncate">
+        ${value.toLocaleString()}M
+      </span>
+    </div>
+  );
+};
 
 interface DiplomacyPanelProps {
   relations: CompanyRelation[];
@@ -337,10 +346,6 @@ const DiplomacyPanel: React.FC<DiplomacyPanelProps> = ({ relations, onAction }) 
     </div>
   );
 };
-
-// ============================================================
-// Diplomacy Card Component
-// ============================================================
 
 interface DiplomacyCardProps {
   relation: CompanyRelation;
@@ -380,7 +385,6 @@ const DiplomacyCard: React.FC<DiplomacyCardProps> = ({ relation, onAction }) => 
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-lg p-6 hover:border-cyan-500/50 transition-all">
-      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="font-bold text-cyan-400 font-mono text-lg">{relation.company_name}</h3>
@@ -389,7 +393,6 @@ const DiplomacyCard: React.FC<DiplomacyCardProps> = ({ relation, onAction }) => 
           </span>
         </div>
 
-        {/* Relation Score */}
         <div className="text-right">
           <div className="text-2xl font-bold font-mono text-slate-300">
             {relation.relation_score > 0 ? '+' : ''}
@@ -399,7 +402,6 @@ const DiplomacyCard: React.FC<DiplomacyCardProps> = ({ relation, onAction }) => 
         </div>
       </div>
 
-      {/* Relation Bar */}
       <div className="mb-4">
         <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
           <div
@@ -407,8 +409,8 @@ const DiplomacyCard: React.FC<DiplomacyCardProps> = ({ relation, onAction }) => 
               relation.relation_score >= 50
                 ? 'bg-emerald-500'
                 : relation.relation_score >= 0
-                ? 'bg-slate-500'
-                : 'bg-rose-500'
+                  ? 'bg-slate-500'
+                  : 'bg-rose-500'
             }`}
             style={{
               width: `${Math.abs(relation.relation_score)}%`,
@@ -418,7 +420,6 @@ const DiplomacyCard: React.FC<DiplomacyCardProps> = ({ relation, onAction }) => 
         </div>
       </div>
 
-      {/* Actions */}
       <div className="flex gap-2">
         <button
           onClick={() => onAction(relation, 'insult')}
@@ -446,4 +447,20 @@ const DiplomacyCard: React.FC<DiplomacyCardProps> = ({ relation, onAction }) => 
   );
 };
 
+function getPositionAvatar(position: StaffPosition): string {
+  return position.slice(0, 3);
+}
 
+function getLoyaltyTone(value: number): 'emerald' | 'amber' | 'rose' {
+  if (value >= 70) {
+    return 'emerald';
+  }
+  if (value >= 40) {
+    return 'amber';
+  }
+  return 'rose';
+}
+
+function clampScore(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}

@@ -128,7 +128,7 @@ class ChassisDesignRequest(BaseModel):
     overall_width_class: Optional[str] = Field(default="STANDARD")  # K_CAR / STANDARD / WIDEBODY
     
     # ========== 研发成本（前端计算，可选，向后兼容）==========
-    program_cost: Optional[float] = Field(default=None, ge=0.0, description="研发项目总成本（百万游戏币）")
+    program_cost: Optional[float] = Field(default=None, ge=0.0, description="研发项目总成本（游戏币）")
     rd_weeks: Optional[int] = Field(default=None, ge=1, description="研发周期（周）")
 
     class Config:
@@ -883,21 +883,21 @@ async def design_chassis(
         # 计算开发成本和周期（基于source_type）
         if source_type_enum == ChassisSourceType.MODULAR_PLATFORM:
             # 模块化平台：高R&D成本，长周期
-            base_development_cost = 5000.0  # $5M
+            base_development_cost = 5_000_000.0
             development_weeks = 50
             is_platform = True
         elif source_type_enum == ChassisSourceType.BESPOKE:
             # 定制底盘：低R&D成本，短周期
-            base_development_cost = 500.0  # $500k
+            base_development_cost = 500_000.0
             development_weeks = 12
             is_platform = False
         elif source_type_enum == ChassisSourceType.CLONED:
             # 克隆底盘：几乎无R&D成本（逆向工程），但需要验证
-            base_development_cost = 200.0  # $200k（拆解成本）
+            base_development_cost = 200_000.0
             development_weeks = 2  # 快速
             is_platform = False
         else:
-            base_development_cost = 1000.0
+            base_development_cost = 1_000_000.0
             development_weeks = 20
             is_platform = request.is_platform
         
@@ -911,9 +911,8 @@ async def design_chassis(
         
         # 使用前端提供的成本数据（如果提供），否则使用后端计算的值（向后兼容）
         if request.program_cost is not None and request.rd_weeks is not None:
-            # 前端已计算并转换为百万游戏币单位，直接使用
-            # 前端发送的program_cost已经是百万游戏币单位（与Company.cash单位一致）
-            program_cost = request.program_cost  # 已经是百万游戏币单位，不需要再转换
+            from backend.logic.rd_manager import normalize_project_cost
+            program_cost = normalize_project_cost(request.program_cost)
             rd_weeks = request.rd_weeks
         else:
             # 向后兼容：使用后端计算的值
@@ -922,31 +921,15 @@ async def design_chassis(
         
         final_development_cost = program_cost
         
-        # ========== 资金验证和扣除 ==========
+        # ========== 资金验证 ==========
         # 重新查询公司以确保获取最新数据（避免缓存问题）
         db.refresh(company)
         
         if company.cash < program_cost:
             raise HTTPException(
                 status_code=402,
-                detail=f"资金不足。需要 {program_cost:.2f}M，当前资金 {company.cash:.2f}M"
+                detail=f"资金不足。需要 ${program_cost:,.0f}，当前资金 ${company.cash:,.0f}"
             )
-        
-        # 记录扣除前的资金
-        old_cash = company.cash
-        
-        # 扣除资金（确保对象被标记为dirty）
-        company.cash = company.cash - program_cost
-        
-        # 显式标记对象为dirty（确保SQLAlchemy检测到更改）
-        from sqlalchemy.orm.attributes import flag_modified
-        flag_modified(company, 'cash')
-        
-        logger.info(
-            f"公司 {company.name} (ID: {company.id}) 扣除研发资金 {program_cost:.2f}M "
-            f"用于底盘项目 '{request.name}' (代码: {request.code})。"
-            f"资金变化: {old_cash:.2f}M -> {company.cash:.2f}M"
-        )
         
         # 创建底盘（初始状态为开发中）
         chassis = EngineeringService.create_chassis(
@@ -1029,8 +1012,8 @@ async def design_chassis(
         db.refresh(chassis)
         
         logger.info(
-            f"✓ 底盘项目创建完成。最终资金余额: {company.cash:.2f}M "
-            f"(已扣除 {program_cost:.2f}M)"
+            f"✓ 底盘项目创建完成。最终资金余额: ${company.cash:,.0f} "
+            f"(已扣除 ${program_cost:,.0f})"
         )
         
         # 生成测试车手反馈
@@ -2185,4 +2168,3 @@ async def get_manufacturing_processes() -> Dict[str, Any]:
 
 
 __all__ = ["router"]
-

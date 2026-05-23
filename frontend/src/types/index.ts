@@ -2,7 +2,20 @@
 // API Response Types
 // ============================================================
 
+export interface CurrentSaveInfo {
+  loaded: boolean;
+  save_path?: string | null;
+  savePath?: string | null;
+  file_name?: string | null;
+  fileName?: string | null;
+}
+
 export interface GameState {
+  game_id?: number;
+  gameId?: number;
+  player_company_id?: number;
+  playerCompanyId?: number;
+  currentSave?: CurrentSaveInfo;
   current_year: number;
   current_month: number;
   current_week: number;
@@ -170,8 +183,41 @@ export interface MarketHeatmapCell {
 export interface MonthlyFinancials {
   revenue: number;
   costs: number;
+  gross_profit?: number;
+  operating_profit?: number;
   net_profit: number;
   cash_balance: number;
+  cost_breakdown?: {
+    manufacturing: number;
+    materials: number;
+    labor: number;
+    rd: number;
+    marketing: number;
+    admin: number;
+    depreciation: number;
+    interest: number;
+    total: number;
+  };
+  balance_sheet?: {
+    cash: number;
+    inventory: number;
+    total_assets: number;
+    total_liabilities: number;
+    shareholder_equity: number;
+  };
+  cash_flow?: {
+    starting_cash: number;
+    ending_cash: number;
+    cash_change: number;
+    net_income: number;
+    debt_principal_change: number;
+    other_cash_flow: number;
+    lines: Array<{
+      label: string;
+      amount: number;
+      kind: string;
+    }>;
+  };
 }
 
 export interface MonthlyProduction {
@@ -189,6 +235,7 @@ export interface MonthlyReport {
   turn_number: number;
   year: number;
   month: number;
+  unit?: string;
   financials: MonthlyFinancials;
   production: MonthlyProduction;
   alerts: MonthlyAlert[];
@@ -246,4 +293,3 @@ export interface CompanyRelation {
   last_interaction_turn: number;
   alliance_level?: number;
 }
-

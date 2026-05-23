@@ -149,7 +149,7 @@ export function calculatePlatformStats(params: ChassisCalculationParams): Chassi
   // 平台策略对R&D成本的影响（这是最大的差异）
   // 模块化平台：需要设计可扩展架构，R&D成本高（基础 $5M）
   // 定制平台：针对单一车型优化，R&D成本低（基础 $500k）
-  let baseProgramCost = platform_strategy === 'MODULAR' ? 5_000_000 : 500_000;
+  const baseProgramCost = platform_strategy === 'MODULAR' ? 5_000_000 : 500_000;
   
   // 技术等级乘数（基于材料和技术复杂度）
   let techLevelMultiplier = 1.0;
@@ -184,4 +184,3 @@ export function calculatePlatformStats(params: ChassisCalculationParams): Chassi
     programCost: isNaN(programCost) ? 0 : programCost,
   };
 }
-

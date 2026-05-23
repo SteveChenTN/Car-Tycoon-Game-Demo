@@ -31,6 +31,7 @@ export const VehicleDesigner: React.FC = () => {
 
   const { gameState } = useGameContext();
   const currentYear = gameState?.current_year || 1946;
+  const playerCompanyId = gameState?.playerCompanyId ?? gameState?.player_company_id ?? gameState?.playerCompany?.id ?? null;
   
   const [engineSearchTerm, setEngineSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -55,21 +56,25 @@ export const VehicleDesigner: React.FC = () => {
   }, [selectedChassis]);
   
   // 时间门控状态
-  const [visibleTabs, setVisibleTabs] = useState<string[]>(['Fundamentals']);
-  const [fieldGating, setFieldGating] = useState<Record<string, any>>({});
-  const [rustProtectionOptions, setRustProtectionOptions] = useState<string[]>(['NONE']);
-  const [fuelTankLocationOptions, setFuelTankLocationOptions] = useState<string[]>(['REAR_AXLE_BEHIND']);
+  const [, setVisibleTabs] = useState<string[]>(['Fundamentals']);
+  const [, setFieldGating] = useState<Record<string, unknown>>({});
+  const [, setRustProtectionOptions] = useState<string[]>(['NONE']);
+  const [, setFuelTankLocationOptions] = useState<string[]>(['REAR_AXLE_BEHIND']);
   
   // 反馈状态
-  const [chassisFeedback, setChassisFeedback] = useState<any>(null);
+  const [, setChassisFeedback] = useState<unknown>(null);
 
   // 加载底盘列表
   useEffect(() => {
     const loadChassis = async () => {
+      if (!playerCompanyId) {
+        setChassisList([]);
+        return;
+      }
+
       try {
-        const companyId = 1; // TODO: 从GameContext获取
         // 获取底盘列表（默认只返回可用的，即is_available=true）
-        const allChassis = await getChassisList(companyId);
+        const allChassis = await getChassisList(playerCompanyId);
         // 额外过滤：确保只显示可用的底盘（开发中的平台不可用）
         const availableChassis = allChassis.filter(c => c.is_available === true);
         setChassisList(availableChassis);
@@ -78,7 +83,7 @@ export const VehicleDesigner: React.FC = () => {
       }
     };
     loadChassis();
-  }, []);
+  }, [playerCompanyId]);
   
   // 加载时间门控信息
   useEffect(() => {

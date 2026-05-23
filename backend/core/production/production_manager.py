@@ -21,6 +21,7 @@ from backend.models.production import (
     Factory, Inventory, MaterialMarket,
     FactoryType, MaterialType
 )
+from backend.models.company import Company
 from backend.models.engineering import Engine, Chassis, CarTrim
 from backend.utils.logger import get_logger
 
@@ -224,25 +225,35 @@ class ProductionManager:
         
         if materials_shortage:
             return False, f"原材料不足: {', '.join(materials_shortage)}", {}
+
+        # 7. 计算并检查现金成本（制造转换成本 + 劳动力）
+        labor_cost = factory.labor_cost_per_unit * quantity
+        efficiency_factor = 1.0 - (factory.level - 1) * 0.02
+        total_cost = (unit_cost * quantity + labor_cost) * efficiency_factor
+
+        company = self.db.query(Company).filter(Company.id == component.company_id).first()
+        if company and company.cash < total_cost:
+            return False, (
+                f"资金不足: 需要 ${total_cost:,.0f}, "
+                f"当前现金 ${company.cash:,.0f}"
+            ), {}
         
-        # 7. 扣减原材料
+        # 8. 扣减原材料
         for material, amount in total_materials_needed.items():
             inventory.deduct_material(material, amount)
         
-        # 8. 增加零部件库存
+        # 9. 增加零部件库存
         inventory.add_component(component_type, component_id, quantity)
         
-        # 9. 计算成本（材料成本 + 劳动力成本）
-        labor_cost = factory.labor_cost_per_unit * quantity
+        # 10. 记录财务成本
+        if company:
+            company.record_cost("labor", labor_cost)
+            company.record_cost("manufacturing", max(0.0, total_cost - labor_cost))
         
-        # 工厂等级越高，效率越高，成本略降
-        efficiency_factor = 1.0 - (factory.level - 1) * 0.02  # 每级降低2%成本
-        total_cost = (unit_cost * quantity + labor_cost) * efficiency_factor
-        
-        # 10. 更新工厂利用率
+        # 11. 更新工厂利用率
         factory.current_utilization_rate = min(1.0, quantity / effective_capacity)
         
-        # 11. 添加工厂工艺和材料熟悉度经验
+        # 12. 添加工厂工艺和材料熟悉度经验
         from backend.core.production.factory_familiarity import FactoryFamiliaritySystem
         from backend.models.game_state import GameState
         
@@ -284,7 +295,7 @@ class ProductionManager:
                         kg_processed, current_turn, factory.game_id
                     )
         
-        # 12. 提交更改
+        # 13. 提交更改
         self.db.commit()
         
         logger.info(
@@ -415,7 +426,19 @@ class ProductionManager:
         if materials_shortage:
             return False, f"车身材料不足: {', '.join(materials_shortage)}", {}
         
-        # 8. 扣减零部件和材料
+        # 8. 计算并检查现金成本
+        labor_cost = assembly_factory.labor_cost_per_unit * quantity
+        efficiency_factor = 1.0 - (assembly_factory.level - 1) * 0.02
+        total_cost = (car_trim.manufacturing_cost * quantity + labor_cost) * efficiency_factor + logistics_cost
+
+        company = self.db.query(Company).filter(Company.id == car_trim.company_id).first()
+        if company and company.cash < total_cost:
+            return False, (
+                f"资金不足: 需要 ${total_cost:,.0f}, "
+                f"当前现金 ${company.cash:,.0f}"
+            ), {}
+
+        # 9. 扣减零部件和材料
         success = component_inventory.deduct_component("engine", car_trim.engine_id, quantity)
         if not success:
             return False, "扣减引擎库存失败（并发冲突？）", {}
@@ -423,20 +446,19 @@ class ProductionManager:
         for material, amount in total_body_materials.items():
             assembly_inventory.deduct_material(material, amount)
         
-        # 9. 增加成品车库存
+        # 10. 增加成品车库存
         assembly_inventory.add_car(car_trim_id, quantity)
         
-        # 10. 计算成本
-        labor_cost = assembly_factory.labor_cost_per_unit * quantity
-        efficiency_factor = 1.0 - (assembly_factory.level - 1) * 0.02
+        # 11. 记录财务成本
+        if company:
+            company.record_cost("labor", labor_cost)
+            company.record_cost("manufacturing", max(0.0, total_cost - labor_cost))
+            company.monthly_units_produced += quantity
         
-        # 总成本 = 车辆制造成本 + 劳动力 + 物流
-        total_cost = (car_trim.manufacturing_cost * quantity + labor_cost) * efficiency_factor + logistics_cost
-        
-        # 11. 更新工厂利用率
+        # 12. 更新工厂利用率
         assembly_factory.current_utilization_rate = min(1.0, quantity / effective_capacity)
         
-        # 12. 更新生产历史和可靠性增长
+        # 13. 更新生产历史和可靠性增长
         from backend.core.production.reliability_growth import ReliabilityGrowthSystem
         from backend.core.production.factory_familiarity import FactoryFamiliaritySystem
         from backend.models.game_state import GameState
@@ -590,6 +612,13 @@ class ProductionManager:
         # 3. 计算成本
         unit_price = material_market.current_price_per_kg
         total_cost = unit_price * quantity_kg
+
+        company = self.db.query(Company).filter(Company.id == factory.company_id).first()
+        if company and company.cash < total_cost:
+            return False, (
+                f"资金不足: 需要 ${total_cost:,.0f}, "
+                f"当前现金 ${company.cash:,.0f}"
+            ), {}
         
         # 4. 获取或创建库存
         inventory = self.db.query(Inventory).filter(
@@ -613,6 +642,9 @@ class ProductionManager:
         
         # 6. 更新库存价值
         inventory.total_inventory_value += total_cost
+
+        if company:
+            company.record_cost("materials", total_cost)
         
         # 7. 提交
         self.db.commit()
@@ -632,4 +664,3 @@ class ProductionManager:
 
 
 __all__ = ["ProductionManager"]
-

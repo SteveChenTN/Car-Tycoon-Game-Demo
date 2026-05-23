@@ -1,32 +1,45 @@
 /**
- * 高管和外交 API 服务
+ * Executive and diplomacy API service.
  */
 
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 
-// ============================================================
-// Types
-// ============================================================
+export type StaffPosition = 'CEO' | 'CTO' | 'CFO' | 'COO' | 'CMO' | 'ENGINEER' | 'DESIGNER';
 
 export interface StaffMember {
   id: number;
-  role: 'CEO' | 'CTO' | 'CFO' | 'COO' | 'CMO' | 'ENGINEER' | 'DESIGNER';
-  name: string;
-  portrait_icon: string; // emoji or icon code
-  loyalty: number; // 0-100
-  skill_engineering?: number; // 0-100
-  skill_finance?: number;
-  skill_marketing?: number;
-  skill_operations?: number;
-  salary_monthly: number;
-  hire_date_turn: number;
-  severance_cost?: number;
+  full_name: string;
+  position: StaffPosition;
+  current_loyalty: number;
+  current_morale: number;
+  annual_salary: number;
+  market_value: number;
+  hire_turn: number | null;
+  fire_turn: number | null;
+  skill_engineering: number;
+  skill_finance: number;
+  skill_marketing: number;
+  skill_operations: number;
+  skill_leadership: number;
+  effectiveness: number;
+  severance_cost: number;
+}
+
+export type StaffCandidate = StaffMember;
+
+export interface StaffMutationResult {
+  success: boolean;
+  staff_id?: number;
+  staff?: StaffMember;
+  message?: string;
+  severance_paid?: number;
+  error?: string;
 }
 
 export interface CompanyRelation {
   company_id: number;
   company_name: string;
-  relation_score: number; // -100 to 100
+  relation_score: number;
   status: 'hostile' | 'rival' | 'neutral' | 'friendly' | 'allied';
   last_interaction_turn: number;
   alliance_level?: number;
@@ -40,33 +53,61 @@ export interface DiplomacyAction {
   success_chance?: number;
 }
 
-// ============================================================
-// Staff Management API
-// ============================================================
+async function errorFromResponse(response: Response): Promise<Error> {
+  try {
+    const data = await response.json();
+    const detail = data.detail ?? data.message ?? data.error;
+    if (detail) {
+      return new Error(typeof detail === 'string' ? detail : JSON.stringify(detail));
+    }
+  } catch {
+    // Fall through to the HTTP status message.
+  }
 
-/**
- * 获取公司所有员工
- */
+  return new Error(`HTTP ${response.status}: ${response.statusText}`);
+}
+
 export async function getCompanyStaff(companyId: number): Promise<StaffMember[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/staff/list?company_id=${companyId}`);
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw await errorFromResponse(response);
     }
+
     return await response.json();
   } catch (error) {
     console.error('Failed to get company staff:', error);
-    return getMockStaff(companyId);
+    return [];
   }
 }
 
-/**
- * 解雇员工
- */
+export async function getStaffCandidates(
+  companyId: number,
+  position?: StaffPosition
+): Promise<StaffCandidate[]> {
+  try {
+    const params = new URLSearchParams({ company_id: companyId.toString() });
+    if (position) {
+      params.set('position', position);
+    }
+
+    const response = await fetch(`${API_BASE_URL}/staff/candidates?${params.toString()}`);
+    if (!response.ok) {
+      throw await errorFromResponse(response);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to get staff candidates:', error);
+    return [];
+  }
+}
+
 export async function fireStaff(
   companyId: number,
-  staffId: number
-): Promise<{ success: boolean; severance_paid?: number; error?: string }> {
+  staffId: number,
+  severanceMultiplier = 1
+): Promise<StaffMutationResult> {
   try {
     const response = await fetch(`${API_BASE_URL}/staff/fire`, {
       method: 'POST',
@@ -76,11 +117,12 @@ export async function fireStaff(
       body: JSON.stringify({
         company_id: companyId,
         staff_id: staffId,
+        severance_multiplier: severanceMultiplier,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw await errorFromResponse(response);
     }
 
     return await response.json();
@@ -93,13 +135,11 @@ export async function fireStaff(
   }
 }
 
-/**
- * 招聘候选人
- */
 export async function hireCandidateStaff(
   companyId: number,
-  candidateId: number
-): Promise<{ success: boolean; staff_id?: number; error?: string }> {
+  candidateId: number,
+  offeredSalary?: number
+): Promise<StaffMutationResult> {
   try {
     const response = await fetch(`${API_BASE_URL}/staff/hire`, {
       method: 'POST',
@@ -109,11 +149,12 @@ export async function hireCandidateStaff(
       body: JSON.stringify({
         company_id: companyId,
         candidate_id: candidateId,
+        offered_salary: offeredSalary,
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw await errorFromResponse(response);
     }
 
     return await response.json();
@@ -126,19 +167,13 @@ export async function hireCandidateStaff(
   }
 }
 
-// ============================================================
-// Diplomacy API
-// ============================================================
-
-/**
- * 获取与其他公司的关系
- */
 export async function getCompanyRelations(companyId: number): Promise<CompanyRelation[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/diplomacy/relations?company_id=${companyId}`);
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw await errorFromResponse(response);
     }
+
     return await response.json();
   } catch (error) {
     console.error('Failed to get company relations:', error);
@@ -146,9 +181,6 @@ export async function getCompanyRelations(companyId: number): Promise<CompanyRel
   }
 }
 
-/**
- * 执行外交行动
- */
 export async function performDiplomacyAction(
   companyId: number,
   action: DiplomacyAction
@@ -166,7 +198,7 @@ export async function performDiplomacyAction(
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw await errorFromResponse(response);
     }
 
     return await response.json();
@@ -177,70 +209,6 @@ export async function performDiplomacyAction(
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
-}
-
-// ============================================================
-// Mock Data
-// ============================================================
-
-function getMockStaff(companyId: number): StaffMember[] {
-  return [
-    {
-      id: 1,
-      role: 'CEO',
-      name: 'Player (You)',
-      portrait_icon: '👤',
-      loyalty: 100,
-      skill_engineering: 50,
-      skill_finance: 60,
-      skill_marketing: 55,
-      skill_operations: 65,
-      salary_monthly: 0,
-      hire_date_turn: 0,
-    },
-    {
-      id: 2,
-      role: 'CTO',
-      name: 'Dr. Hans Mueller',
-      portrait_icon: '🧑‍🔬',
-      loyalty: 75,
-      skill_engineering: 92,
-      skill_finance: 45,
-      skill_marketing: 30,
-      skill_operations: 60,
-      salary_monthly: 25000,
-      hire_date_turn: 5,
-      severance_cost: 50000,
-    },
-    {
-      id: 3,
-      role: 'CFO',
-      name: 'Ms. Sarah Chen',
-      portrait_icon: '👩‍💼',
-      loyalty: 85,
-      skill_engineering: 30,
-      skill_finance: 95,
-      skill_marketing: 70,
-      skill_operations: 65,
-      salary_monthly: 22000,
-      hire_date_turn: 3,
-      severance_cost: 44000,
-    },
-    {
-      id: 4,
-      role: 'COO',
-      name: 'Mr. Takeshi Yamada',
-      portrait_icon: '👨‍💼',
-      loyalty: 60,
-      skill_engineering: 55,
-      skill_finance: 60,
-      skill_marketing: 50,
-      skill_operations: 88,
-      salary_monthly: 20000,
-      hire_date_turn: 12,
-      severance_cost: 40000,
-    },
-  ];
 }
 
 function getMockRelations(): CompanyRelation[] {
@@ -269,5 +237,3 @@ function getMockRelations(): CompanyRelation[] {
     },
   ];
 }
-
-

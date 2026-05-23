@@ -80,7 +80,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </p>
 
             {/* 错误详情（开发模式） */}
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {import.meta.env.DEV && this.state.error && (
               <div className="bg-slate-900 border border-red-500/30 rounded p-4 mb-6 overflow-auto max-h-64">
                 <h3 className="text-red-400 font-mono text-sm font-bold mb-2">
                   DEBUG INFO:

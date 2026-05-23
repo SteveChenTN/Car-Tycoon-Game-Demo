@@ -14,6 +14,7 @@ from backend.models.market import (
     MarketingCampaign, DistributionType, MarketingFocus
 )
 from backend.models.engineering import CarTrim
+from backend.models.company import Company
 from backend.models.region import Region
 from backend.config import MarketConstants, EconomicConstants
 from backend.utils.logger import get_logger
@@ -417,6 +418,7 @@ class MarketSimulator:
                         vehicle.available_units -= actual_sales
                         total_new_sales += actual_sales
                         bucket.satisfied_demand += actual_sales
+                        self._record_vehicle_sale(vehicle, actual_sales)
                         
                         # 记录销量
                         sales_by_company[vehicle.company_id] = \
@@ -437,6 +439,30 @@ class MarketSimulator:
             "sales_by_company": sales_by_company,
             "sales_by_trim": sales_by_trim
         }
+
+    def _record_vehicle_sale(self, vehicle: VehicleOption, units_sold: int) -> None:
+        """Record revenue and COGS for sold new vehicles."""
+        if units_sold <= 0 or vehicle.car_trim_id is None:
+            return
+
+        company = self.db.query(Company).filter(Company.id == vehicle.company_id).first()
+        if not company:
+            return
+
+        trim = self.db.query(CarTrim).filter(CarTrim.id == vehicle.car_trim_id).first()
+        unit_cost = 0.0
+        if trim:
+            unit_cost = float(trim.manufacturing_cost or 0.0)
+        if unit_cost <= 0.0:
+            unit_cost = vehicle.price * 0.65
+
+        revenue = vehicle.price * units_sold
+        cogs = unit_cost * units_sold
+
+        company.record_revenue(revenue, units_sold=units_sold)
+        company.record_cost("manufacturing", cogs * 0.55)
+        company.record_cost("materials", cogs * 0.30)
+        company.record_cost("labor", cogs * 0.15)
     
     def _get_brand_perceptions(
         self,
@@ -666,4 +692,3 @@ __all__ = [
     "run_market_simulation_for_region",
     "run_market_simulation_for_all_regions"
 ]
-

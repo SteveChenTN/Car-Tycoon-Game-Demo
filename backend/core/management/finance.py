@@ -187,7 +187,10 @@ class FinanceLogic:
                     # 执行还款
                     payment_details = loan.make_payment(payment_amount, current_turn)
                     company.cash -= payment_amount
-                    company.total_debt = loan.remaining_principal
+                    company.monthly_interest += payment_details.get("interest", 0.0)
+                    company.quarterly_profit -= payment_details.get("interest", 0.0)
+                    company.refresh_monthly_profit()
+                    company.total_debt = self._calculate_company_active_debt(company.id)
                     
                     results["successful_payments"] += 1
                     results["total_paid"] += payment_amount
@@ -224,6 +227,14 @@ class FinanceLogic:
             logger.error(f"处理贷款还款失败: {e}", exc_info=True)
             self.db.rollback()
             return {"success": False, "error": str(e)}
+
+    def _calculate_company_active_debt(self, company_id: int) -> float:
+        """Return remaining principal for all active loans of a company."""
+        active_loans = self.db.query(Loan).filter(
+            Loan.company_id == company_id,
+            Loan.status == LoanStatus.ACTIVE
+        ).all()
+        return sum(loan.remaining_principal for loan in active_loans)
     
     def calculate_taxes(
         self,

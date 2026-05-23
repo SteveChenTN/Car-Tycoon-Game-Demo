@@ -265,7 +265,7 @@ class TechTreeSystem:
                 logger.warning(f"Research on {tech_node.name} suspended due to insufficient funds")
                 continue
             
-            company.cash -= company_tech.monthly_investment
+            company.record_cost("rd", company_tech.monthly_investment)
             company_tech.total_invested += company_tech.monthly_investment
             
             # 计算研发进度
@@ -589,4 +589,3 @@ class TechTreeSystem:
 
 
 __all__ = ["TechTreeSystem"]
-

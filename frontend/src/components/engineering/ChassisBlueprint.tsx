@@ -35,12 +35,9 @@ export const ChassisBlueprint: React.FC<ChassisBlueprintProps> = ({
   wheelbase_mm,
   track_front_mm,
   track_rear_mm,
-  engine_bay_volume,
   engine_bay_length_mm = 800,
   engine_bay_width_mm = 700,
   engine_bay_height_mm = 600,
-  crumple_zone_length = 0,
-  fuel_tank_location = 'REAR_AXLE_BEHIND',
   layout = 'FF',
   structure_type = 'LADDER',
   showSideView = false,
@@ -108,36 +105,37 @@ export const ChassisBlueprint: React.FC<ChassisBlueprintProps> = ({
       case 'FR':
         // 前置引擎：位于前轴前方（Nose区域）
         return {
-          topX: frontAxleX - engineLength - 20 * viewBoxScale,
+          topX: frontAxleX - engineLength - frontOverhang / 7.5,
           topY: engineTopY,
-          topWidth: engineLength,
+          topWidth: engineWidth,
           topHeight: engineTopHeight,
-          sideX: frontAxleX - engineLength - 20 * viewBoxScale,
+          sideX: frontAxleX - engineLength - frontOverhang / 7.5,
           sideY: frameRailY - engineSideHeight,
           sideWidth: engineLength,
           sideHeight: engineSideHeight,
         };
-      case 'MR':
+      case 'MR': {
         // 中置引擎：位于两轴之间（驾驶员后方，后轴前方）
         const mrStartX = midPointX - engineLength / 2;
         return {
           topX: mrStartX,
           topY: engineTopY,
-          topWidth: engineLength,
+          topWidth: engineWidth,
           topHeight: engineTopHeight,
           sideX: mrStartX,
           sideY: frameRailY - engineSideHeight,
           sideWidth: engineLength,
           sideHeight: engineSideHeight,
         };
+      }
       case 'RR':
         // 后置引擎：位于后轴后方（Rear Overhang区域）
         return {
-          topX: rearAxleX + 20 * viewBoxScale,
+          topX: rearAxleX + rearOverhang / 7.5,
           topY: engineTopY,
-          topWidth: engineLength,
+          topWidth: engineWidth,
           topHeight: engineTopHeight,
-          sideX: rearAxleX + 20 * viewBoxScale,
+          sideX: rearAxleX + rearOverhang / 7.5,
           sideY: frameRailY - engineSideHeight,
           sideWidth: engineLength,
           sideHeight: engineSideHeight,
@@ -145,22 +143,22 @@ export const ChassisBlueprint: React.FC<ChassisBlueprintProps> = ({
       case 'AWD':
         // AWD通常前置，但可能有中置变体，这里默认前置
         return {
-          topX: frontAxleX - engineLength - 20 * viewBoxScale,
+          topX: frontAxleX - engineLength - frontOverhang / 7.5,
           topY: engineTopY,
-          topWidth: engineLength,
+          topWidth: engineWidth,
           topHeight: engineTopHeight,
-          sideX: frontAxleX - engineLength - 20 * viewBoxScale,
+          sideX: frontAxleX - engineLength - frontOverhang / 7.5,
           sideY: frameRailY - engineSideHeight,
           sideWidth: engineLength,
           sideHeight: engineSideHeight,
         };
       default:
         return {
-          topX: frontAxleX - engineLength - 20 * viewBoxScale,
+          topX: frontAxleX - engineLength - frontOverhang / 7.5,
           topY: engineTopY,
-          topWidth: engineLength,
+          topWidth: engineWidth,
           topHeight: engineTopHeight,
-          sideX: frontAxleX - engineLength - 20 * viewBoxScale,
+          sideX: frontAxleX - engineLength - frontOverhang / 7.5,
           sideY: frameRailY - engineSideHeight,
           sideWidth: engineLength,
           sideHeight: engineSideHeight,

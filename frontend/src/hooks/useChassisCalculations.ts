@@ -42,7 +42,7 @@ export interface ChassisStats {
   safetyFactor?: number;
 }
 
-export interface UseChassisCalculationsParams extends ChassisCalculationParams {}
+export type UseChassisCalculationsParams = ChassisCalculationParams;
 
 /**
  * 底盘计算Hook
@@ -59,7 +59,7 @@ export function useChassisCalculations(params: UseChassisCalculationsParams): Ch
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const calculateStats = useCallback(async (calculationParams: UseChassisCalculationsParams) => {
     // 验证参数有效性

@@ -14,7 +14,7 @@ import clsx from 'clsx';
 // ============================================================
 
 export function FactoryManager() {
-  const { gameState } = useGame();
+  const { playerCompanyId } = useGame();
   const [factories, setFactories] = useState<Factory[]>([]);
   const [selectedFactory, setSelectedFactory] = useState<Factory | null>(null);
   const [availableDesigns, setAvailableDesigns] = useState<VehicleDesignSummary[]>([]);
@@ -24,25 +24,38 @@ export function FactoryManager() {
 
   // 加载工厂数据
   useEffect(() => {
+    if (!playerCompanyId) {
+      setFactories([]);
+      setSelectedFactory(null);
+      setAvailableDesigns([]);
+      return;
+    }
+
     loadFactories();
     loadDesigns();
-  }, [gameState]);
+  }, [playerCompanyId]);
 
   const loadFactories = async () => {
+    if (!playerCompanyId) return;
+
     try {
-      const response = await getPlayerFactories(1); // TODO: 获取真实company_id
+      const response = await getPlayerFactories(playerCompanyId);
       setFactories(response.factories);
-      if (response.factories.length > 0 && !selectedFactory) {
-        setSelectedFactory(response.factories[0]);
-      }
+      setSelectedFactory((current) =>
+        response.factories.some((factory) => factory.id === current?.id)
+          ? current
+          : response.factories[0] ?? null
+      );
     } catch (error) {
       console.error('[FactoryManager] Failed to load factories:', error);
     }
   };
 
   const loadDesigns = async () => {
+    if (!playerCompanyId) return;
+
     try {
-      const designs = await getAvailableDesigns(1); // TODO: 获取真实company_id
+      const designs = await getAvailableDesigns(playerCompanyId);
       setAvailableDesigns(designs);
     } catch (error) {
       console.error('[FactoryManager] Failed to load designs:', error);

@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { MonthlyReport } from '../../types';
 import { getLatestMonthlyReport } from '../../services/reportService';
 import { useGame } from '../../contexts/GameContext';
+import { formatCurrency } from '../../utils/formatters';
 import clsx from 'clsx';
 
 // ============================================================
@@ -19,33 +20,33 @@ interface MonthlyReportModalProps {
 }
 
 export function MonthlyReportModal({ isOpen, onClose }: MonthlyReportModalProps) {
-  const { gameState } = useGame();
+  const { gameId } = useGame();
   const [report, setReport] = useState<MonthlyReport | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // 监听游戏状态变化，加载最新报告
   useEffect(() => {
-    if (isOpen && gameState) {
+    if (isOpen && gameId) {
       loadReport();
     }
-  }, [isOpen, gameState]);
+  }, [isOpen, gameId]);
 
   const loadReport = async () => {
+    if (!gameId) return;
+
     setLoading(true);
+    setError(null);
     try {
-      // TODO: 从gameState获取game_id
-      const data = await getLatestMonthlyReport(1);
-      if (data) {
-        setReport(data);
-      } else {
-        // API端点不存在或返回null，使用mock数据
-        console.log('[MonthlyReportModal] Report endpoint not available, using mock data');
-        setReport(getMockReport());
+      const data = await getLatestMonthlyReport(gameId);
+      setReport(data);
+      if (!data) {
+        setError('尚未生成月度报表，请先推进一个回合。');
       }
     } catch (error) {
       console.error('[MonthlyReportModal] Failed to load report:', error);
-      // Fallback: 如果API不可用，使用mock数据
-      setReport(getMockReport());
+      setReport(null);
+      setError('尚未生成月度报表，请先推进一个回合。');
     } finally {
       setLoading(false);
     }
@@ -74,6 +75,10 @@ export function MonthlyReportModal({ isOpen, onClose }: MonthlyReportModalProps)
             <div className="text-center py-12 text-slate-400">加载中...</div>
           )}
 
+          {!loading && error && (
+            <div className="text-center py-12 text-slate-400">{error}</div>
+          )}
+
           {!loading && report && (
             <div className="space-y-6 font-mono">
               {/* Section 1: Financials */}
@@ -83,13 +88,13 @@ export function MonthlyReportModal({ isOpen, onClose }: MonthlyReportModalProps)
                   <div className="receipt-line">
                     <span className="text-slate-400">营收</span>
                     <span className="text-green-400 font-bold">
-                      ${report.financials.revenue.toLocaleString()}
+                      {formatCurrency(report.financials.revenue)}
                     </span>
                   </div>
                   <div className="receipt-line">
                     <span className="text-slate-400">成本</span>
                     <span className="text-red-400 font-bold">
-                      -${report.financials.costs.toLocaleString()}
+                      -{formatCurrency(report.financials.costs)}
                     </span>
                   </div>
                   <div className="border-t-2 border-dashed border-slate-600 my-2"></div>
@@ -101,17 +106,43 @@ export function MonthlyReportModal({ isOpen, onClose }: MonthlyReportModalProps)
                         report.financials.net_profit >= 0 ? 'text-green-400' : 'text-red-400'
                       )}
                     >
-                      ${report.financials.net_profit.toLocaleString()}
+                      {formatCurrency(report.financials.net_profit)}
                     </span>
                   </div>
                   <div className="receipt-line">
                     <span className="text-slate-400">现金余额</span>
                     <span className="text-cyan-400 font-bold">
-                      ${report.financials.cash_balance.toLocaleString()}
+                      {formatCurrency(report.financials.cash_balance)}
                     </span>
                   </div>
                 </div>
               </section>
+
+              {report.financials.cost_breakdown && (
+                <section className="receipt-section">
+                  <h3 className="receipt-section-title">成本拆分</h3>
+                  <CostLine label="制造" value={report.financials.cost_breakdown.manufacturing} />
+                  <CostLine label="材料" value={report.financials.cost_breakdown.materials} />
+                  <CostLine label="人工" value={report.financials.cost_breakdown.labor} />
+                  <CostLine label="研发" value={report.financials.cost_breakdown.rd} />
+                  <CostLine label="营销" value={report.financials.cost_breakdown.marketing} />
+                  <CostLine label="利息" value={report.financials.cost_breakdown.interest} />
+                </section>
+              )}
+
+              {report.financials.cash_flow && (
+                <section className="receipt-section">
+                  <h3 className="receipt-section-title">现金变化来源</h3>
+                  {report.financials.cash_flow.lines.map((line) => (
+                    <div className="receipt-line" key={line.label}>
+                      <span className="text-slate-400">{line.label}</span>
+                      <span className={line.amount >= 0 ? 'text-green-400' : 'text-red-400'}>
+                        {formatCurrency(line.amount)}
+                      </span>
+                    </div>
+                  ))}
+                </section>
+              )}
 
               {/* Section 2: Production */}
               <section className="receipt-section">
@@ -173,6 +204,22 @@ export function MonthlyReportModal({ isOpen, onClose }: MonthlyReportModalProps)
 // 警报项组件
 // ============================================================
 
+interface CostLineProps {
+  label: string;
+  value: number;
+}
+
+function CostLine({ label, value }: CostLineProps) {
+  if (value === 0) return null;
+
+  return (
+    <div className="receipt-line">
+      <span className="text-slate-400">{label}</span>
+      <span className="text-red-400">-{formatCurrency(value)}</span>
+    </div>
+  );
+}
+
 interface AlertItemProps {
   alert: MonthlyReport['alerts'][0];
 }
@@ -195,43 +242,6 @@ function AlertItem({ alert }: AlertItemProps) {
       </div>
     </div>
   );
-}
-
-// ============================================================
-// Mock数据（用于开发测试）
-// ============================================================
-
-function getMockReport(): MonthlyReport {
-  return {
-    turn_number: 12,
-    year: 1950,
-    month: 12,
-    financials: {
-      revenue: 2500000,
-      costs: 1800000,
-      net_profit: 700000,
-      cash_balance: 5000000
-    },
-    production: {
-      cars_built: 1250,
-      components_produced: 3500,
-      utilization_rate: 0.85
-    },
-    alerts: [
-      {
-        type: 'success',
-        message: '生产线A完成改装，现在可以生产 Model X GT'
-      },
-      {
-        type: 'warning',
-        message: '北美市场需求下降10%，建议调整定价策略'
-      },
-      {
-        type: 'info',
-        message: '竞争对手推出新车型，市场份额受到影响'
-      }
-    ]
-  };
 }
 
 export default MonthlyReportModal;

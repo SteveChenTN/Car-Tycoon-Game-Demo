@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ComponentInfo } from '../../services/engineeringService';
-import { Info } from 'lucide-react';
 
 interface ComponentRichSelectProps {
   label: string;
@@ -214,4 +213,3 @@ export const ComponentRichSelect: React.FC<ComponentRichSelectProps> = ({
     </div>
   );
 };
-

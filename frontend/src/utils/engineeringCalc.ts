@@ -159,6 +159,7 @@ export function estimateHorsepower(
     ve *= 1.0 + boostBar * 0.55;
   } else if (inductionType === 'SUPERCHARGED') {
     ve *= 1.0 + boostBar * 0.45;
+    void ve;
   }
   
   // BMEP（调整以匹配后端）
@@ -301,7 +302,7 @@ export function estimateTorque(
   const displacementL = displacementCC / 1000;
   
   // 调整BMEP基础值以匹配后端
-  let bmepBase = 10.0 + (compressionRatio - 8.0) * 0.6;
+  const bmepBase = 10.0 + (compressionRatio - 8.0) * 0.6;
   
   // 增压倍增器
   let bmepMultiplier = 1.0;
@@ -340,7 +341,7 @@ export function estimateTorque(
  */
 export function generatePowerCurve(
   maxTorqueNm: number,
-  maxPowerHP: number,
+  _maxPowerHP: number,
   redlineRPM: number,
   inductionType: string,
   displacementCC?: number,
@@ -458,7 +459,7 @@ export function estimateEngineWeight(
   const displacementL = displacementCC / 1000;
   
   const baseWeightPerLiter = 65;
-  let baseWeight = displacementL * baseWeightPerLiter;
+  const baseWeight = displacementL * baseWeightPerLiter;
   
   // 材料系数
   const materialFactor: Record<string, number> = {
@@ -695,4 +696,3 @@ export function checkEngineFitment(
     engineBayVolume: Math.round(bayVolume * 1000) / 1000,
   };
 }
-

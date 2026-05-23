@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from 'react';
+import { useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 
 interface Node {

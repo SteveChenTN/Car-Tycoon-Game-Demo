@@ -4,7 +4,7 @@ import { useGameContext } from '../../contexts/GameContext';
 import { DynoGraph } from '../../components/engineering/DynoGraph';
 import { ComponentRichSelect } from '../../components/engineering/ComponentRichSelect';
 import { TechSelect, TechSlider } from '../../components/common/inputs';
-import { ComponentInfo } from '../../services/engineeringService';
+import type { ComponentInfo } from '../../services/engineeringService';
 import {
   simulateEngine,
   getUnlockedComponents,
@@ -35,19 +35,22 @@ export const EngineDesigner: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [manufacturingTolerance, setManufacturingTolerance] = useState(0.5);
 
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const companyIdRef = useRef<number | null>(null);
 
-  // 获取公司ID（从游戏状态或默认值）
+  // 获取公司ID（从游戏状态）
   useEffect(() => {
-    // TODO: 从游戏状态获取玩家公司ID
-    companyIdRef.current = 1; // 临时默认值
+    companyIdRef.current = gameState?.playerCompanyId ?? gameState?.player_company_id ?? gameState?.playerCompany?.id ?? null;
   }, [gameState]);
 
   // 加载解锁的组件
   useEffect(() => {
     const loadComponents = async () => {
-      if (!companyIdRef.current) return;
+      if (!companyIdRef.current) {
+        setUnlockedComponents(null);
+        setIsLoadingComponents(false);
+        return;
+      }
 
       try {
         setIsLoadingComponents(true);
@@ -115,7 +118,7 @@ export const EngineDesigner: React.FC = () => {
     };
 
     debouncedSimulate(params);
-  }, [engineDraft, debouncedSimulate]);
+  }, [engineDraft, manufacturingTolerance, debouncedSimulate]);
 
   // 保存引擎
   const handleSave = async () => {
@@ -130,9 +133,9 @@ export const EngineDesigner: React.FC = () => {
 
       const result = await createEngine({
         company_id: companyIdRef.current,
+        ...engineDraft,
         name: engineDraft.name || '未命名引擎',
         code: engineDraft.code || `ENG_${Date.now()}`,
-        ...engineDraft,
       });
 
       if (result.success) {
@@ -327,12 +330,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
     const components = unlockedComponents.components[category as keyof typeof unlockedComponents.components] || [];
     console.log(`[getComponentOptions] Category: ${category}, Components:`, components);
     
-    // 如果组件已经是 ComponentInfo[] 格式，直接返回
-    if (components.length > 0 && typeof components[0] === 'object' && 'value' in components[0]) {
-      return components as ComponentInfo[];
-    }
-    // 否则转换为 ComponentInfo[] 格式（向后兼容）
-    return (components as string[]).map((comp) => ({ value: comp }));
+    return components.map((component) =>
+      typeof component === 'string' ? { value: component } : component
+    );
   };
   
   const getOptions = (category: string): Array<{ value: string; label: string; locked?: boolean }> => {
@@ -367,21 +367,14 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
       W: 'W型',
     };
 
-    // 处理 ComponentInfo[] 格式
-    if (components.length > 0 && typeof components[0] === 'object' && 'value' in components[0]) {
-      return (components as ComponentInfo[]).map((comp) => ({
-        value: comp.value,
-        label: labels[comp.value] || comp.value,
+    return components.map((component) => {
+      const value = typeof component === 'string' ? component : component.value;
+      return {
+        value,
+        label: labels[value] || value,
         locked: false,
-      }));
-    }
-    
-    // 处理 string[] 格式（向后兼容）
-    return (components as string[]).map((comp) => ({
-      value: comp,
-      label: labels[comp] || comp,
-      locked: false,
-    }));
+      };
+    });
   };
 
   return (

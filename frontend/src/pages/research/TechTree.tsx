@@ -11,12 +11,12 @@ import { ProjectStarterWizard } from './ProjectStarterWizard';
 import { ReverseEngineeringLab } from './ReverseEngineeringLab';
 
 export const TechTree: React.FC = () => {
-  const { gameState } = useGameContext();
+  const { playerCompanyId } = useGameContext();
   const [techTree, setTechTree] = useState<TechTreeType | null>(null);
   const [selectedNode, setSelectedNode] = useState<TechNode | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'tech' | 'projects' | 'reverse'>('tech');
-  const companyId = 1; // TODO: 从GameContext获取
+  const companyId = playerCompanyId;
 
   useEffect(() => {
     loadTechTree();
@@ -59,9 +59,8 @@ export const TechTree: React.FC = () => {
 
   const handleStartResearch = async (node: TechNode) => {
     if (node.status !== 'available') return;
+    if (!companyId) return;
 
-    // TODO: 从 GameContext 获取 companyId
-    const companyId = 1;
     const result = await startResearch(companyId, node.id);
 
     if (result.success) {
@@ -194,25 +193,33 @@ export const TechTree: React.FC = () => {
 
         {activeTab === 'projects' && (
           <div className="p-6">
-            <ProjectStarterWizard
-              companyId={companyId}
-              onProjectStarted={(result) => {
-                console.log('Project started:', result);
-                // 可以显示成功消息或刷新数据
-              }}
-            />
+            {companyId ? (
+              <ProjectStarterWizard
+                companyId={companyId}
+                onProjectStarted={(result) => {
+                  console.log('Project started:', result);
+                  // 可以显示成功消息或刷新数据
+                }}
+              />
+            ) : (
+              <p className="text-secondary font-mono text-sm">Loading game context...</p>
+            )}
           </div>
         )}
 
         {activeTab === 'reverse' && (
           <div className="p-6">
-            <ReverseEngineeringLab
-              companyId={companyId}
-              onReverseEngineerComplete={(result) => {
-                console.log('Reverse engineering complete:', result);
-                // 可以显示成功消息或刷新数据
-              }}
-            />
+            {companyId ? (
+              <ReverseEngineeringLab
+                companyId={companyId}
+                onReverseEngineerComplete={(result) => {
+                  console.log('Reverse engineering complete:', result);
+                  // 可以显示成功消息或刷新数据
+                }}
+              />
+            ) : (
+              <p className="text-secondary font-mono text-sm">Loading game context...</p>
+            )}
           </div>
         )}
       </div>

@@ -2,13 +2,16 @@
  * Format a number as currency (USD)
  */
 export function formatCurrency(value: number): string {
-  if (value >= 1_000_000) {
-    return `$${(value / 1_000_000).toFixed(1)}M`;
+  const sign = value < 0 ? '-' : '';
+  const absoluteValue = Math.abs(value);
+
+  if (absoluteValue >= 1_000_000) {
+    return `${sign}$${(absoluteValue / 1_000_000).toFixed(1)}M`;
   }
-  if (value >= 1_000) {
-    return `$${(value / 1_000).toFixed(1)}K`;
+  if (absoluteValue >= 1_000) {
+    return `${sign}$${(absoluteValue / 1_000).toFixed(1)}K`;
   }
-  return `$${value.toFixed(0)}`;
+  return `${sign}$${absoluteValue.toFixed(0)}`;
 }
 
 /**

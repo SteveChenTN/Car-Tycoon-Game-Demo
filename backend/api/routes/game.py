@@ -56,6 +56,15 @@ class TurnAdvanceResponse(BaseModel):
         from_attributes = True
 
 
+def _current_save_payload() -> Dict[str, Any]:
+    current_save_path = GameSessionManager.get_current_save_path()
+    return {
+        "loaded": current_save_path is not None,
+        "save_path": str(current_save_path) if current_save_path else None,
+        "file_name": current_save_path.name if current_save_path else None,
+    }
+
+
 # ============================================================================
 # 游戏状态端点
 # ============================================================================
@@ -78,6 +87,7 @@ async def get_game_state(db: Session = Depends(get_db_optional)) -> Dict[str, An
             return {
                 "success": False,
                 "error": "NO_GAME_LOADED",
+                "current_save": _current_save_payload(),
                 "message": "请先创建或加载游戏存档",
                 "action": "请使用 POST /api/v1/game/new 创建新游戏，或 POST /api/v1/game/load 加载存档"
             }
@@ -88,6 +98,7 @@ async def get_game_state(db: Session = Depends(get_db_optional)) -> Dict[str, An
             return {
                 "success": False,
                 "error": "NO_GAME_FOUND",
+                "current_save": _current_save_payload(),
                 "message": "请先初始化游戏世界 (运行 init_world.py)"
             }
         
@@ -107,6 +118,8 @@ async def get_game_state(db: Session = Depends(get_db_optional)) -> Dict[str, An
         
         return {
             "success": True,
+            "game_id": game.id,
+            "player_company_id": player_company.id if player_company else None,
             "game": {
                 "id": game.id,
                 "turn": game.turn_number,
@@ -124,6 +137,7 @@ async def get_game_state(db: Session = Depends(get_db_optional)) -> Dict[str, An
                 "prestige": player_company.prestige_score,
                 "credit_rating": player_company.credit_rating
             } if player_company else None,
+            "current_save": _current_save_payload(),
             "recent_events": [log.to_dict() for log in recent_logs]
         }
         
@@ -790,5 +804,3 @@ async def delete_saved_game(request: DeleteSaveRequest) -> Dict[str, Any]:
 
 
 __all__ = ["router"]
-
-

@@ -15,7 +15,7 @@ import clsx from 'clsx';
 // ============================================================
 
 export function MarketDashboard() {
-  const { gameState } = useGame();
+  const { playerCompanyId } = useGame();
   const [regions, setRegions] = useState<RegionPricing[]>([]);
   const [heatmap, setHeatmap] = useState<MarketHeatmapCell[]>([]);
   const [globalBasePrice, setGlobalBasePrice] = useState<number>(25000);
@@ -26,8 +26,15 @@ export function MarketDashboard() {
 
   // 加载市场数据
   useEffect(() => {
+    if (!playerCompanyId) {
+      setRegions([]);
+      setHeatmap([]);
+      setRegionalPrices({});
+      return;
+    }
+
     loadMarketData();
-  }, [gameState]);
+  }, [playerCompanyId]);
 
   // 初始化区域价格
   useEffect(() => {
@@ -41,12 +48,14 @@ export function MarketDashboard() {
   }, [regions, globalBasePrice]);
 
   const loadMarketData = async () => {
+    if (!playerCompanyId) return;
+
     setError(null);
     setLoading(true);
     try {
       const [marketData, heatmapData] = await Promise.all([
-        getMarketOverview(1), // TODO: 获取真实company_id
-        getSalesHeatmap(1)
+        getMarketOverview(playerCompanyId),
+        getSalesHeatmap(playerCompanyId)
       ]);
       
       // 转换数据格式以匹配前端期望
@@ -85,10 +94,12 @@ export function MarketDashboard() {
   };
 
   const handleSubmitPricing = async () => {
+    if (!playerCompanyId) return;
+
     setLoading(true);
     try {
       const response = await submitRegionalPricing({
-        company_id: 1, // TODO: 获取真实company_id
+        company_id: playerCompanyId,
         design_id: 1, // TODO: 选择车型
         regional_prices: regionalPrices
       });

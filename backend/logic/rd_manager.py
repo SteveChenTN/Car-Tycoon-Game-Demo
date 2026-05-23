@@ -13,6 +13,17 @@ from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
+MONEY_LEGACY_MILLION_THRESHOLD = 100_000.0
+MONEY_MILLION = 1_000_000.0
+
+
+def normalize_project_cost(amount: float) -> float:
+    """Normalize legacy million-denominated R&D costs to absolute currency."""
+    amount = float(amount or 0.0)
+    if 0.0 < abs(amount) < MONEY_LEGACY_MILLION_THRESHOLD:
+        return amount * MONEY_MILLION
+    return amount
+
 
 class ProjectType(str, Enum):
     """研发项目类型"""
@@ -251,15 +262,16 @@ class RDManager:
             return False, "公司不存在", None
         
         # 应用熟悉度加成：成本和时间
-        effective_cost = base_cost * (1 - department.cost_reduction)
+        normalized_base_cost = normalize_project_cost(base_cost)
+        effective_cost = normalized_base_cost * (1 - department.cost_reduction)
         effective_weeks = int(base_weeks * (1 - department.time_reduction))
         
         # 检查资金
         if company.cash < effective_cost:
-            return False, f"资金不足（需要 {effective_cost:.2f}M，当前 {company.cash:.2f}M）", None
+            return False, f"资金不足（需要 ${effective_cost:,.0f}，当前 ${company.cash:,.0f}）", None
         
         # 扣除资金
-        company.cash -= effective_cost
+        company.record_cost("rd", effective_cost)
         
         # 创建项目
         project = ResearchProject(
@@ -281,7 +293,7 @@ class RDManager:
             f"启动研发项目: {project_type.value} - "
             f"公司 {self.company_id}, 部门 {dept_type.value}, "
             f"周数 {effective_weeks} (基础 {base_weeks}), "
-            f"成本 {effective_cost:.2f}M (基础 {base_cost:.2f}M), "
+            f"成本 ${effective_cost:,.0f} (基础 ${normalized_base_cost:,.0f}), "
             f"熟悉度加成: 成本-{department.cost_reduction*100:.0f}%, 时间-{department.time_reduction*100:.0f}%"
         )
         
@@ -625,4 +637,3 @@ class RDManager:
 
 
 __all__ = ["RDManager", "ResearchProject", "Department", "ProjectType", "ProjectStatus", "DepartmentType"]
-

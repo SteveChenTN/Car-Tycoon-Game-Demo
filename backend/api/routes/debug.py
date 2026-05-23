@@ -19,6 +19,18 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/debug", tags=["Debug"])
 
 
+def _enum_value(value: Any) -> Any:
+    return value.value if hasattr(value, "value") else value
+
+
+def _annual_revenue(company: Company) -> float:
+    return company.quarterly_revenue * 4
+
+
+def _loan_payment(loan: Loan) -> float:
+    return loan.calculate_current_payment_amount()
+
+
 # ============================================================================
 # 全局信息端点
 # ============================================================================
@@ -71,12 +83,12 @@ async def get_all_companies_detailed(db: Session = Depends(get_db)) -> List[Dict
                     "credit_rating": company.credit_rating,
                     "total_assets": company.total_assets,
                     "quarterly_profit": company.quarterly_profit,
-                    "annual_revenue": company.annual_revenue
+                    "annual_revenue": _annual_revenue(company)
                 },
                 "reputation": {
                     "prestige_score": company.prestige_score,
-                    "reliability_reputation": company.reliability_reputation,
-                    "innovation_reputation": company.innovation_reputation
+                    "reliability_reputation": company.reputation_quality,
+                    "innovation_reputation": company.reputation_innovation
                 },
                 "technology": {
                     "unlocked_count": len(unlocked_techs),
@@ -87,7 +99,7 @@ async def get_all_companies_detailed(db: Session = Depends(get_db)) -> List[Dict
                     "total_models": len(cars),
                     "in_production": len([c for c in cars if c.is_in_production])
                 },
-                "workforce": company.employee_count
+                "workforce": company.total_employees
             })
         
         return result
@@ -155,15 +167,15 @@ async def get_company_full_details(
                 "total_assets": company.total_assets,
                 "credit_rating": company.credit_rating,
                 "quarterly_profit": company.quarterly_profit,
-                "annual_revenue": company.annual_revenue,
+                "annual_revenue": _annual_revenue(company),
                 "loans": [
                     {
                         "id": loan.id,
-                        "type": loan.loan_type,
-                        "original_amount": loan.original_amount,
+                        "type": _enum_value(loan.loan_type),
+                        "original_amount": loan.principal_amount,
                         "remaining": loan.remaining_principal,
                         "interest_rate": loan.interest_rate,
-                        "monthly_payment": loan.monthly_payment
+                        "monthly_payment": _loan_payment(loan)
                     }
                     for loan in loans
                 ]
@@ -242,8 +254,8 @@ async def get_company_full_details(
             },
             "reputation": {
                 "prestige": company.prestige_score,
-                "reliability": company.reliability_reputation,
-                "innovation": company.innovation_reputation
+                "reliability": company.reputation_quality,
+                "innovation": company.reputation_innovation
             }
         }
         

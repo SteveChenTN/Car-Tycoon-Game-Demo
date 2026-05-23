@@ -19,7 +19,7 @@ class RetoolingCalculator:
     
     计算生产线切换车型时需要的：
     - 重新配置时间（回合数）
-    - 重新配置成本（百万游戏币）
+    - 重新配置成本（游戏币）
     """
     
     @staticmethod
@@ -82,7 +82,7 @@ class RetoolingCalculator:
         factory_level: int
     ) -> float:
         """
-        计算重新配置成本（百万游戏币）
+        计算重新配置成本（游戏币）
         
         影响因素：
         - 设计复杂度差异
@@ -95,22 +95,22 @@ class RetoolingCalculator:
             factory_level: 工厂等级 1-10
             
         Returns:
-            重新配置成本（百万游戏币）
+            重新配置成本（游戏币）
         """
         # 基础成本
         if previous_design is None:
             # 首次配置：基础50万（模具、工具）
-            base_cost = 0.5
+            base_cost = 500_000.0
         else:
             # 切换配置：基础20万
-            base_cost = 0.2
+            base_cost = 200_000.0
             
             # 设计差异影响成本
             complexity_diff = RetoolingCalculator._calculate_design_complexity_diff(
                 previous_design, new_design
             )
             # 差异越大，成本越高（0-30万额外成本）
-            base_cost += complexity_diff * 0.3
+            base_cost += complexity_diff * 300_000.0
         
         # 工厂等级影响（高等级工厂需要更精密的工具，成本更高）
         # 但高等级工厂效率更高，所以时间成本更低
@@ -124,8 +124,8 @@ class RetoolingCalculator:
         total_cost = base_cost * level_cost_factor * design_complexity_factor
         
         logger.debug(
-            f"Retooling cost: {total_cost:.2f}M "
-            f"(base={base_cost:.2f}M, level_factor={level_cost_factor:.2f}, "
+            f"Retooling cost: ${total_cost:,.0f} "
+            f"(base=${base_cost:,.0f}, level_factor={level_cost_factor:.2f}, "
             f"design_factor={design_complexity_factor:.2f})"
         )
         
@@ -243,6 +243,17 @@ class RetoolingCalculator:
         retooling_cost = RetoolingCalculator.calculate_retooling_cost(
             previous_design, new_design, factory_level
         )
+
+        if factory:
+            from backend.models.company import Company
+            company = db.query(Company).filter(Company.id == factory.company_id).first()
+            if company and company.cash < retooling_cost:
+                return False, (
+                    f"资金不足，重新配置需要 ${retooling_cost:,.0f}，"
+                    f"当前现金 ${company.cash:,.0f}"
+                ), {}
+            if company:
+                company.record_cost("manufacturing", retooling_cost)
         
         # 更新生产线状态
         line.status = "RETOOLING"
@@ -261,7 +272,7 @@ class RetoolingCalculator:
         
         logger.info(
             f"Production line {line.id} started retooling to {new_design.name}: "
-            f"{retooling_turns} turns, {retooling_cost:.2f}M cost"
+            f"{retooling_turns} turns, ${retooling_cost:,.0f} cost"
         )
         
         return True, "开始重新配置", {
@@ -272,4 +283,3 @@ class RetoolingCalculator:
 
 
 __all__ = ["RetoolingCalculator"]
-

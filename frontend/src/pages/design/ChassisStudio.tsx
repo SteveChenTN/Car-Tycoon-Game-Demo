@@ -11,6 +11,7 @@ import { calculatePlatformStats } from '../../logic/chassisCalculations';
 import { useWizard } from '../../hooks/useWizard';
 import { TechSlider, TechSelect } from '../../components/common/inputs';
 import { RDBaseLayout, type RDBaseLayoutStep } from '../../components/layouts';
+import { formatCurrency } from '../../utils/formatters';
 import { 
   ChevronRight, ChevronLeft, Save, Settings, 
   Ruler, Gauge, CheckCircle2
@@ -59,8 +60,9 @@ const STEPS: RDBaseLayoutStep[] = [
 ];
 
 export const ChassisStudio: React.FC = () => {
-  const { gameState, refreshGameState } = useGameContext();
+  const { gameState, playerCompanyId, refreshGameState } = useGameContext();
   const currentYear = gameState?.current_year || 1946;
+  const playerCompany = gameState?.playerCompany;
   
   // 使用 useWizard 管理步骤导航
   const wizard = useWizard({
@@ -163,16 +165,20 @@ export const ChassisStudio: React.FC = () => {
   }, [chassisDraft.platform_strategy, chassisDraft.wheelbase_mm, chassisDraft.track_front_mm, chassisDraft.track_rear_mm]);
   
   const handleSave = async () => {
+    if (!playerCompanyId || !playerCompany) {
+      alert('Game context is still loading. Please try again in a moment.');
+      return;
+    }
+
     setIsSaving(true);
     try {
-      const companyId = gameState?.playerCompany?.id || 1;
-      const currentCash = gameState?.playerCompany?.cash || 0;
-      const programCostUSD = rdStats.programCost; // USD
-      const programCostM = programCostUSD / 1_000_000; // 转换为百万游戏币
+      const companyId = playerCompanyId;
+      const currentCash = playerCompany.cash;
+      const programCost = rdStats.programCost;
       
       // 前端资金检查（提前验证）
-      if (currentCash < programCostM) {
-        alert(`资金不足！需要 $${programCostM.toFixed(2)}M，当前资金 $${currentCash.toFixed(2)}M`);
+      if (currentCash < programCost) {
+        alert(`资金不足！需要 ${formatCurrency(programCost)}，当前资金 ${formatCurrency(currentCash)}`);
         setIsSaving(false);
         return;
       }
@@ -203,8 +209,8 @@ export const ChassisStudio: React.FC = () => {
         bandwidth_wheelbase_mm: chassisDraft.bandwidth_wheelbase_mm,
         base_track_width_mm: chassisDraft.base_track_width_mm,
         bandwidth_track_mm: chassisDraft.bandwidth_track_mm,
-        // 发送前端计算的成本和周数（已转换为百万游戏币单位）
-        program_cost: programCostM, // 百万游戏币（与后端Company.cash单位一致）
+        // 发送前端计算的绝对金额（与后端Company.cash单位一致）
+        program_cost: programCost,
         rd_weeks: rdStats.rdTime,
       };
       
@@ -228,7 +234,7 @@ export const ChassisStudio: React.FC = () => {
       
       if (data.success) {
         // 更新全局资金（乐观更新）
-        if (gameState?.playerCompany) {
+        if (playerCompany) {
           // 刷新游戏状态以获取最新的资金数据
           if (refreshGameState) {
             refreshGameState();
@@ -241,7 +247,7 @@ export const ChassisStudio: React.FC = () => {
           : `${rdStats.rdTime} 周后`;
         
         // 显示成功通知
-        alert(`项目已启动！\n研发成本: $${programCostM.toFixed(2)}M\n预计完成: ${completionDate}\n\n请前往"研究"模块查看研发进度。`);
+        alert(`项目已启动！\n研发成本: ${formatCurrency(programCost)}\n预计完成: ${completionDate}\n\n请前往"研究"模块查看研发进度。`);
         
         // 重置表单
         setChassisDraft({
@@ -338,7 +344,9 @@ export const ChassisStudio: React.FC = () => {
                   isSaving || 
                   !chassisDraft.name || 
                   !chassisDraft.code ||
-                  (gameState?.playerCompany?.cash || 0) < (rdStats.programCost / 1_000_000)
+                  !playerCompany ||
+                  !playerCompanyId ||
+                  playerCompany.cash < rdStats.programCost
                 }
                 className="flex items-center gap-2 px-4 py-2 rounded-sm font-mono text-sm font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-accent-success hover:bg-green-400 text-primary"
               >
@@ -350,13 +358,13 @@ export const ChassisStudio: React.FC = () => {
                 ) : (
                   <>
                     <Save className="w-4 h-4" />
-                    COMMIT FUNDS (${(rdStats.programCost / 1_000_000).toFixed(1)}M)
+                    COMMIT FUNDS ({formatCurrency(rdStats.programCost)})
                   </>
                 )}
               </button>
-              {(gameState?.playerCompany?.cash || 0) < (chassisStats.programCost / 1_000_000) && (
+              {playerCompany && playerCompany.cash < rdStats.programCost && (
                 <span className="text-xs font-mono text-accent-danger">
-                  资金不足！需要 ${(rdStats.programCost / 1_000_000).toFixed(2)}M，当前 ${(gameState?.playerCompany?.cash || 0).toFixed(2)}M
+                  资金不足！需要 {formatCurrency(rdStats.programCost)}，当前 {formatCurrency(playerCompany.cash)}
                 </span>
               )}
             </div>

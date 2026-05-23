@@ -175,14 +175,14 @@ class DiplomacyManager:
             return False, "Poaching company not found", {}
         
         # 4. 计算成功率
-        current_salary = executive.salary
+        current_salary = executive.annual_salary
         salary_ratio = salary_offer / max(1.0, current_salary)  # 避免除零
         
         # 忠诚度影响（0-100 -> 0.2-2.0倍）
-        loyalty_factor = 1.0 / max(0.5, executive.loyalty / 100.0)
+        loyalty_factor = 1.0 / max(0.5, executive.current_loyalty / 100.0)
         
         # 士气影响（低士气更容易被挖）
-        morale_factor = 1.5 - (executive.morale / 100.0)  # 0.5-1.5
+        morale_factor = 1.5 - (executive.current_morale / 100.0)  # 0.5-1.5
         
         # 基础成功率
         base_success_chance = salary_ratio * loyalty_factor * morale_factor * 0.15
@@ -210,9 +210,9 @@ class DiplomacyManager:
             # 成功：高管跳槽
             old_company_id = executive.company_id
             executive.company_id = poaching_company_id
-            executive.salary = salary_offer
-            executive.loyalty = 50.0  # 忠诚度重置为中等（刚跳槽）
-            executive.morale = 75.0   # 士气提升（新环境）
+            executive.annual_salary = salary_offer
+            executive.current_loyalty = 50.0  # 忠诚度重置为中等（刚跳槽）
+            executive.current_morale = 75.0   # 士气提升（新环境）
             
             # 关系重创
             new_relation = self.update_relation(
@@ -270,7 +270,7 @@ class DiplomacyManager:
         
         else:
             # 失败：高管拒绝，忠诚度提升
-            executive.loyalty = min(100.0, executive.loyalty + 10.0)
+            executive.current_loyalty = min(100.0, executive.current_loyalty + 10.0)
             
             # 关系受损（但小于成功）
             new_relation = self.update_relation(
@@ -586,4 +586,3 @@ class DiplomacyManager:
 
 # 导出
 __all__ = ["DiplomacyManager"]
-

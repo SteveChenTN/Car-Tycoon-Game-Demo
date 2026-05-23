@@ -21,6 +21,7 @@ wheels/
 *.egg
 
 # Virtual Environment
+.venv/
 venv/
 env/
 ENV/
@@ -39,10 +40,12 @@ Thumbs.db
 # 项目特定
 data/*.db
 data/*.db-journal
+data/test/
 data/saves/*.db
 data/saves/*.db-journal
 logs/*.log
 .env
+.pytest_cache/
 
 # Frontend
 node_modules/

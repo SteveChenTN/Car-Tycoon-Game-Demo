@@ -372,8 +372,66 @@ class Company(Base, TimestampMixin, BaseModel):
     
     def __repr__(self) -> str:
         return (f"<Company(id={self.id}, name='{self.name}', "
-                f"cash={self.cash:.1f}M, credit={self.credit_rating}, "
+                f"cash={self.cash:,.0f}, credit={self.credit_rating}, "
                 f"prestige={self.prestige_score:.1f})>")
+
+    def get_monthly_total_costs(self) -> float:
+        """Return this period's total P&L costs in game currency."""
+        return (
+            self.monthly_cost_manufacturing +
+            self.monthly_cost_materials +
+            self.monthly_cost_labor +
+            self.monthly_cost_rd +
+            self.monthly_cost_marketing +
+            self.monthly_cost_admin +
+            self.monthly_interest
+        )
+
+    def refresh_monthly_profit(self) -> None:
+        """Keep monthly profit derived from the monthly revenue/cost ledger."""
+        self.monthly_profit = self.monthly_revenue - self.get_monthly_total_costs()
+
+    def record_revenue(self, amount: float, units_sold: int = 0) -> None:
+        """Record cash revenue in absolute game currency."""
+        amount = max(0.0, float(amount or 0.0))
+        units_sold = max(0, int(units_sold or 0))
+
+        self.cash += amount
+        self.monthly_revenue += amount
+        self.quarterly_revenue += amount
+        self.quarterly_profit += amount
+        self.monthly_units_sold += units_sold
+        self.total_vehicles_sold += units_sold
+        self.refresh_monthly_profit()
+
+    def record_cost(self, category: str, amount: float, affect_cash: bool = True) -> None:
+        """Record a monthly cost in absolute game currency."""
+        amount = max(0.0, float(amount or 0.0))
+        if amount == 0.0:
+            return
+
+        field_by_category = {
+            "manufacturing": "monthly_cost_manufacturing",
+            "materials": "monthly_cost_materials",
+            "labor": "monthly_cost_labor",
+            "rd": "monthly_cost_rd",
+            "marketing": "monthly_cost_marketing",
+            "admin": "monthly_cost_admin",
+            "interest": "monthly_interest",
+        }
+        field_name = field_by_category.get(category)
+        if not field_name:
+            raise ValueError(f"Unknown cost category: {category}")
+
+        setattr(self, field_name, getattr(self, field_name) + amount)
+        self.quarterly_profit -= amount
+
+        if affect_cash:
+            self.cash -= amount
+            if self.cash < 0:
+                self.is_bankrupt = True
+
+        self.refresh_monthly_profit()
     
     def reset_monthly_stats(self) -> None:
         """
@@ -394,4 +452,3 @@ class Company(Base, TimestampMixin, BaseModel):
 
 
 __all__ = ["Company"]
-

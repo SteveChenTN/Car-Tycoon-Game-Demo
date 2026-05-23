@@ -7,6 +7,24 @@ import type { GameState } from '@/types';
 
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+  timeoutMs = 5000
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: init.signal ?? controller.signal,
+    });
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
 // ============================================================
 // Types
 // ============================================================
@@ -25,6 +43,25 @@ export interface SaveInfo {
   };
   file_path: string;
   file_size_mb: number;
+}
+
+interface BackendSaveInfo {
+  save_name?: string;
+  file_name?: string;
+  version?: string;
+  saved_at?: string;
+  modified_time?: string;
+  created_time?: string;
+  metadata?: SaveInfo['metadata'];
+  game_year?: number;
+  current_year?: number;
+  current_month?: number;
+  current_week?: number;
+  turn_number?: number;
+  difficulty?: string;
+  file_path?: string;
+  file_size_mb?: number;
+  size_mb?: number;
 }
 
 export interface SaveGameResponse {
@@ -169,25 +206,25 @@ export async function loadGame(filePath: string): Promise<LoadGameResponse> {
  */
 export async function listSaves(): Promise<SaveInfo[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/game/saves`);
+    const response = await fetchWithTimeout(`${API_BASE_URL}/game/saves`);
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
     const data = await response.json();
-    const saves = data.saves || [];
+    const saves = (data.saves || []) as BackendSaveInfo[];
     
     // 转换后端数据格式以匹配前端期望
-    return saves.map((save: any) => ({
+    return saves.map((save) => ({
       success: true,
       save_name: save.save_name || save.file_name || '未命名存档',
       version: save.version || '1.0',
       saved_at: save.saved_at || save.modified_time || save.created_time || new Date().toISOString(),
-      metadata: save.metadata || (save.game_year ? {
-        current_year: save.game_year,
-        current_month: 1,
-        current_week: 1,
+      metadata: save.metadata || ((save.game_year || save.current_year) ? {
+        current_year: save.game_year || save.current_year || 1946,
+        current_month: save.current_month || 1,
+        current_week: save.current_week || 1,
         turn_number: save.turn_number || 0,
         difficulty: save.difficulty || 'normal'
       } : undefined),
@@ -195,7 +232,7 @@ export async function listSaves(): Promise<SaveInfo[]> {
       file_size_mb: save.file_size_mb ?? save.size_mb ?? 0
     }));
   } catch (error) {
-    console.error('Failed to list saves:', error);
+    console.warn('Failed to list saves:', error);
     return [];
   }
 }
@@ -247,11 +284,37 @@ export async function getGameState(): Promise<GameState | null> {
     const data = await response.json();
 
     if (data.success && data.game) {
+      const playerCompany = data.player_company
+        ? {
+            id: data.player_company.id,
+            name: data.player_company.name,
+            cash: data.player_company.cash,
+            prestige: data.player_company.prestige,
+            credit_rating: data.player_company.credit_rating,
+          }
+        : undefined;
+      const gameId = data.game_id ?? data.game.id;
+      const playerCompanyId = data.player_company_id ?? playerCompany?.id;
+
       return {
+        game_id: gameId,
+        gameId,
+        player_company_id: playerCompanyId,
+        playerCompanyId,
+        currentSave: data.current_save
+          ? {
+              loaded: data.current_save.loaded,
+              save_path: data.current_save.save_path,
+              savePath: data.current_save.save_path,
+              file_name: data.current_save.file_name,
+              fileName: data.current_save.file_name,
+            }
+          : undefined,
         current_year: data.game.year,
         current_month: data.game.month,
         current_week: data.game.week,
         turn_number: data.game.turn,
+        playerCompany,
       };
     }
 
@@ -310,4 +373,3 @@ export async function nextTurn(): Promise<{ success: boolean; new_date?: string;
     };
   }
 }
-

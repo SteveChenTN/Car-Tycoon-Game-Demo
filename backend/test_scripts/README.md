@@ -81,3 +81,8 @@ python backend/test_scripts/test_production_flow.py
 4. 日志输出详细，便于调试
 
 
+# Database safety notice
+
+The scripts in this directory are standalone database tests, not part of the
+default pytest suite. They may write to or migrate the active SQLite database.
+Run them only against a disposable test database or a verified backup copy.
