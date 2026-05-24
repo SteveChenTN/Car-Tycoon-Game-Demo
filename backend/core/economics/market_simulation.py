@@ -2,9 +2,10 @@
 市场模拟核心算法
 实现月度销售计算、需求匹配和市场解析
 """
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional, Tuple, Any
 from dataclasses import dataclass
 from sqlalchemy.orm import Session
+from collections import defaultdict
 import math
 import random
 import time
@@ -16,6 +17,9 @@ from backend.models.market import (
 from backend.models.engineering import CarTrim
 from backend.models.company import Company
 from backend.models.region import Region
+from backend.models.game_state import GameState
+from backend.models.history import SalesHistory, MarketDemandHistory, UsedCarInventory
+from backend.models.inventory import DealershipInventory
 from backend.config import MarketConstants, EconomicConstants
 from backend.utils.logger import get_logger
 from backend.core.economics.market_math import MultinomialLogitModel as MultinomialLogit
@@ -46,6 +50,10 @@ class VehicleOption:
     is_used: bool
     distribution_coverage: float  # 分销覆盖度
     available_units: int
+    dealer_inventory_id: Optional[int] = None
+    manufacturing_cost: float = 0.0
+    discount_percent: float = 0.0
+    revenue_retention: float = 1.0
 
 
 @dataclass
@@ -59,6 +67,11 @@ class MarketResolutionResult:
     unmet_demand: int
     used_car_sales: int
     execution_time_ms: float
+    sales_details_by_trim: Dict[int, Dict[str, Any]]
+    total_revenue: float
+    total_manufacturing_cost: float
+    total_gross_profit: float
+    lost_demand_by_reason: Dict[str, int]
 
 
 # ========== 核心市场模拟类 ==========
@@ -96,22 +109,37 @@ class MarketSimulator:
         logger.info(f"开始计算地区 {region_id} 的月度销售（回合 {current_turn}）")
         
         # 阶段1：获取市场上下文
+        game_state = self.db.query(GameState).filter(GameState.id == game_id).first()
+        if not game_state:
+            raise ValueError(f"游戏 {game_id} 不存在")
+
+        period_factor = self._get_period_factor(game_state)
         region = self._get_region(region_id)
         consumer_buckets = self._get_consumer_buckets(region_id, game_id)
-        available_vehicles = self._get_available_vehicles(region_id, game_id)
+        self._receive_arrived_shipments(region_id, game_id, current_turn)
+        available_vehicles = self._get_available_vehicles(
+            region_id=region_id,
+            game_id=game_id,
+            period_factor=period_factor
+        )
+        empty_market_reason = self._determine_empty_market_reason(region_id, game_id)
         
         logger.debug(f"  消费者细分数: {len(consumer_buckets)}")
         logger.debug(f"  可选车型数: {len(available_vehicles)}")
         
         # 阶段2：计算每个细分的需求
-        total_demand = self._calculate_demand(consumer_buckets, region, current_turn)
+        total_demand = self._calculate_demand(
+            consumer_buckets, region, current_turn, period_factor
+        )
         
         # 阶段3：运行购买模拟
         sales_result = self._simulate_purchases(
             consumer_buckets=consumer_buckets,
             vehicles=available_vehicles,
             region=region,
-            game_id=game_id
+            game_id=game_id,
+            current_turn=current_turn,
+            empty_market_reason=empty_market_reason
         )
         
         # 阶段4：生成结果
@@ -123,9 +151,24 @@ class MarketSimulator:
             total_sales=sales_result["total_new_sales"],
             sales_by_company=sales_result["sales_by_company"],
             sales_by_trim=sales_result["sales_by_trim"],
-            unmet_demand=total_demand - sales_result["total_new_sales"] - sales_result["used_car_sales"],
+            unmet_demand=max(
+                0,
+                total_demand - sales_result["total_new_sales"] - sales_result["used_car_sales"]
+            ),
             used_car_sales=sales_result["used_car_sales"],
-            execution_time_ms=execution_time_ms
+            execution_time_ms=execution_time_ms,
+            sales_details_by_trim=sales_result["sales_details_by_trim"],
+            total_revenue=sales_result["total_revenue"],
+            total_manufacturing_cost=sales_result["total_manufacturing_cost"],
+            total_gross_profit=sales_result["total_gross_profit"],
+            lost_demand_by_reason=sales_result["lost_demand_by_reason"]
+        )
+
+        self._persist_market_outcome(
+            game_id=game_id,
+            game_state=game_state,
+            region=region,
+            result=result
         )
         
         logger.info(
@@ -137,7 +180,44 @@ class MarketSimulator:
         return result
     
     # ========== 阶段1：获取数据 ==========
-    
+
+    def _get_period_factor(self, game_state: GameState) -> float:
+        """将月度需求/容量缩放到当前回合粒度。"""
+        if game_state.simulation_speed == "weekly":
+            return 1.0 / 4.0
+        return 1.0
+
+    def _receive_arrived_shipments(
+        self,
+        region_id: int,
+        game_id: int,
+        current_turn: int
+    ) -> None:
+        """把已到达的经销商在途库存转为可售新车。"""
+        arrivals = self.db.query(DealershipInventory).filter(
+            DealershipInventory.game_id == game_id,
+            DealershipInventory.region_id == region_id,
+            DealershipInventory.quantity_in_transit > 0,
+            DealershipInventory.expected_arrival_turn.isnot(None),
+            DealershipInventory.expected_arrival_turn <= current_turn
+        ).all()
+
+        for inventory in arrivals:
+            inventory.receive_shipment(inventory.quantity_in_transit, current_turn)
+
+        if arrivals:
+            self.db.flush()
+
+    def _determine_empty_market_reason(self, region_id: int, game_id: int) -> str:
+        """区分没有分销网络和有渠道但没有可售库存。"""
+        has_distribution = self.db.query(DistributionNetwork).filter(
+            DistributionNetwork.game_id == game_id,
+            DistributionNetwork.region_id == region_id,
+            DistributionNetwork.is_active == True,
+            DistributionNetwork.coverage_level > 0
+        ).first()
+        return "NO_NEW_STOCK" if has_distribution else "NO_DISTRIBUTION"
+
     def _get_region(self, region_id: int) -> Region:
         """获取地区信息"""
         region = self.db.query(Region).filter(Region.id == region_id).first()
@@ -155,11 +235,12 @@ class MarketSimulator:
     def _get_available_vehicles(
         self,
         region_id: int,
-        game_id: int
+        game_id: int,
+        period_factor: float
     ) -> List[VehicleOption]:
         """
         获取该地区可购买的所有车辆
-        包含分销覆盖度过滤
+        包含分销覆盖度、经销商库存和周期容量过滤
         """
         vehicles = []
         
@@ -172,6 +253,7 @@ class MarketSimulator:
         for trim in trims:
             # 检查分销网络
             distribution = self.db.query(DistributionNetwork).filter(
+                DistributionNetwork.game_id == game_id,
                 DistributionNetwork.company_id == trim.company_id,
                 DistributionNetwork.region_id == region_id,
                 DistributionNetwork.is_active == True
@@ -180,23 +262,42 @@ class MarketSimulator:
             if not distribution or distribution.coverage_level == 0.0:
                 # 该公司在此地区无分销，车辆不可见
                 continue
+
+            dealer_inventory = self.db.query(DealershipInventory).filter(
+                DealershipInventory.game_id == game_id,
+                DealershipInventory.region_id == region_id,
+                DealershipInventory.car_trim_id == trim.id,
+                DealershipInventory.company_id == trim.company_id
+            ).first()
+
+            if not dealer_inventory or dealer_inventory.quantity_new <= 0:
+                continue
+
+            period_capacity = int(distribution.monthly_capacity * period_factor)
+            if distribution.monthly_capacity > 0 and period_capacity == 0:
+                period_capacity = 1
+
+            available_units = min(dealer_inventory.quantity_new, period_capacity)
+            if available_units <= 0:
+                continue
             
             # 创建车辆选项
             vehicle = self._convert_trim_to_option(
                 trim=trim,
-                distribution=distribution
+                distribution=distribution,
+                dealer_inventory=dealer_inventory,
+                available_units=available_units
             )
             vehicles.append(vehicle)
-        
-        # TODO: 添加二手车选项（简化版）
-        # 这里可以后续扩展，现在只模拟新车市场
         
         return vehicles
     
     def _convert_trim_to_option(
         self,
         trim: CarTrim,
-        distribution: DistributionNetwork
+        distribution: DistributionNetwork,
+        dealer_inventory: DealershipInventory,
+        available_units: int
     ) -> VehicleOption:
         """
         将CarTrim转换为VehicleOption
@@ -236,7 +337,7 @@ class MarketSimulator:
             car_trim_id=trim.id,
             company_id=trim.company_id,
             segment=trim.segment,
-            price=trim.msrp,
+            price=float(dealer_inventory.effective_price or dealer_inventory.current_msrp or trim.msrp or 0.0),
             performance_score=performance_score,
             comfort_score=comfort_score,
             reliability_score=reliability_score,
@@ -246,7 +347,11 @@ class MarketSimulator:
             prestige_score=prestige_score,
             is_used=False,
             distribution_coverage=distribution.coverage_level,
-            available_units=distribution.monthly_capacity
+            available_units=available_units,
+            dealer_inventory_id=dealer_inventory.id,
+            manufacturing_cost=float(trim.manufacturing_cost or 0.0),
+            discount_percent=dealer_inventory.current_discount_percent or 0.0,
+            revenue_retention=distribution.get_effective_margin()
         )
     
     # ========== 阶段2：需求计算 ==========
@@ -255,7 +360,8 @@ class MarketSimulator:
         self,
         buckets: List[ConsumerBucket],
         region: Region,
-        current_turn: int
+        current_turn: int,
+        period_factor: float
     ) -> int:
         """
         计算总需求量
@@ -272,13 +378,13 @@ class MarketSimulator:
             monthly_base_demand = annual_purchases / 12.0
             
             # 应用经济修正和随机波动
-            demand = monthly_base_demand * economic_modifier * random.uniform(0.9, 1.1)
+            demand = monthly_base_demand * period_factor * economic_modifier * random.uniform(0.9, 1.1)
             bucket.current_demand = int(demand)
             bucket.satisfied_demand = 0  # 重置
             
             total_demand += bucket.current_demand
         
-        self.db.commit()
+        self.db.flush()
         
         return total_demand
     
@@ -308,7 +414,9 @@ class MarketSimulator:
         consumer_buckets: List[ConsumerBucket],
         vehicles: List[VehicleOption],
         region: Region,
-        game_id: int
+        game_id: int,
+        current_turn: int,
+        empty_market_reason: str
     ) -> Dict:
         """
         运行购买模拟（使用Multinomial Logit模型）
@@ -316,8 +424,21 @@ class MarketSimulator:
         """
         sales_by_company = {}
         sales_by_trim = {}
+        sales_details_by_trim: Dict[int, Dict[str, Any]] = {}
         total_new_sales = 0
-        used_car_sales = 0
+        used_candidate_demand = 0
+        lost_demand_by_reason = defaultdict(int)
+
+        def route_unmet(quantity: int, reason: str) -> None:
+            nonlocal used_candidate_demand
+            if quantity <= 0:
+                return
+
+            used_attempts = int(quantity * 0.3)
+            used_candidate_demand += used_attempts
+            lost_now = quantity - used_attempts
+            if lost_now > 0:
+                lost_demand_by_reason[reason] += lost_now
         
         # 随机打乱顺序以避免系统性偏差
         random.shuffle(consumer_buckets)
@@ -330,7 +451,9 @@ class MarketSimulator:
             brand_perceptions = self._get_brand_perceptions(region.id, game_id)
             
             # 获取营销活动数据
-            active_campaigns = self._get_active_campaigns(region.id, game_id, bucket.segment)
+            active_campaigns = self._get_active_campaigns(
+                region.id, game_id, bucket.segment, current_turn
+            )
             
             # 使用Multinomial Logit模型批量处理需求
             # 为了性能，按批次处理（每批100个买家）
@@ -384,85 +507,244 @@ class MarketSimulator:
                 
                 if len(options) <= 1:
                     # 没有可选车辆，所有人都不购买
-                    used_car_sales += int(current_batch * 0.3)
+                    route_unmet(current_batch, empty_market_reason)
                     remaining_demand -= current_batch
                     continue
                 
-                # 初始化Logit模型
-                # Beta参数：价格负系数，性能正系数，品牌正系数
-                logit_model = MultinomialLogit(beta_params={
-                    'price': -0.00002,  # 价格每增加$1，效用降低0.00002
-                    'performance': 0.01,  # 性能每增加1分，效用增加0.01
-                    'brand': 0.02,  # 品牌知名度每增加1分，效用增加0.02
-                    'utility': 3.0  # 直接效用得分的权重
-                })
-                
                 # 计算选择概率
-                probabilities = logit_model.calculate_probabilities(options)
+                utility_scores = []
+                for option in options:
+                    attributes = option["attributes"]
+                    utility_scores.append(
+                        -0.00002 * attributes["price"]
+                        + 0.01 * attributes["performance"]
+                        + 0.02 * attributes["brand"]
+                        + 3.0 * attributes["utility"]
+                    )
+                logit_model = MultinomialLogit(use_numpy=False)
+                probabilities = logit_model.calculate_choice_probabilities(utility_scores)
                 
                 # 根据概率分配购买
+                allocated_count = 0
                 for i, option in enumerate(options):
                     purchase_count = int(probabilities[i] * current_batch)
+                    allocated_count += purchase_count
                     
                     if purchase_count == 0:
                         continue
                     
                     if option['vehicle'] is None:
-                        # "不购买"选项：30%转向二手车
-                        used_car_sales += int(purchase_count * 0.3)
+                        route_unmet(purchase_count, "LOW_UTILITY_OR_PRICE")
                     else:
                         vehicle = option['vehicle']
                         # 考虑库存限制
                         actual_sales = min(purchase_count, vehicle.available_units)
-                        
-                        vehicle.available_units -= actual_sales
-                        total_new_sales += actual_sales
-                        bucket.satisfied_demand += actual_sales
-                        self._record_vehicle_sale(vehicle, actual_sales)
-                        
-                        # 记录销量
-                        sales_by_company[vehicle.company_id] = \
-                            sales_by_company.get(vehicle.company_id, 0) + actual_sales
-                        
-                        if vehicle.car_trim_id:
-                            sales_by_trim[vehicle.car_trim_id] = \
-                                sales_by_trim.get(vehicle.car_trim_id, 0) + actual_sales
+
+                        if actual_sales > 0 and vehicle.dealer_inventory_id is not None:
+                            dealer_inventory = self.db.query(DealershipInventory).filter(
+                                DealershipInventory.id == vehicle.dealer_inventory_id
+                            ).first()
+
+                            if dealer_inventory and dealer_inventory.sell_units(actual_sales):
+                                vehicle.available_units -= actual_sales
+                                total_new_sales += actual_sales
+                                bucket.satisfied_demand += actual_sales
+
+                                customer_revenue = vehicle.price * actual_sales
+                                company_revenue = customer_revenue * vehicle.revenue_retention
+                                manufacturing_cost = vehicle.manufacturing_cost * actual_sales
+                                gross_profit = company_revenue - manufacturing_cost
+
+                                sales_by_company[vehicle.company_id] = (
+                                    sales_by_company.get(vehicle.company_id, 0) + actual_sales
+                                )
+
+                                if vehicle.car_trim_id:
+                                    sales_by_trim[vehicle.car_trim_id] = (
+                                        sales_by_trim.get(vehicle.car_trim_id, 0) + actual_sales
+                                    )
+
+                                    detail = sales_details_by_trim.setdefault(
+                                        vehicle.car_trim_id,
+                                        {
+                                            "trim_id": vehicle.car_trim_id,
+                                            "company_id": vehicle.company_id,
+                                            "units_sold": 0,
+                                            "customer_revenue": 0.0,
+                                            "revenue_total": 0.0,
+                                            "manufacturing_cost_total": 0.0,
+                                            "gross_profit_total": 0.0,
+                                            "discount_weighted_total": 0.0,
+                                        }
+                                    )
+                                    detail["units_sold"] += actual_sales
+                                    detail["customer_revenue"] += customer_revenue
+                                    detail["revenue_total"] += company_revenue
+                                    detail["manufacturing_cost_total"] += manufacturing_cost
+                                    detail["gross_profit_total"] += gross_profit
+                                    detail["discount_weighted_total"] += (
+                                        (vehicle.discount_percent / 100.0) * actual_sales
+                                    )
+                            else:
+                                actual_sales = 0
+
+                        stock_shortfall = purchase_count - actual_sales
+                        if stock_shortfall > 0:
+                            route_unmet(stock_shortfall, "NO_NEW_STOCK")
+
+                rounding_lost = current_batch - allocated_count
+                if rounding_lost > 0:
+                    route_unmet(rounding_lost, "ROUNDING_LOST")
                 
                 remaining_demand -= current_batch
-        
-        # 提交数据库更新
-        self.db.commit()
+
+        used_car_sales = self._simulate_used_car_sales(
+            game_id=game_id,
+            region_id=region.id,
+            demand=used_candidate_demand
+        )
+        used_stockout = used_candidate_demand - used_car_sales
+        if used_stockout > 0:
+            lost_demand_by_reason["USED_STOCKOUT"] += used_stockout
+
+        self.db.flush()
         
         return {
             "total_new_sales": total_new_sales,
             "used_car_sales": used_car_sales,
             "sales_by_company": sales_by_company,
-            "sales_by_trim": sales_by_trim
+            "sales_by_trim": sales_by_trim,
+            "sales_details_by_trim": sales_details_by_trim,
+            "total_revenue": sum(d["revenue_total"] for d in sales_details_by_trim.values()),
+            "total_manufacturing_cost": sum(
+                d["manufacturing_cost_total"] for d in sales_details_by_trim.values()
+            ),
+            "total_gross_profit": sum(
+                d["gross_profit_total"] for d in sales_details_by_trim.values()
+            ),
+            "lost_demand_by_reason": dict(lost_demand_by_reason),
         }
 
-    def _record_vehicle_sale(self, vehicle: VehicleOption, units_sold: int) -> None:
-        """Record revenue and COGS for sold new vehicles."""
-        if units_sold <= 0 or vehicle.car_trim_id is None:
-            return
+    def _simulate_used_car_sales(self, game_id: int, region_id: int, demand: int) -> int:
+        """用现有二手车库存承接未满足的新车需求。"""
+        if demand <= 0:
+            return 0
 
-        company = self.db.query(Company).filter(Company.id == vehicle.company_id).first()
-        if not company:
-            return
+        used_cars = self.db.query(UsedCarInventory).filter(
+            UsedCarInventory.game_id == game_id,
+            UsedCarInventory.region_id == region_id,
+            UsedCarInventory.quantity > 0
+        ).order_by(
+            UsedCarInventory.condition_score.desc(),
+            UsedCarInventory.avg_asking_price.asc()
+        ).all()
 
-        trim = self.db.query(CarTrim).filter(CarTrim.id == vehicle.car_trim_id).first()
-        unit_cost = 0.0
-        if trim:
-            unit_cost = float(trim.manufacturing_cost or 0.0)
-        if unit_cost <= 0.0:
-            unit_cost = vehicle.price * 0.65
+        total_sold = 0
 
-        revenue = vehicle.price * units_sold
-        cogs = unit_cost * units_sold
+        for used_car in used_cars:
+            if total_sold >= demand:
+                break
 
-        company.record_revenue(revenue, units_sold=units_sold)
-        company.record_cost("manufacturing", cogs * 0.55)
-        company.record_cost("materials", cogs * 0.30)
-        company.record_cost("labor", cogs * 0.15)
+            max_sellable = min(used_car.quantity, demand - total_sold)
+            avg_market_price = 25000.0
+            price_factor = min(1.0, avg_market_price / max(used_car.avg_asking_price, 1.0))
+            condition_factor = used_car.condition_score / 100.0
+            actual_sold = int(max_sellable * price_factor * condition_factor)
+            actual_sold = max(0, min(actual_sold, used_car.quantity))
+
+            if actual_sold <= 0:
+                continue
+
+            used_car.quantity -= actual_sold
+            total_sold += actual_sold
+
+        return total_sold
+
+    def _persist_market_outcome(
+        self,
+        game_id: int,
+        game_state: GameState,
+        region: Region,
+        result: MarketResolutionResult
+    ) -> None:
+        """写入销售历史、需求历史，并更新公司本回合财务指标。"""
+        report_turn = game_state.turn_number + 1
+
+        for detail in result.sales_details_by_trim.values():
+            units_sold = detail["units_sold"]
+            if units_sold <= 0:
+                continue
+
+            revenue_total = detail["revenue_total"]
+            gross_profit_total = detail["gross_profit_total"]
+            manufacturing_cost_total = detail["manufacturing_cost_total"]
+            avg_transaction_price = detail["customer_revenue"] / units_sold
+            avg_discount_percent = detail["discount_weighted_total"] / units_sold
+            market_share_percent = (
+                units_sold / result.total_sales * 100.0
+                if result.total_sales > 0 else 0.0
+            )
+            gross_margin_percent = (
+                gross_profit_total / revenue_total * 100.0
+                if revenue_total > 0 else 0.0
+            )
+
+            self.db.add(SalesHistory(
+                game_id=game_id,
+                turn_number=report_turn,
+                year=game_state.current_year,
+                month=game_state.current_month,
+                region_id=region.id,
+                trim_id=detail["trim_id"],
+                company_id=detail["company_id"],
+                units_sold=units_sold,
+                revenue_total=revenue_total,
+                avg_transaction_price=avg_transaction_price,
+                avg_discount_percent=avg_discount_percent,
+                market_share_percent=market_share_percent,
+                gross_profit_total=gross_profit_total,
+                gross_margin_percent=gross_margin_percent,
+            ))
+
+            company = self.db.query(Company).filter(
+                Company.id == detail["company_id"]
+            ).first()
+            if not company:
+                continue
+
+            company.record_revenue(revenue_total, units_sold=units_sold)
+            company.record_cost("manufacturing", manufacturing_cost_total)
+
+        lost_demand = sum(result.lost_demand_by_reason.values())
+        demand_record = self.db.query(MarketDemandHistory).filter(
+            MarketDemandHistory.game_id == game_id,
+            MarketDemandHistory.turn_number == report_turn,
+            MarketDemandHistory.region_id == region.id
+        ).first()
+
+        if demand_record:
+            demand_record.year = game_state.current_year
+            demand_record.month = game_state.current_month
+            demand_record.total_demand = result.total_demand
+            demand_record.new_car_sales = result.total_sales
+            demand_record.used_car_sales = result.used_car_sales
+            demand_record.lost_demand = lost_demand
+            demand_record.lost_reasons = result.lost_demand_by_reason
+        else:
+            self.db.add(MarketDemandHistory(
+                game_id=game_id,
+                turn_number=report_turn,
+                year=game_state.current_year,
+                month=game_state.current_month,
+                region_id=region.id,
+                total_demand=result.total_demand,
+                new_car_sales=result.total_sales,
+                used_car_sales=result.used_car_sales,
+                lost_demand=lost_demand,
+                lost_reasons=result.lost_demand_by_reason,
+            ))
+
+        self.db.flush()
     
     def _get_brand_perceptions(
         self,
@@ -481,14 +763,17 @@ class MarketSimulator:
         self,
         region_id: int,
         game_id: int,
-        target_segment: str
+        target_segment: str,
+        current_turn: int
     ) -> Dict[int, List[MarketingCampaign]]:
         """获取当前活跃的营销活动"""
         campaigns = self.db.query(MarketingCampaign).filter(
             MarketingCampaign.region_id == region_id,
             MarketingCampaign.game_id == game_id,
             MarketingCampaign.is_active == True,
-            MarketingCampaign.target_bucket == target_segment
+            MarketingCampaign.target_bucket == target_segment,
+            MarketingCampaign.start_turn <= current_turn,
+            MarketingCampaign.end_turn >= current_turn
         ).all()
         
         # 按公司分组

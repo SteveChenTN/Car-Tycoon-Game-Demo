@@ -25,6 +25,10 @@ def normalize_project_cost(amount: float) -> float:
     return amount
 
 
+def _enum_value(value: Any) -> Any:
+    return value.value if isinstance(value, Enum) else value
+
+
 class ProjectType(str, Enum):
     """研发项目类型"""
     ENGINE = "ENGINE"  # 引擎研发
@@ -253,7 +257,7 @@ class RDManager:
         
         # 检查槽位
         if not department.can_start_project():
-            return False, f"{dept_type.value}部门槽位已满（{department.slots_total}/{department.slots_total}）", None
+            return False, f"{_enum_value(dept_type)}部门槽位已满（{department.slots_total}/{department.slots_total}）", None
         
         # 获取公司
         from backend.models.company import Company
@@ -290,8 +294,8 @@ class RDManager:
         department.active_projects.append(project)
         
         logger.info(
-            f"启动研发项目: {project_type.value} - "
-            f"公司 {self.company_id}, 部门 {dept_type.value}, "
+            f"启动研发项目: {_enum_value(project_type)} - "
+            f"公司 {self.company_id}, 部门 {_enum_value(dept_type)}, "
             f"周数 {effective_weeks} (基础 {base_weeks}), "
             f"成本 ${effective_cost:,.0f} (基础 ${normalized_base_cost:,.0f}), "
             f"熟悉度加成: 成本-{department.cost_reduction*100:.0f}%, 时间-{department.time_reduction*100:.0f}%"
@@ -346,14 +350,14 @@ class RDManager:
                     results["projects_completed"] += 1
                     results["completed_projects"].append({
                         "project_id": project.id,
-                        "type": project.type.value,
-                        "department": dept_type.value,
+                        "type": _enum_value(project.type),
+                        "department": _enum_value(dept_type),
                         "completion_result": completion_result
                     })
                     
                     logger.info(
-                        f"研发项目完成: {project.type.value} - "
-                        f"公司 {self.company_id}, 部门 {dept_type.value}, "
+                        f"研发项目完成: {_enum_value(project.type)} - "
+                        f"公司 {self.company_id}, 部门 {_enum_value(dept_type)}, "
                         f"获得经验 {experience_gained:.1f}, "
                         f"部门熟悉度等级: {department.familiarity_level}"
                     )
@@ -525,16 +529,16 @@ class RDManager:
         """
         return {
             "departments": {
-                dept_type.value: {
-                    "type": dept.type.value,
+                _enum_value(dept_type): {
+                    "type": _enum_value(dept.type),
                     "slots_total": dept.slots_total,
                     "familiarity_score": dept.familiarity_score,
                     "familiarity_level": dept.familiarity_level,
                     "active_projects": [
                         {
                             "id": p.id,
-                            "type": p.type.value,
-                            "status": p.status.value,
+                            "type": _enum_value(p.type),
+                            "status": _enum_value(p.status),
                             "payload": p.payload,
                             "progress": p.progress,
                             "target_weeks": p.target_weeks,

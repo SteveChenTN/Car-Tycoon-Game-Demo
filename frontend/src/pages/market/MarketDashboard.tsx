@@ -41,7 +41,7 @@ export function MarketDashboard() {
     if (regions.length > 0 && Object.keys(regionalPrices).length === 0) {
       const initialPrices: Record<number, number> = {};
       regions.forEach((region) => {
-        initialPrices[region.region_id] = region.my_price || globalBasePrice;
+        initialPrices[region.region_id] = region.my_price ?? globalBasePrice;
       });
       setRegionalPrices(initialPrices);
     }
@@ -62,8 +62,8 @@ export function MarketDashboard() {
       const formattedRegions = marketData.map((region: any) => ({
         ...region,
         demand_tier: region.demand_tier || (region.demand_level > 0.7 ? 'HIGH' : region.demand_level > 0.4 ? 'MEDIUM' : 'LOW'),
-        my_price: region.my_price || globalBasePrice,
-        estimated_profit: 0 // 将在 useMemo 中计算
+        my_price: region.my_price ?? globalBasePrice,
+        estimated_profit: region.estimated_profit ?? region.gross_profit ?? 0
       }));
       
       setRegions(formattedRegions);
@@ -120,10 +120,13 @@ export function MarketDashboard() {
   // 计算估算利润
   const enrichedRegions = useMemo(() => {
     return regions.map((region) => {
-      const myPrice = regionalPrices[region.region_id] || region.my_price;
-      const estimatedVolume = 1000; // TODO: 从API获取真实估算
-      const cost = 20000; // TODO: 从车型数据获取
-      const estimatedProfit = (myPrice - cost) * estimatedVolume;
+      const apiPrice = region.my_price ?? globalBasePrice;
+      const myPrice = regionalPrices[region.region_id] ?? apiPrice;
+      const actualSales = region.actual_sales ?? region.estimated_sales ?? 0;
+      const baseProfit = region.estimated_profit ?? region.gross_profit ?? 0;
+      const estimatedProfit = actualSales > 0
+        ? baseProfit + (myPrice - apiPrice) * actualSales
+        : baseProfit;
 
       return {
         ...region,
@@ -131,7 +134,7 @@ export function MarketDashboard() {
         estimated_profit: estimatedProfit
       };
     });
-  }, [regions, regionalPrices]);
+  }, [regions, regionalPrices, globalBasePrice]);
 
   // 如果有错误，显示错误信息
   if (error && regions.length === 0) {
@@ -197,7 +200,10 @@ export function MarketDashboard() {
                 <tr className="text-xs uppercase tracking-wider text-slate-400">
                   <th className="px-4 py-3 text-left">区域</th>
                   <th className="px-4 py-3 text-left">需求层级</th>
+                  <th className="px-4 py-3 text-right">销量</th>
+                  <th className="px-4 py-3 text-right">库存</th>
                   <th className="px-4 py-3 text-right">市场份额</th>
+                  <th className="px-4 py-3 text-right">二手/流失</th>
                   <th className="px-4 py-3 text-right">竞品均价</th>
                   <th className="px-4 py-3 text-right">我的价格</th>
                   <th className="px-4 py-3 text-right">预估利润</th>
@@ -205,9 +211,12 @@ export function MarketDashboard() {
               </thead>
               <tbody className="divide-y divide-slate-700">
                 {enrichedRegions.map((region) => {
-                  const myPrice = region.my_price;
-                  const rivalPrice = region.rival_avg_price;
+                  const myPrice = region.my_price ?? 0;
+                  const rivalPrice = region.rival_avg_price ?? 0;
                   const priceColor = myPrice < rivalPrice ? 'text-green-400' : 'text-red-400';
+                  const actualSales = region.actual_sales ?? region.estimated_sales ?? 0;
+                  const usedSales = region.used_car_sales ?? 0;
+                  const lostDemand = region.lost_demand ?? 0;
 
                   return (
                     <tr
@@ -223,8 +232,17 @@ export function MarketDashboard() {
                       <td className="px-4 py-3">
                         <DemandTierBadge tier={region.demand_tier} />
                       </td>
+                      <td className="px-4 py-3 text-right font-mono text-slate-100">
+                        {actualSales.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-slate-300">
+                        {(region.stock_available ?? 0).toLocaleString()}
+                      </td>
                       <td className="px-4 py-3 text-right font-mono">
                         {(region.market_share * 100).toFixed(1)}%
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono text-slate-400">
+                        {usedSales.toLocaleString()} / {lostDemand.toLocaleString()}
                       </td>
                       <td className="px-4 py-3 text-right font-mono text-slate-400">
                         ${rivalPrice.toLocaleString()}
@@ -287,6 +305,9 @@ export function MarketDashboard() {
                     {isHovered && region && (
                       <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-black border border-slate-600 rounded p-2 text-xs whitespace-nowrap z-20 pointer-events-none">
                         <div className="font-semibold">{region.region_name}</div>
+                        <div className="text-cyan-300 mt-1">
+                          销量 {(cell.sales_volume ?? region.actual_sales ?? 0).toLocaleString()} 辆
+                        </div>
                         <div className="text-slate-400 mt-1">
                           {region.customer_feedback || '暂无反馈'}
                         </div>

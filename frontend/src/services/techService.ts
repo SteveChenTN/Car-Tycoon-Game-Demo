@@ -2,7 +2,7 @@
  * 技术树和研发 API 服务
  */
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import { apiPaths, apiUrl } from './apiClient';
 
 // ============================================================
 // Types
@@ -90,7 +90,7 @@ export async function getTechTree(): Promise<TechTree> {
  */
 export async function getResearchProgress(companyId: number): Promise<ResearchProgress[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/research/progress?company_id=${companyId}`);
+    const response = await fetch(apiUrl(apiPaths.legacy.v1('research', '/progress'), { company_id: companyId }));
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
@@ -109,7 +109,7 @@ export async function startResearch(
   techId: string
 ): Promise<{ success: boolean; message?: string; error?: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/research/start`, {
+    const response = await fetch(apiUrl(apiPaths.legacy.v1('research', '/start')), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

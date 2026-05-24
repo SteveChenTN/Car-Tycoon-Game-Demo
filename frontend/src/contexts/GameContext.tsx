@@ -1,7 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import type { EventLog, GameState } from '@/types';
-
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import { apiPaths, apiUrl, getActiveGameId, setActiveGameId } from '@/services/apiClient';
 
 interface GameContextValue {
   gameState: GameState | null;
@@ -184,9 +183,38 @@ export function GameProvider({ children }: GameProviderProps) {
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shouldReconnectRef = useRef(true);
 
+  const fetchRecentEvents = useCallback(async () => {
+    try {
+      const response = await fetch(apiUrl(apiPaths.currentGame('/events/recent'), { limit: 50 }), {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'omit',
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json() as unknown[];
+      if (!Array.isArray(data)) {
+        return;
+      }
+
+      const events = data
+        .slice()
+        .reverse()
+        .map((item, index) => eventFromPayload(asRecord(item), index + 1));
+
+      setEventHistory(events);
+      setLatestEvent(events.length > 0 ? events[events.length - 1] : null);
+    } catch (error) {
+      console.error('[GameProvider] Failed to fetch recent events:', error);
+    }
+  }, []);
+
   const fetchGameState = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/game/state`, {
+      const response = await fetch(apiUrl(apiPaths.currentGame('/state')), {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'omit',
@@ -200,11 +228,16 @@ export function GameProvider({ children }: GameProviderProps) {
       setCurrentSaveState(normalizeCurrentSave(data.current_save ?? data.currentSave) ?? null);
 
       if (!data.success || !data.game) {
+        setActiveGameId(null);
         setGameState(null);
         return;
       }
 
-      setGameState((prev) => normalizeGameState(data, prev));
+      setGameState((prev) => {
+        const next = normalizeGameState(data, prev);
+        setActiveGameId(next?.gameId ?? next?.game_id);
+        return next;
+      });
     } catch (error) {
       console.error('[GameProvider] Failed to fetch game state:', error);
     }
@@ -218,7 +251,10 @@ export function GameProvider({ children }: GameProviderProps) {
 
     shouldReconnectRef.current = true;
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const socket = new WebSocket(`${protocol}//${window.location.hostname}:8000/ws/game`);
+    const port = window.location.port ? `:${window.location.port}` : '';
+    const gameId = getActiveGameId();
+    const socketPath = apiPaths.websocket(gameId);
+    const socket = new WebSocket(`${protocol}//${window.location.hostname}${port}${socketPath}`);
     socketRef.current = socket;
 
     socket.onopen = () => {
@@ -232,6 +268,7 @@ export function GameProvider({ children }: GameProviderProps) {
         if (message.type === 'game_state') {
           setGameState((prev) => {
             const next = normalizeGameState(message.payload, prev);
+            setActiveGameId(next?.gameId ?? next?.game_id);
             setCurrentSaveState(next?.currentSave ?? null);
             return next;
           });
@@ -275,6 +312,7 @@ export function GameProvider({ children }: GameProviderProps) {
 
         if (message.type === 'turn_complete') {
           window.setTimeout(fetchGameState, 500);
+          window.setTimeout(fetchRecentEvents, 500);
         }
       } catch (error) {
         console.error('[GameProvider] Failed to parse WebSocket message:', error);
@@ -292,14 +330,16 @@ export function GameProvider({ children }: GameProviderProps) {
         reconnectTimerRef.current = window.setTimeout(connect, 3000);
       }
     };
-  }, [fetchGameState]);
+  }, [fetchGameState, fetchRecentEvents]);
 
   useEffect(() => {
     fetchGameState();
+    fetchRecentEvents();
     connect();
 
     const handleGameLoaded = () => {
       window.setTimeout(fetchGameState, 1000);
+      window.setTimeout(fetchRecentEvents, 1000);
     };
 
     window.addEventListener('gameLoaded', handleGameLoaded);
@@ -315,7 +355,7 @@ export function GameProvider({ children }: GameProviderProps) {
       socketRef.current?.close();
       window.removeEventListener('gameLoaded', handleGameLoaded);
     };
-  }, [connect, fetchGameState]);
+  }, [connect, fetchGameState, fetchRecentEvents]);
 
   const reconnect = useCallback(() => {
     connect();
@@ -323,7 +363,8 @@ export function GameProvider({ children }: GameProviderProps) {
 
   const refreshGameState = useCallback(() => {
     void fetchGameState();
-  }, [fetchGameState]);
+    void fetchRecentEvents();
+  }, [fetchGameState, fetchRecentEvents]);
 
   const playerCompanyId =
     gameState?.playerCompanyId ??

@@ -5,8 +5,7 @@
 
 import axios from 'axios';
 import { EngineDesign, ChassisDesign, VehicleDesign } from '../contexts/EngineeringContext';
-
-const API_BASE = 'http://localhost:8000';
+import { api, apiPaths } from './apiClient';
 
 // ============================================================
 // Engine API
@@ -84,8 +83,8 @@ export interface EngineSimulationResponse {
 export async function simulateEngine(
   payload: EngineSimulationRequest
 ): Promise<EngineSimulationResponse> {
-  const response = await axios.post(
-    `${API_BASE}/api/v1/engineering/engine/simulate`,
+  const response = await api.post(
+    apiPaths.scoped('engineering', '/engine/simulate'),
     payload
   );
   return response.data;
@@ -121,8 +120,8 @@ export interface UnlockedComponentsResponse {
 export async function getUnlockedComponents(
   companyId: number
 ): Promise<UnlockedComponentsResponse> {
-  const response = await axios.get(
-    `${API_BASE}/api/v1/engineering/components/unlocked`,
+  const response = await api.get(
+    apiPaths.scoped('engineering', '/components/unlocked'),
     { params: { company_id: companyId } }
   );
   return response.data;
@@ -132,7 +131,7 @@ export async function getUnlockedComponents(
  * 设计并保存新引擎
  */
 export async function createEngine(payload: EngineDesignPayload): Promise<EngineResponse> {
-  const response = await axios.post(`${API_BASE}/api/v1/engineering/engine/design`, payload);
+  const response = await api.post(apiPaths.scoped('engineering', '/engine/design'), payload);
   return response.data;
 }
 
@@ -155,7 +154,7 @@ export interface EngineListItem {
 type RequestParams = Record<string, string | number | boolean>;
 
 export async function getEngine(engineId: number): Promise<EngineResponse> {
-  const response = await axios.get(`${API_BASE}/api/v1/engineering/engine/${engineId}`);
+  const response = await api.get(apiPaths.scoped('engineering', `/engine/${engineId}`));
   return response.data;
 }
 
@@ -167,7 +166,7 @@ export async function listEngines(companyId?: number, availableOnly: boolean = f
   if (companyId) params.company_id = companyId;
   if (availableOnly) params.available_only = true;
   
-  const response = await axios.get(`${API_BASE}/api/v1/engineering/engines`, { params });
+  const response = await api.get(apiPaths.scoped('engineering', '/engines'), { params });
   return response.data;
 }
 
@@ -201,7 +200,7 @@ export interface ChassisResponse {
  * 设计并保存新底盘
  */
 export async function createChassis(payload: ChassisDesignPayload): Promise<ChassisResponse> {
-  const response = await axios.post(`${API_BASE}/api/v1/engineering/chassis/design`, payload);
+  const response = await api.post(apiPaths.scoped('engineering', '/chassis/design'), payload);
   return response.data;
 }
 
@@ -236,7 +235,7 @@ export async function listChassis(companyId?: number, availableOnly: boolean = f
   if (companyId) params.company_id = companyId;
   if (availableOnly) params.available_only = true;
   
-  const response = await axios.get(`${API_BASE}/api/v1/engineering/chassis`, { params });
+  const response = await api.get(apiPaths.scoped('engineering', '/chassis'), { params });
   return response.data;
 }
 
@@ -286,7 +285,7 @@ export interface VehicleResponse {
  * 设计并保存新车辆
  */
 export async function createVehicle(payload: VehicleDesignPayload): Promise<VehicleResponse> {
-  const response = await axios.post(`${API_BASE}/api/v1/engineering/car/design`, payload);
+  const response = await api.post(apiPaths.scoped('engineering', '/car/design'), payload);
   return response.data;
 }
 
@@ -301,7 +300,7 @@ export async function checkCompatibility(
   message: string;
   details: Record<string, unknown>;
 }> {
-  const response = await axios.post(`${API_BASE}/api/v1/engineering/compatibility/check`, null, {
+  const response = await api.post(apiPaths.scoped('engineering', '/compatibility/check'), null, {
     params: { engine_id: engineId, chassis_id: chassisId },
   });
   return response.data;
@@ -327,7 +326,7 @@ export async function listVehicles(companyId?: number, inProduction: boolean = f
   if (companyId) params.company_id = companyId;
   if (inProduction) params.in_production = true;
   
-  const response = await axios.get(`${API_BASE}/api/v1/engineering/cars`, { params });
+  const response = await api.get(apiPaths.scoped('engineering', '/cars'), { params });
   return response.data;
 }
 

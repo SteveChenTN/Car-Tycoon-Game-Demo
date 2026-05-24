@@ -264,10 +264,11 @@ class RetoolingCalculator:
         # 保存之前的设计ID（用于后续分析）
         if previous_design:
             line.previous_design_id = previous_design.id
-        
-        # 注意：current_design_id 在retooling完成后再更新
-        # 这里先不更新，等retooling完成后再设置
-        
+
+        # Store the target design now so the production loop knows what to run
+        # after retooling completes.
+        line.current_design_id = new_design.id
+
         db.commit()
         
         logger.info(

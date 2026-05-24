@@ -565,10 +565,67 @@ class WorldGenerator:
             cash=starting_capital,
             credit_rating=self._credit_rating_from_score(70.0),  # 转换为 "A"
             prestige_score=0.0,
+            headquarters_region="NAM",
             tech_level=5,  # 修复：tech_level 必须是 1-10 的整数
-            headquarters_region="NAM"
         )
     
+    def _generate_ai_personality(self, archetype: Dict[str, Any]) -> Dict[str, int]:
+        """Generate five-dimension CEO personality from the AI archetype."""
+        strategy = archetype["strategy"]
+        presets = {
+            "TECH_GIANT": {"aggression": 55, "innovation": 88, "risk_tolerance": 62, "loyalty": 48, "foresight": 86},
+            "COST_CUTTER": {"aggression": 72, "innovation": 35, "risk_tolerance": 45, "loyalty": 55, "foresight": 34},
+            "LUXURY_BRAND": {"aggression": 45, "innovation": 68, "risk_tolerance": 42, "loyalty": 70, "foresight": 62},
+            "PERFORMANCE": {"aggression": 78, "innovation": 76, "risk_tolerance": 72, "loyalty": 45, "foresight": 58},
+            "EFFICIENCY": {"aggression": 42, "innovation": 78, "risk_tolerance": 48, "loyalty": 64, "foresight": 76},
+            "VOLUME": {"aggression": 65, "innovation": 42, "risk_tolerance": 40, "loyalty": 66, "foresight": 45},
+            "TRADITIONAL": {"aggression": 35, "innovation": 42, "risk_tolerance": 28, "loyalty": 82, "foresight": 38},
+            "AGILE": {"aggression": 62, "innovation": 72, "risk_tolerance": 70, "loyalty": 42, "foresight": 68},
+            "SAFETY_FOCUS": {"aggression": 32, "innovation": 62, "risk_tolerance": 26, "loyalty": 78, "foresight": 56},
+            "DESIGN_FOCUS": {"aggression": 48, "innovation": 66, "risk_tolerance": 55, "loyalty": 55, "foresight": 54},
+            "MULTINATIONAL": {"aggression": 48, "innovation": 58, "risk_tolerance": 34, "loyalty": 74, "foresight": 55},
+            "NICHE": {"aggression": 36, "innovation": 82, "risk_tolerance": 64, "loyalty": 52, "foresight": 72},
+            "EV_PIONEER": {"aggression": 58, "innovation": 92, "risk_tolerance": 76, "loyalty": 44, "foresight": 92},
+            "COMMERCIAL": {"aggression": 52, "innovation": 36, "risk_tolerance": 38, "loyalty": 72, "foresight": 42},
+            "EXOTIC": {"aggression": 66, "innovation": 82, "risk_tolerance": 78, "loyalty": 36, "foresight": 64},
+            "AFFORDABLE": {"aggression": 70, "innovation": 30, "risk_tolerance": 44, "loyalty": 62, "foresight": 30},
+            "OFF_ROAD": {"aggression": 58, "innovation": 56, "risk_tolerance": 58, "loyalty": 62, "foresight": 48},
+            "FAMILY": {"aggression": 34, "innovation": 46, "risk_tolerance": 26, "loyalty": 84, "foresight": 44},
+            "INNOVATOR": {"aggression": 54, "innovation": 94, "risk_tolerance": 74, "loyalty": 40, "foresight": 88},
+            "RELIABILITY": {"aggression": 34, "innovation": 56, "risk_tolerance": 24, "loyalty": 86, "foresight": 48},
+        }
+        base = presets.get(strategy, {
+            "aggression": int(35 + archetype.get("marketing_focus", 0.5) * 35),
+            "innovation": int(25 + archetype.get("rd_focus", 0.5) * 65),
+            "risk_tolerance": int(30 + archetype.get("production_focus", 0.5) * 30),
+            "loyalty": 55,
+            "foresight": int(30 + archetype.get("rd_focus", 0.5) * 55),
+        })
+        return {
+            key: max(0, min(100, value + random.randint(-6, 6)))
+            for key, value in base.items()
+        }
+
+    def _estimate_ai_employees(self, strategy: str) -> int:
+        """Estimate starting organization scale for inertia classification."""
+        base_by_strategy = {
+            "MULTINATIONAL": 80_000,
+            "TECH_GIANT": 28_000,
+            "VOLUME": 36_000,
+            "LUXURY_BRAND": 18_000,
+            "TRADITIONAL": 22_000,
+            "COMMERCIAL": 12_000,
+            "FAMILY": 9_000,
+            "RELIABILITY": 10_000,
+            "AGILE": 750,
+            "NICHE": 450,
+            "EXOTIC": 650,
+            "EV_PIONEER": 1_200,
+            "INNOVATOR": 900,
+        }
+        base = base_by_strategy.get(strategy, 5_000)
+        return max(100, int(base * random.uniform(0.75, 1.25)))
+
     def _generate_ai_companies(self, game_id: int) -> List[Company]:
         """
         生成AI竞争对手
@@ -601,6 +658,7 @@ class WorldGenerator:
             # 将 tech_level_bonus（-5 到 20）映射到等级调整（-2 到 +3）
             tech_bonus_adjustment = max(-2, min(3, int(archetype.get("tech_level_bonus", 0) / 5)))
             tech_level = max(1, min(10, base_tech_level + tech_bonus_adjustment + random.randint(-1, 1)))
+            cash_amount = base_capital * archetype["cash_multiplier"] * random.uniform(0.8, 1.2)
             
             company = Company(
                 game_id=game_id,
@@ -610,14 +668,17 @@ class WorldGenerator:
                 is_ai=True,  # AI公司
                 is_bankrupt=False,
                 founded_year=founded_year,
+                cash=cash_amount,
+                total_assets=cash_amount * random.uniform(1.2, 2.4),
+                total_employees=self._estimate_ai_employees(archetype["strategy"]),
                 founded_turn=1,  # 添加必需字段（简化：都设为1）
-                cash=base_capital * archetype["cash_multiplier"] * random.uniform(0.8, 1.2),
                 credit_rating=self._credit_rating_from_score(credit_score),
                 prestige_score=random.uniform(0.0, 50.0),
                 tech_level=tech_level,  # 修复：使用计算后的 1-10 整数
                 headquarters_region=random.choice(["NAM", "EUR", "ASI", "LAM", "MEA"]),
                 ai_strategy=archetype["strategy"]
             )
+            company.set_ai_personality(self._generate_ai_personality(archetype))
             ai_companies.append(company)
         
         return ai_companies
@@ -691,4 +752,3 @@ class WorldGenerator:
 
 
 __all__ = ["WorldGenerator"]
-

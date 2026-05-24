@@ -3,7 +3,7 @@
  * 处理三种R&D路径：模块化平台、定制底盘、逆向工程
  */
 
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import { apiPaths, apiUrl } from './apiClient';
 
 export interface ResearchProjectRequest {
   company_id: number;
@@ -50,7 +50,7 @@ export interface CompetitorCar {
 export async function startResearchProject(
   request: ResearchProjectRequest
 ): Promise<any> {
-  const response = await fetch(`${API_BASE_URL}/engineering/research/start-project`, {
+  const response = await fetch(apiUrl(apiPaths.scoped('engineering', '/research/start-project')), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ export async function startResearchProject(
 export async function reverseEngineerCar(
   request: ReverseEngineeringRequest
 ): Promise<any> {
-  const response = await fetch(`${API_BASE_URL}/engineering/reverse-engineer`, {
+  const response = await fetch(apiUrl(apiPaths.scoped('engineering', '/reverse-engineer')), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -88,7 +88,9 @@ export async function reverseEngineerCar(
 export async function getCompetitorCars(
   companyId: number
 ): Promise<CompetitorCar[]> {
-  const response = await fetch(`${API_BASE_URL}/engineering/cars?exclude_company_id=${companyId}`);
+  const response = await fetch(
+    apiUrl(apiPaths.scoped('engineering', '/cars'), { exclude_company_id: companyId })
+  );
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
   }
@@ -106,10 +108,9 @@ export async function getChassisList(
   if (companyId) params.append('company_id', companyId.toString());
   if (sourceType) params.append('source_type', sourceType);
   
-  const response = await fetch(`${API_BASE_URL}/engineering/chassis?${params.toString()}`);
+  const response = await fetch(apiUrl(apiPaths.scoped('engineering', '/chassis')) + `?${params.toString()}`);
   if (!response.ok) {
     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
   }
   return await response.json();
 }
-

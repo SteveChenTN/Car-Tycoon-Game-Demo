@@ -156,7 +156,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # 导入路由
 # ============================================================================
 
-from backend.api.routes import game, engineering, company, debug, history, websocket, factory, market, staff, diplomacy, reports
+from backend.api.routes import game, engineering, company, debug, history, websocket, factory, market, staff, diplomacy, reports, games_compat
 
 # 注册路由
 app.include_router(game.router)
@@ -170,6 +170,8 @@ app.include_router(market.router)
 app.include_router(reports.router)  # 报告API
 app.include_router(staff.router)
 app.include_router(diplomacy.router)
+app.include_router(games_compat.router)
+games_compat.configure_api_documentation(app)
 
 logger.info("✓ API Routes registered (including WebSocket)")
 
@@ -188,10 +190,21 @@ async def root() -> Dict[str, Any]:
         "docs": "/docs",
         "api_base": "/api/v1",
         "routes": {
-            "game": "/api/v1/game",
-            "engineering": "/api/v1/engineering",
-            "company": "/api/v1/company",
-            "debug": "/api/v1/debug",
+            "future_facing": {
+                "games": "/api/v1/games",
+                "game_scoped": "/api/v1/games/{game_id}",
+                "engineering": "/api/v1/games/{game_id}/engineering",
+                "companies": "/api/v1/games/{game_id}/companies",
+                "debug": "/api/v1/games/{game_id}/debug",
+                "reports": "/api/v1/games/{game_id}/reports",
+            },
+            "legacy": {
+                "game": "/api/v1/game",
+                "engineering": "/api/v1/engineering",
+                "company": "/api/v1/company",
+                "reports": "/api/reports",
+                "debug": "/api/v1/debug",
+            },
             "websocket": "/ws/game/{game_id}"
         },
         "message": "Welcome to AutoMogul - Hardcore Automobile Company Simulation"
@@ -223,4 +236,3 @@ if __name__ == "__main__":
         reload=True,
         log_level="info"
     )
-

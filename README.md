@@ -61,6 +61,13 @@
 6. 时间单位：GDD 明确以周为单位，代码中已有周度时间，但市场、生产、财务部分逻辑仍带有月度语义，需要统一结算口径。
 7. 数据单位：公司现金、贷款、成本等在部分代码中混用“百万游戏币”和原始金额，后续应制定统一单位规范。
 
+### API 兼容层状态
+
+- Future-facing 路由已统一放在 `/api/v1/games` 和 `/api/v1/games/{game_id}/...` 下。
+- Legacy 路由如 `/api/v1/game`、`/api/v1/engineering`、`/api/v1/company`、`/api/v1/debug`、`/api/reports` 继续短期保留。
+- Swagger 会把 legacy HTTP 路由标记为 deprecated，并将 future-facing 路由单独分组。
+- 前端服务层应通过 `frontend/src/services/apiClient.ts` 生成 API 路径，避免继续硬编码混杂的 host/path。
+
 ## 当前接管进展
 
 ### P0 稳定化已完成一轮

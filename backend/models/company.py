@@ -11,6 +11,15 @@ from backend.database import Base
 from backend.models.base import TimestampMixin, BaseModel
 
 
+DEFAULT_AI_PERSONALITY_TRAITS: Dict[str, int] = {
+    "aggression": 50,
+    "innovation": 50,
+    "risk_tolerance": 50,
+    "loyalty": 50,
+    "foresight": 50,
+}
+
+
 class Company(Base, TimestampMixin, BaseModel):
     """
     汽车公司主模型
@@ -261,16 +270,22 @@ class Company(Base, TimestampMixin, BaseModel):
     
     def get_ai_personality(self) -> Dict[str, Any]:
         """获取AI个性特征"""
+        traits = DEFAULT_AI_PERSONALITY_TRAITS.copy()
         if not self.ai_personality_traits:
-            return {}
+            return traits
         try:
-            return json.loads(self.ai_personality_traits)
+            stored_traits = json.loads(self.ai_personality_traits)
+            if isinstance(stored_traits, dict):
+                traits.update(stored_traits)
         except:
-            return {}
+            pass
+        return traits
     
     def set_ai_personality(self, traits: Dict[str, Any]) -> None:
         """设置AI个性特征"""
-        self.ai_personality_traits = json.dumps(traits)
+        normalized_traits = DEFAULT_AI_PERSONALITY_TRAITS.copy()
+        normalized_traits.update(traits or {})
+        self.ai_personality_traits = json.dumps(normalized_traits)
     
     def calculate_debt_ratio(self) -> float:
         """计算负债比率"""

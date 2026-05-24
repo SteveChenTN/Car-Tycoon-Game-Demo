@@ -12,6 +12,7 @@ import { useWizard } from '../../hooks/useWizard';
 import { TechSlider, TechSelect } from '../../components/common/inputs';
 import { RDBaseLayout, type RDBaseLayoutStep } from '../../components/layouts';
 import { formatCurrency } from '../../utils/formatters';
+import { apiPaths, apiUrl } from '../../services/apiClient';
 import { 
   ChevronRight, ChevronLeft, Save, Settings, 
   Ruler, Gauge, CheckCircle2
@@ -122,7 +123,7 @@ export const ChassisStudio: React.FC = () => {
   useEffect(() => {
     const generateFeedback = async () => {
       try {
-        const response = await fetch('http://localhost:8000/api/v1/engineering/chassis/feedback', {
+        const response = await fetch(apiUrl(apiPaths.scoped('engineering', '/chassis/feedback')), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -214,7 +215,7 @@ export const ChassisStudio: React.FC = () => {
         rd_weeks: rdStats.rdTime,
       };
       
-      const response = await fetch('http://localhost:8000/api/v1/engineering/chassis/design', {
+      const response = await fetch(apiUrl(apiPaths.scoped('engineering', '/chassis/design')), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request),

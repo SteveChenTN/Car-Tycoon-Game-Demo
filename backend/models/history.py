@@ -160,6 +160,50 @@ class FinancialHistory(Base, TimestampMixin, BaseModel):
                 f"net_income={self.net_income:,.0f})>")
 
 
+class MarketDemandHistory(Base, TimestampMixin, BaseModel):
+    """
+    市场需求结算历史
+    每回合记录地区需求、新车满足量、二手车承接量和流失原因。
+    """
+    __tablename__ = "market_demand_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    game_id = Column(Integer, ForeignKey("game_state.id", ondelete="CASCADE"), nullable=False)
+
+    # 时间窗口
+    turn_number = Column(Integer, nullable=False, comment="回合数")
+    year = Column(Integer, nullable=False, comment="游戏内年份")
+    month = Column(Integer, nullable=False, comment="游戏内月份")
+
+    # 地区
+    region_id = Column(Integer, ForeignKey("regions.id", ondelete="CASCADE"), nullable=False)
+
+    # 需求分解
+    total_demand = Column(Integer, nullable=False, default=0, comment="总需求")
+    new_car_sales = Column(Integer, nullable=False, default=0, comment="新车成交")
+    used_car_sales = Column(Integer, nullable=False, default=0, comment="二手车成交")
+    lost_demand = Column(Integer, nullable=False, default=0, comment="最终流失需求")
+    lost_reasons = Column(JSON, nullable=False, default=dict, comment="流失原因计数")
+
+    # 关系
+    region = relationship("Region", foreign_keys=[region_id])
+
+    __table_args__ = (
+        CheckConstraint("total_demand >= 0", name="check_market_demand_total"),
+        CheckConstraint("new_car_sales >= 0", name="check_market_new_sales"),
+        CheckConstraint("used_car_sales >= 0", name="check_market_used_sales"),
+        CheckConstraint("lost_demand >= 0", name="check_market_lost_demand"),
+        Index("idx_market_demand_game_turn", "game_id", "turn_number"),
+        Index("idx_market_demand_region", "region_id"),
+        Index("idx_market_demand_composite", "game_id", "turn_number", "region_id", unique=True),
+    )
+
+    def __repr__(self) -> str:
+        return (f"<MarketDemandHistory(turn={self.turn_number}, "
+                f"region={self.region_id}, demand={self.total_demand}, "
+                f"new={self.new_car_sales}, used={self.used_car_sales})>")
+
+
 class UsedCarInventory(Base, TimestampMixin, BaseModel):
     """
     二手车库存 - 统计桶方法 (Option A)
@@ -259,6 +303,7 @@ class UsedCarInventory(Base, TimestampMixin, BaseModel):
 __all__ = [
     "SalesHistory",
     "FinancialHistory",
+    "MarketDemandHistory",
     "UsedCarInventory"
 ]
 

@@ -329,11 +329,11 @@ class Inventory(Base, TimestampMixin, BaseModel):
         flag_modified(self, 'raw_materials')
         return True
     
-    def get_component_quantity(self, component_id: int) -> int:
+    def get_component_quantity(self, component_id: int, component_type: str = "engine") -> int:
         """获取指定零部件的库存量"""
         if not self.finished_components:
             return 0
-        component_key = f"engine_{component_id}"  # 简化：假设主要是引擎
+        component_key = f"{component_type}_{component_id}"
         return self.finished_components.get(component_key, 0)
     
     def add_component(self, component_type: str, component_id: int, quantity: int) -> None:
@@ -486,4 +486,3 @@ __all__ = [
     "MaterialType",
     "ProcurementPolicy"
 ]
-

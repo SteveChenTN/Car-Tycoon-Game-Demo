@@ -203,8 +203,12 @@ class CompanyTechnology(Base, TimestampMixin, BaseModel):
         comment="当前每月投入（百万游戏币）"
     )
     
-    # 注意：research_progress, research_started_turn, research_completed_turn, 
-    # estimated_completion_turn 已移至 RDManager 管理
+    # Legacy save files still have these columns; RDManager remains the source of
+    # truth for active projects, but mapping the fields keeps inserts compatible.
+    research_progress = Column(Float, nullable=False, default=0.0)
+    research_started_turn = Column(Integer, nullable=True)
+    research_completed_turn = Column(Integer, nullable=True)
+    estimated_completion_turn = Column(Integer, nullable=True)
     
     # ==================== 突破追踪（概率模型）====================
     breakthrough_attempts = Column(
@@ -300,4 +304,3 @@ class CompanyTechnology(Base, TimestampMixin, BaseModel):
 
 
 __all__ = ["TechNode", "CompanyTechnology"]
-

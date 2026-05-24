@@ -5,6 +5,7 @@ import { checkEngineFitment } from '../../utils/engineeringCalc';
 import { Car, Settings, AlertCircle, Loader2, Factory, Wrench, Eye, AlertTriangle } from 'lucide-react';
 import { getChassisList } from '@/services/researchService';
 import { TechSlider, TechSelect } from '../../components/common/inputs';
+import { apiPaths, apiUrl } from '@/services/apiClient';
 
 /**
  * VehicleDesigner - 车辆工作室
@@ -89,13 +90,17 @@ export const VehicleDesigner: React.FC = () => {
   useEffect(() => {
     const loadTechGating = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/v1/engineering/chassis/available-tabs?year=${currentYear}`);
+        const response = await fetch(
+          apiUrl(apiPaths.scoped('engineering', '/chassis/available-tabs'), { year: currentYear })
+        );
         const data = await response.json();
         if (data.success) {
           setVisibleTabs(data.visible_tabs);
         }
         
-        const gatingResponse = await fetch(`http://localhost:8000/api/v1/engineering/chassis/field-gating?year=${currentYear}`);
+        const gatingResponse = await fetch(
+          apiUrl(apiPaths.scoped('engineering', '/chassis/field-gating'), { year: currentYear })
+        );
         const gatingData = await gatingResponse.json();
         if (gatingData.success) {
           setFieldGating(gatingData.field_gating);
@@ -115,7 +120,7 @@ export const VehicleDesigner: React.FC = () => {
       if (!chassisDraft) return;
       
       try {
-        const response = await fetch('http://localhost:8000/api/v1/engineering/chassis/feedback', {
+        const response = await fetch(apiUrl(apiPaths.scoped('engineering', '/chassis/feedback')), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

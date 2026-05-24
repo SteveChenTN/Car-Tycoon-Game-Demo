@@ -2,10 +2,8 @@
  * 工厂和生产管理API服务
  */
 
-import axios from 'axios';
 import { Factory, ProductionLine, ProductionLineStatus, VehicleDesignSummary } from '../types';
-
-const API_BASE = 'http://localhost:8000';
+import { api, apiPaths } from './apiClient';
 
 // ============================================================
 // Factory API
@@ -109,7 +107,7 @@ function mapFactory(factory: BackendFactory): Factory {
  * 获取玩家的所有工厂
  */
 export async function getPlayerFactories(companyId: number): Promise<FactoryListResponse> {
-  const response = await axios.get(`${API_BASE}/api/v1/factory/list`, {
+  const response = await api.get(apiPaths.scoped('factory', '/list'), {
     params: { company_id: companyId }
   });
   const data = response.data as BackendFactoryListResponse;
@@ -124,7 +122,7 @@ export async function getPlayerFactories(companyId: number): Promise<FactoryList
  * 获取工厂详情（包括生产线状态）
  */
 export async function getFactoryDetails(factoryId: number): Promise<Factory> {
-  const response = await axios.get(`${API_BASE}/api/v1/factory/${factoryId}`);
+  const response = await api.get(apiPaths.scoped('factory', `/${factoryId}`));
   const data = response.data as BackendFactoryDetailsResponse;
   return mapFactory(data.factory ?? (response.data as BackendFactory));
 }
@@ -149,7 +147,7 @@ export interface AssignProductionResponse {
  * 分配车型到生产线
  */
 export async function assignProduction(payload: AssignProductionPayload): Promise<AssignProductionResponse> {
-  const response = await axios.post(`${API_BASE}/api/v1/factory/assign`, payload);
+  const response = await api.post(apiPaths.scoped('factory', '/assign'), payload);
   return response.data;
 }
 
@@ -157,7 +155,7 @@ export async function assignProduction(payload: AssignProductionPayload): Promis
  * 停止生产线
  */
 export async function stopProduction(lineId: number): Promise<{ success: boolean; message: string }> {
-  const response = await axios.post(`${API_BASE}/api/v1/factory/stop`, { line_id: lineId });
+  const response = await api.post(apiPaths.scoped('factory', '/stop'), { line_id: lineId });
   return response.data;
 }
 
@@ -165,7 +163,7 @@ export async function stopProduction(lineId: number): Promise<{ success: boolean
  * 获取可用的车型设计列表
  */
 export async function getAvailableDesigns(companyId: number): Promise<VehicleDesignSummary[]> {
-  const response = await axios.get(`${API_BASE}/api/v1/engineering/designs/available`, {
+  const response = await api.get(apiPaths.scoped('engineering', '/designs/available'), {
     params: { company_id: companyId }
   });
   const designs = (response.data.designs || []) as BackendDesignSummary[];

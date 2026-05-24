@@ -2,10 +2,8 @@
  * 市场和定价API服务
  */
 
-import axios from 'axios';
 import { RegionPricing, MarketHeatmapCell } from '../types';
-
-const API_BASE = 'http://localhost:8000';
+import { api, apiPaths } from './apiClient';
 
 // ============================================================
 // Market Pricing API
@@ -32,7 +30,7 @@ export interface MarketPricingResponse {
  * 提交区域定价策略
  */
 export async function submitRegionalPricing(payload: MarketPricingPayload): Promise<MarketPricingResponse> {
-  const response = await axios.post(`${API_BASE}/api/v1/market/pricing`, payload);
+  const response = await api.post(apiPaths.scoped('market', '/pricing'), payload);
   return response.data;
 }
 
@@ -40,7 +38,7 @@ export async function submitRegionalPricing(payload: MarketPricingPayload): Prom
  * 获取当前市场状况（各区域需求、竞争对手价格）
  */
 export async function getMarketOverview(companyId: number): Promise<RegionPricing[]> {
-  const response = await axios.get(`${API_BASE}/api/v1/market/overview`, {
+  const response = await api.get(apiPaths.scoped('market', '/overview'), {
     params: { company_id: companyId }
   });
   return response.data.regions || [];
@@ -50,14 +48,14 @@ export async function getMarketOverview(companyId: number): Promise<RegionPricin
  * 获取销售热力图数据
  */
 export async function getSalesHeatmap(companyId: number): Promise<MarketHeatmapCell[]> {
-  const response = await axios.get(`${API_BASE}/api/v1/market/heatmap`, {
+  const response = await api.get(apiPaths.scoped('market', '/heatmap'), {
     params: { company_id: companyId }
   });
   // 转换数据格式以匹配前端期望
   const cells = response.data.cells || [];
   return cells.map((cell: any) => ({
     ...cell,
-    sales_intensity: cell.intensity || cell.sales_intensity || 0.1
+    sales_intensity: cell.sales_intensity ?? cell.intensity ?? 0
   }));
 }
 
@@ -71,4 +69,3 @@ export function calculateEstimatedProfit(
 ): number {
   return (myPrice - cost) * estimatedVolume;
 }
-

@@ -32,11 +32,15 @@ from backend.models.events import (
 )
 from backend.models.game_manager import EventLog, GameConfig
 from backend.models.technology import TechNode, CompanyTechnology
+from backend.models.ai_decision import AIDecisionQueue
 from backend.models.staff import Staff
 from backend.models.directive import Directive
 from backend.models.diplomacy import CompetitorRelation, DiplomaticAction, Patent
 from backend.models.history import (
-    SalesHistory, FinancialHistory, UsedCarInventory
+    SalesHistory, FinancialHistory, MarketDemandHistory, UsedCarInventory
+)
+from backend.models.inventory import (
+    FactoryInventory, DealershipInventory, ShipmentLog
 )
 from backend.models.supply import (
     SupplierContract, MaterialMarket as MaterialMarketSupply
@@ -95,6 +99,7 @@ __all__ = [
     "GameConfig",
     "TechNode",
     "CompanyTechnology",
+    "AIDecisionQueue",
     "Staff",
     "Directive",
     "CompetitorRelation",
@@ -102,7 +107,11 @@ __all__ = [
     "Patent",
     "SalesHistory",
     "FinancialHistory",
+    "MarketDemandHistory",
     "UsedCarInventory",
+    "FactoryInventory",
+    "DealershipInventory",
+    "ShipmentLog",
     "SupplierContract",
     "MaterialMarketSupply",
     "ProductionHistory",
@@ -110,5 +119,3 @@ __all__ = [
     "FactoryProcessFamiliarity",
     "FactoryMaterialFamiliarity"
 ]
-
-

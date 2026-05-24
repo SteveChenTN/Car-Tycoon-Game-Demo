@@ -3,7 +3,7 @@
 协调所有系统的回合推进逻辑
 """
 from sqlalchemy.orm import Session
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import logging
 from datetime import datetime
 
@@ -13,8 +13,9 @@ from backend.models.region import Region
 from backend.models.game_manager import EventLog
 from backend.models.history import SalesHistory, FinancialHistory
 from backend.models.finance import Loan, LoanStatus
+from backend.models.engineering import CarTrim
 from backend.models.market import MarketingCampaign
-from backend.models.production import Factory, Inventory
+from backend.models.production import Factory, Inventory, ProductionLine, FactoryType
 from backend.models.supply import SupplierContract, ContractStatus
 from backend.core.management.finance import FinanceLogic
 from backend.core.management.testing import TestingLogic
@@ -154,6 +155,11 @@ class GameLoopManager:
             ai_decisions = self._phase_ai_decisions(game_id, current_turn)
             turn_summary["phases"]["ai_decisions"] = ai_decisions
 
+            # ========== 阶段 2.5: 合约执行 ==========
+            logger.info("阶段 2.5: 供应商合约执行")
+            contract_results = self._phase_contract_execution(game_id, current_turn)
+            turn_summary["phases"]["contracts"] = contract_results
+
             # ========== 阶段 3: 生产解算 ==========
             logger.info("阶段 3: 生产解算")
             production_results = self._phase_production(game_id, current_turn)
@@ -168,11 +174,6 @@ class GameLoopManager:
             logger.info("阶段 5: 财务结算")
             financial_results = self._phase_financial(game_id, current_turn)
             turn_summary["phases"]["financial"] = financial_results
-
-            # ========== 阶段 5.5: 合约执行（新增）==========
-            logger.info("阶段 5.5: 供应商合约执行")
-            contract_results = self._phase_contract_execution(game_id, current_turn)
-            turn_summary["phases"]["contracts"] = contract_results
 
             # ========== 阶段 6: 研发项目推进 ==========
             logger.info("阶段 6: 研发项目推进")
@@ -291,9 +292,21 @@ class GameLoopManager:
         执行所有AI公司的决策逻辑
         """
         try:
+            from backend.core.ai.ai_strategy import (
+                classify_company_size,
+                get_or_create_company_personality,
+                run_ai_turn_for_company,
+            )
+
             results = {
                 "ai_companies": 0,
-                "decisions_made": []
+                "decisions_generated": 0,
+                "queued_count": 0,
+                "executed_count": 0,
+                "failed_count": 0,
+                "due_count": 0,
+                "decisions_made": [],
+                "by_company": {}
             }
 
             ai_companies = self.db.query(Company).filter(
@@ -303,14 +316,67 @@ class GameLoopManager:
             ).all()
 
             for company in ai_companies:
-                # TODO: 调用AI决策系统
-                # 这里需要导入并使用 ai_strategy.py 中的逻辑
+                personality = get_or_create_company_personality(company)
+                execution_results = run_ai_turn_for_company(
+                    db=self.db,
+                    company_id=company.id,
+                    game_id=game_id,
+                    current_turn=current_turn,
+                    personality=personality,
+                )
+                serialized_results = [execution_result.to_dict() for execution_result in execution_results]
+                successful_results = [
+                    execution_result
+                    for execution_result in execution_results
+                    if execution_result.success
+                ]
+                failed_results = [
+                    execution_result
+                    for execution_result in execution_results
+                    if not execution_result.success
+                ]
+
+                company_result = {
+                    "company_id": company.id,
+                    "company_name": company.name,
+                    "size": classify_company_size(company),
+                    "generated": len(execution_results),
+                    "queued": 0,
+                    "executed": len(successful_results),
+                    "failed": len(failed_results),
+                    "foresight": personality.foresight,
+                    "actions": serialized_results,
+                }
+                results["by_company"][company.id] = company_result
+                results["decisions_made"].extend(serialized_results)
+                results["decisions_generated"] += len(execution_results)
+                results["executed_count"] += len(successful_results)
+                results["failed_count"] += len(failed_results)
                 results["ai_companies"] += 1
 
+                for execution_result in successful_results:
+                    self._log_event(
+                        game_id=game_id,
+                        turn=current_turn + 1,
+                        event_type="AI_ACTION",
+                        message=execution_result.message,
+                        severity="SUCCESS",
+                        related_company_id=company.id,
+                        extra_data={
+                            "size": company_result["size"],
+                            "foresight": personality.foresight,
+                            "decision_type": execution_result.decision_type,
+                            "action": execution_result.action,
+                            **execution_result.metadata,
+                        },
+                    )
+
+            self.db.commit()
             return results
 
         except Exception as e:
             logger.error(f"AI决策失败: {e}")
+            self.db.rollback()
             return {"error": str(e)}
 
     def _phase_production(self, game_id: int, current_turn: int) -> Dict[str, Any]:
@@ -322,18 +388,19 @@ class GameLoopManager:
             # 首先检查所有retooling中的生产线是否完成
             retooling_completed = self._check_retooling_completion(game_id, current_turn)
 
-            # TODO: 实现周度生产处理
-            # 当前使用占位实现，需要根据周度系统调整生产量（月产量/4）
-            # 使用ProductionManager处理生产
-            # results = self.production_mgr.process_weekly_production(game_id)
+            results = self.production_mgr.process_weekly_production(game_id, current_turn)
+            results["retooling_completed"] = retooling_completed
 
-            # 临时占位：返回空结果，避免崩溃
-            results = {
-                "status": "placeholder",
-                "message": "周度生产处理待实现",
-                "factories_processed": 0,
-                "retooling_completed": retooling_completed
-            }
+            for event in results.get("events", []):
+                self._log_event(
+                    game_id=game_id,
+                    turn=current_turn + 1,
+                    event_type=event.get("event_type", "PRODUCTION"),
+                    message=event.get("message", "Production event"),
+                    severity=event.get("severity", "INFO"),
+                    related_company_id=event.get("related_company_id"),
+                    extra_data=event.get("extra_data")
+                )
 
             return results
 
@@ -386,40 +453,44 @@ class GameLoopManager:
         return completed_count
 
     def _phase_market(self, game_id: int, current_turn: int) -> Dict[str, Any]:
-        """
-        阶段4: 市场解算
-        计算销售、市场份额等（周度）
-        """
         try:
-            # TODO: 实现周度市场模拟
-            # 当前使用月度方法，但需要按周缩放（月销量/4）
-            # 获取所有地区
             regions = self.db.query(Region).filter(Region.game_id == game_id).all()
 
             total_sales = 0
             results_by_region = []
 
             for region in regions:
-                # 调用月度方法，但结果需要按周缩放
-                monthly_result = self.market_sim.calculate_monthly_sales(
+                market_result = self.market_sim.calculate_monthly_sales(
                     region_id=region.id,
                     current_turn=current_turn,
                     game_id=game_id
                 )
 
-                # 按周缩放（除以4）
-                weekly_sales = monthly_result.total_sales // 4
-                total_sales += weekly_sales
+                total_sales += market_result.total_sales
 
                 results_by_region.append({
                     "region_id": region.id,
                     "region_code": region.code,
-                    "weekly_sales": weekly_sales,
-                    "monthly_equivalent": monthly_result.total_sales
+                    "sales": market_result.total_sales,
+                    "demand": market_result.total_demand,
+                    "used_car_sales": market_result.used_car_sales,
+                    "lost_demand": market_result.unmet_demand,
+                    "lost_demand_by_reason": market_result.lost_demand_by_reason,
+                    "revenue": market_result.total_revenue,
+                    "gross_profit": market_result.total_gross_profit
                 })
 
+            companies = self.db.query(Company).filter(Company.game_id == game_id).all()
+            for company in companies:
+                company.market_share_global = (
+                    company.monthly_units_sold / total_sales
+                    if total_sales > 0 else 0.0
+                )
+
+            self.db.flush()
+
             return {
-                "total_weekly_sales": total_sales,
+                "total_sales": total_sales,
                 "regions": results_by_region
             }
 
@@ -513,6 +584,9 @@ class GameLoopManager:
         }
 
         for campaign in active_campaigns:
+            if (campaign.name or "").startswith("AI "):
+                continue
+
             company = self.db.query(Company).filter(Company.id == campaign.company_id).first()
             if not company:
                 continue
@@ -646,13 +720,24 @@ class GameLoopManager:
         try:
             results = {
                 "expired_events": 0,
-                "companies_reset": 0
+                "companies_reset": 0,
+                "monthly_reset_due": False
             }
 
-            companies = self.db.query(Company).filter(Company.game_id == game_id).all()
-            for company in companies:
-                company.reset_monthly_stats()
-                results["companies_reset"] += 1
+            game_state = self.db.query(GameState).filter(GameState.id == game_id).first()
+            monthly_reset_due = bool(
+                game_state and (
+                    game_state.simulation_speed == "monthly" or
+                    game_state.current_week >= 4
+                )
+            )
+            results["monthly_reset_due"] = monthly_reset_due
+
+            if monthly_reset_due:
+                companies = self.db.query(Company).filter(Company.game_id == game_id).all()
+                for company in companies:
+                    company.reset_monthly_stats()
+                    results["companies_reset"] += 1
 
             return results
 
@@ -675,8 +760,12 @@ class GameLoopManager:
                 "total_materials_delivered": 0,
                 "total_payments": 0.0,
                 "breaches": 0,
-                "completions": 0
+                "completions": 0,
+                "delivery_failures": 0
             }
+
+            game_state = self.db.query(GameState).filter(GameState.id == game_id).first()
+            current_week = game_state.current_week if game_state else 1
 
             # 获取所有生效中的合约
             active_contracts = self.db.query(SupplierContract).filter(
@@ -695,8 +784,17 @@ class GameLoopManager:
                 if not company:
                     continue
 
-                # 计算应付金额
-                payment_amount = contract.calculate_monthly_payment()
+                delivery_units = self._split_monthly_quantity(
+                    contract.monthly_volume_commitment or 0,
+                    current_week
+                )
+                if delivery_units <= 0:
+                    continue
+
+                unit_price = float(contract.fixed_price_per_unit or 0.0)
+                if contract.volume_discount_rate:
+                    unit_price *= (1.0 - contract.volume_discount_rate)
+                payment_amount = delivery_units * unit_price
 
                 # 检查公司是否有足够现金
                 if company.cash < payment_amount:
@@ -733,31 +831,44 @@ class GameLoopManager:
 
                     continue
 
-                # 执行交付
-                delivery_result = contract.execute_monthly_delivery(current_turn)
+                target_factory = self._select_contract_delivery_factory(
+                    contract, game_id, current_week
+                )
+                if not target_factory or not contract.material_type:
+                    results["delivery_failures"] += 1
+                    self._log_event(
+                        game_id=game_id,
+                        turn=current_turn + 1,
+                        event_type="SUPPLY",
+                        message=f"供应合约 {contract.id} 无可用入库工厂，交付跳过",
+                        severity="WARNING",
+                        related_company_id=company.id
+                    )
+                    continue
 
-                if delivery_result.get("success"):
-                    # 扣除款项
-                    company.record_cost("materials", payment_amount)
+                company.record_cost("materials", payment_amount)
+                inventory = self._get_or_create_inventory(target_factory)
+                inventory.add_material(contract.material_type.upper(), delivery_units)
+                inventory.total_inventory_value += payment_amount
+                contract.record_delivery(delivery_units, unit_price)
+                if current_turn >= contract.end_turn:
+                    contract.status = ContractStatus.COMPLETED.value
 
-                    # TODO: 添加材料到工厂库存
-                    # 这需要与 ProductionManager 集成
+                results["contracts_executed"] += 1
+                results["total_materials_delivered"] += delivery_units
+                results["total_payments"] += payment_amount
 
-                    results["contracts_executed"] += 1
-                    results["total_materials_delivered"] += contract.monthly_quantity
-                    results["total_payments"] += payment_amount
+                if contract.status == ContractStatus.COMPLETED.value:
+                    results["completions"] += 1
 
-                    if delivery_result.get("status") == ContractStatus.COMPLETED.value:
-                        results["completions"] += 1
-
-                        self._log_event(
-                            game_id=game_id,
-                            turn=current_turn + 1,
-                            event_type="FINANCE",
-                            message=f"✅ {company.name} 完成供应合约 - {contract.material_type}",
-                            severity="SUCCESS",
-                            related_company_id=company.id
-                        )
+                    self._log_event(
+                        game_id=game_id,
+                        turn=current_turn + 1,
+                        event_type="FINANCE",
+                        message=f"✅ {company.name} 完成供应合约 - {contract.material_type}",
+                        severity="SUCCESS",
+                        related_company_id=company.id
+                    )
 
             self.db.commit()
 
@@ -767,6 +878,97 @@ class GameLoopManager:
             logger.error(f"合约执行失败: {e}")
             self.db.rollback()
             return {"error": str(e)}
+
+    @staticmethod
+    def _split_monthly_quantity(monthly_quantity: int, current_week: int) -> int:
+        monthly_quantity = max(0, int(monthly_quantity or 0))
+        current_week = min(4, max(1, int(current_week or 1)))
+        base = monthly_quantity // 4
+        remainder = monthly_quantity % 4
+        return base + (1 if current_week <= remainder else 0)
+
+    def _get_or_create_inventory(self, factory: Factory) -> Inventory:
+        inventory = self.db.query(Inventory).filter(Inventory.factory_id == factory.id).first()
+        if inventory:
+            return inventory
+
+        inventory = Inventory(
+            game_id=factory.game_id,
+            factory_id=factory.id,
+            raw_materials={},
+            finished_components={},
+            completed_cars={},
+            total_inventory_value=0.0
+        )
+        self.db.add(inventory)
+        self.db.flush()
+        return inventory
+
+    def _select_contract_delivery_factory(
+        self,
+        contract: SupplierContract,
+        game_id: int,
+        current_week: int
+    ) -> Optional[Factory]:
+        factories = self.db.query(Factory).filter(
+            Factory.game_id == game_id,
+            Factory.company_id == contract.company_id,
+            Factory.is_operational == True
+        ).order_by(Factory.id.asc()).all()
+        if not factories:
+            return None
+
+        material_type = (contract.material_type or "").upper()
+        if not material_type:
+            return factories[0]
+
+        best_factory = None
+        best_score = None
+        for factory in factories:
+            weekly_need = self._contract_material_need_for_factory(
+                factory, material_type, current_week
+            )
+            if weekly_need <= 0:
+                continue
+            inventory = self._get_or_create_inventory(factory)
+            available = inventory.get_material_quantity(material_type)
+            score = available / weekly_need
+            if best_score is None or score < best_score:
+                best_score = score
+                best_factory = factory
+
+        return best_factory or factories[0]
+
+    def _contract_material_need_for_factory(
+        self,
+        factory: Factory,
+        material_type: str,
+        current_week: int
+    ) -> float:
+        running_lines = self.db.query(ProductionLine).filter(
+            ProductionLine.factory_id == factory.id,
+            ProductionLine.status == "RUNNING",
+            ProductionLine.current_design_id.isnot(None)
+        ).all()
+
+        need = 0.0
+        for line in running_lines:
+            car_trim = line.car_trim
+            if not car_trim:
+                continue
+            quantity = self._split_monthly_quantity(line.monthly_capacity, current_week)
+            if quantity <= 0:
+                continue
+            if factory.factory_type == FactoryType.COMPONENT.value:
+                materials = self.production_mgr._sum_materials(
+                    self.production_mgr.calculate_engine_material_requirements(car_trim.engine),
+                    self.production_mgr.calculate_chassis_material_requirements(car_trim.chassis)
+                )
+            else:
+                materials = self.production_mgr.calculate_car_body_material_requirements(car_trim)
+            need += float(materials.get(material_type, 0.0) or 0.0) * quantity
+
+        return need
 
     def _phase_used_car_update(self, game_id: int, current_turn: int) -> Dict[str, Any]:
         """

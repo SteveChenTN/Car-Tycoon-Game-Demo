@@ -4,8 +4,7 @@
  */
 
 import type { GameState } from '@/types';
-
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import { apiPaths, apiUrl, setActiveGameId } from './apiClient';
 
 async function fetchWithTimeout(
   input: RequestInfo | URL,
@@ -111,7 +110,7 @@ export interface NewGameResponse {
  */
 export async function createNewGame(request: NewGameRequest): Promise<NewGameResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/game/new`, {
+    const response = await fetch(apiUrl(apiPaths.games.create), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -123,7 +122,9 @@ export async function createNewGame(request: NewGameRequest): Promise<NewGameRes
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    setActiveGameId(data.game_id ?? data.game?.id);
+    return data;
   } catch (error) {
     console.error('Failed to create new game:', error);
     return {
@@ -138,7 +139,7 @@ export async function createNewGame(request: NewGameRequest): Promise<NewGameRes
  */
 export async function saveGame(saveName: string): Promise<SaveGameResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/game/save`, {
+    const response = await fetch(apiUrl(apiPaths.legacy.game('/save')), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -165,7 +166,7 @@ export async function saveGame(saveName: string): Promise<SaveGameResponse> {
  */
 export async function loadGame(filePath: string): Promise<LoadGameResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/game/load`, {
+    const response = await fetch(apiUrl(apiPaths.games.load), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -191,7 +192,9 @@ export async function loadGame(filePath: string): Promise<LoadGameResponse> {
       throw new Error(errorMessage);
     }
 
-    return await response.json();
+    const data = await response.json();
+    setActiveGameId(data.game_id ?? data.game?.id);
+    return data;
   } catch (error) {
     console.error('Failed to load game:', error);
     return {
@@ -206,7 +209,7 @@ export async function loadGame(filePath: string): Promise<LoadGameResponse> {
  */
 export async function listSaves(): Promise<SaveInfo[]> {
   try {
-    const response = await fetchWithTimeout(`${API_BASE_URL}/game/saves`);
+    const response = await fetchWithTimeout(apiUrl(apiPaths.games.saves));
 
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -242,12 +245,12 @@ export async function listSaves(): Promise<SaveInfo[]> {
  */
 export async function deleteSave(filePath: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/game/save`, {
+    const response = await fetch(apiUrl(apiPaths.games.saves), {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ file_path: filePath }),
+      body: JSON.stringify({ save_path: filePath }),
     });
 
     if (!response.ok) {
@@ -270,7 +273,7 @@ export async function deleteSave(filePath: string): Promise<{ success: boolean; 
  */
 export async function getGameState(): Promise<GameState | null> {
   try {
-    const response = await fetch(`${API_BASE_URL}/game/state`);
+    const response = await fetch(apiUrl(apiPaths.currentGame('/state')));
 
     if (!response.ok) {
       if (response.status === 500) {
@@ -295,6 +298,7 @@ export async function getGameState(): Promise<GameState | null> {
         : undefined;
       const gameId = data.game_id ?? data.game.id;
       const playerCompanyId = data.player_company_id ?? playerCompany?.id;
+      setActiveGameId(gameId);
 
       return {
         game_id: gameId,
@@ -318,6 +322,7 @@ export async function getGameState(): Promise<GameState | null> {
       };
     }
 
+    setActiveGameId(null);
     return null;
   } catch (error) {
     console.error('[gameApi] Failed to fetch game state:', error);
@@ -335,7 +340,7 @@ export async function getGameState(): Promise<GameState | null> {
  */
 export async function nextTurn(): Promise<{ success: boolean; new_date?: string; error?: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/game/next_turn`, {
+    const response = await fetch(apiUrl(apiPaths.currentGame('/next_turn')), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

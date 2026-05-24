@@ -19,7 +19,7 @@ import math
 
 from backend.models.production import (
     Factory, Inventory, MaterialMarket,
-    FactoryType, MaterialType
+    FactoryType, MaterialType, ProductionLine
 )
 from backend.models.company import Company
 from backend.models.engineering import Engine, Chassis, CarTrim
@@ -141,6 +141,564 @@ class ProductionManager:
     
     # ========== 零部件生产 ==========
     
+    # ========== Weekly production loop ==========
+
+    def process_weekly_production(self, game_id: int, current_turn: int) -> Dict[str, Any]:
+        """Settle all running production lines for the current game week."""
+        from backend.models.game_state import GameState
+
+        game_state = self.db.query(GameState).filter(GameState.id == game_id).first()
+        current_week = game_state.current_week if game_state else 1
+
+        lines = self.db.query(ProductionLine).filter(
+            ProductionLine.game_id == game_id,
+            ProductionLine.status == "RUNNING"
+        ).all()
+        lines.sort(key=lambda line: (
+            0 if line.factory and line.factory.factory_type == FactoryType.COMPONENT.value else 1,
+            line.id
+        ))
+
+        results: Dict[str, Any] = {
+            "status": "ok",
+            "week": current_week,
+            "lines_processed": 0,
+            "factories_processed": 0,
+            "components_produced": 0,
+            "cars_assembled": 0,
+            "materials_used": {},
+            "events": [],
+            "lines": []
+        }
+        factory_stats: Dict[int, Dict[str, Any]] = {}
+
+        for line in lines:
+            factory = line.factory
+            if not factory or not factory.is_operational or not line.current_design_id:
+                continue
+
+            company = self.db.query(Company).filter(Company.id == factory.company_id).first()
+            car_trim = line.car_trim or self.db.query(CarTrim).filter(
+                CarTrim.id == line.current_design_id
+            ).first()
+            if not car_trim:
+                continue
+
+            planned_qty = self._calculate_line_weekly_quantity(
+                line, factory, company, car_trim, current_week
+            )
+            self._add_factory_capacity(factory_stats, factory, planned_qty)
+
+            if factory.factory_type == FactoryType.COMPONENT.value:
+                line_result = self._process_component_line(
+                    line, factory, company, car_trim, planned_qty, current_turn
+                )
+                results["components_produced"] += line_result.get("quantity", 0) * 2
+            elif factory.factory_type == FactoryType.ASSEMBLY.value:
+                line_result = self._process_assembly_line(
+                    line, factory, company, car_trim, planned_qty, current_turn
+                )
+                results["cars_assembled"] += line_result.get("quantity", 0)
+            else:
+                continue
+
+            self._add_factory_output(factory_stats, factory, line_result.get("quantity", 0))
+            results["lines_processed"] += 1
+            results["lines"].append(line_result)
+            results["events"].extend(line_result.get("events", []))
+            self._merge_into(results["materials_used"], line_result.get("materials_used", {}))
+
+        for stats in factory_stats.values():
+            factory = stats["factory"]
+            capacity = stats["capacity"]
+            produced = stats["produced"]
+            factory.current_utilization_rate = min(1.0, produced / capacity) if capacity > 0 else 0.0
+
+        results["factories_processed"] = len(factory_stats)
+        self.db.commit()
+        return results
+
+    def _process_component_line(
+        self,
+        line: ProductionLine,
+        factory: Factory,
+        company: Optional[Company],
+        car_trim: CarTrim,
+        planned_qty: int,
+        current_turn: int
+    ) -> Dict[str, Any]:
+        inventory = self._get_or_create_inventory(factory)
+        engine_materials = self.calculate_engine_material_requirements(car_trim.engine)
+        chassis_materials = self.calculate_chassis_material_requirements(car_trim.chassis)
+        per_unit_materials = self._sum_materials(engine_materials, chassis_materials)
+        actual_qty, shortages = self._material_limited_quantity(
+            inventory, per_unit_materials, planned_qty
+        )
+
+        events: List[Dict[str, Any]] = []
+        if shortages:
+            events.append(self._production_shortage_event(
+                factory, line, car_trim, planned_qty, actual_qty, shortages
+            ))
+
+        if actual_qty <= 0:
+            return {
+                "line_id": line.id,
+                "factory_id": factory.id,
+                "type": "component",
+                "car_trim_id": car_trim.id,
+                "planned_quantity": planned_qty,
+                "quantity": 0,
+                "materials_used": {},
+                "events": events
+            }
+
+        materials_used = {
+            material: amount * actual_qty
+            for material, amount in per_unit_materials.items()
+        }
+        for material, amount in materials_used.items():
+            inventory.deduct_material(material, amount)
+
+        inventory.add_component("engine", car_trim.engine_id, actual_qty)
+        inventory.add_component("chassis", car_trim.chassis_id, actual_qty)
+
+        labor_cost = factory.labor_cost_per_unit * actual_qty
+        chassis_unit_cost = (
+            car_trim.chassis.get_effective_manufacturing_cost()
+            if hasattr(car_trim.chassis, "get_effective_manufacturing_cost")
+            else car_trim.chassis.manufacturing_cost
+        )
+        unit_cost = float(car_trim.engine.manufacturing_cost or 0.0) + float(chassis_unit_cost or 0.0)
+        efficiency_factor = max(0.5, 1.0 - (factory.level - 1) * 0.02)
+        total_cost = (unit_cost * actual_qty + labor_cost) * efficiency_factor
+        if company:
+            company.record_cost("labor", labor_cost)
+            company.record_cost("manufacturing", max(0.0, total_cost - labor_cost))
+
+        self._record_component_familiarity(factory, car_trim, actual_qty, current_turn)
+
+        return {
+            "line_id": line.id,
+            "factory_id": factory.id,
+            "type": "component",
+            "car_trim_id": car_trim.id,
+            "planned_quantity": planned_qty,
+            "quantity": actual_qty,
+            "components_added": {
+                f"engine_{car_trim.engine_id}": actual_qty,
+                f"chassis_{car_trim.chassis_id}": actual_qty
+            },
+            "materials_used": materials_used,
+            "total_cost": round(total_cost, 2),
+            "events": events
+        }
+
+    def _process_assembly_line(
+        self,
+        line: ProductionLine,
+        factory: Factory,
+        company: Optional[Company],
+        car_trim: CarTrim,
+        planned_qty: int,
+        current_turn: int
+    ) -> Dict[str, Any]:
+        inventory = self._get_or_create_inventory(factory)
+        body_materials = self.calculate_car_body_material_requirements(car_trim)
+        material_qty, material_shortages = self._material_limited_quantity(
+            inventory, body_materials, planned_qty
+        )
+        engine_available = self._company_component_available(
+            factory.company_id, factory.game_id, "engine", car_trim.engine_id
+        )
+        chassis_available = self._company_component_available(
+            factory.company_id, factory.game_id, "chassis", car_trim.chassis_id
+        )
+
+        actual_qty = min(planned_qty, material_qty, engine_available, chassis_available)
+        shortages = list(material_shortages)
+        if engine_available < planned_qty:
+            shortages.append({
+                "kind": "component",
+                "item": f"engine_{car_trim.engine_id}",
+                "needed": planned_qty,
+                "available": engine_available
+            })
+        if chassis_available < planned_qty:
+            shortages.append({
+                "kind": "component",
+                "item": f"chassis_{car_trim.chassis_id}",
+                "needed": planned_qty,
+                "available": chassis_available
+            })
+
+        events: List[Dict[str, Any]] = []
+        if shortages:
+            events.append(self._production_shortage_event(
+                factory, line, car_trim, planned_qty, actual_qty, shortages
+            ))
+
+        if actual_qty <= 0:
+            return {
+                "line_id": line.id,
+                "factory_id": factory.id,
+                "type": "assembly",
+                "car_trim_id": car_trim.id,
+                "planned_quantity": planned_qty,
+                "quantity": 0,
+                "materials_used": {},
+                "events": events
+            }
+
+        materials_used = {
+            material: amount * actual_qty
+            for material, amount in body_materials.items()
+        }
+        for material, amount in materials_used.items():
+            inventory.deduct_material(material, amount)
+
+        logistics_cost = 0.0
+        logistics_cost += self._deduct_company_component(
+            factory.company_id, factory.game_id, factory, "engine", car_trim.engine_id, actual_qty
+        )
+        logistics_cost += self._deduct_company_component(
+            factory.company_id, factory.game_id, factory, "chassis", car_trim.chassis_id, actual_qty
+        )
+        inventory.add_car(car_trim.id, actual_qty)
+
+        labor_cost = factory.labor_cost_per_unit * actual_qty
+        efficiency_factor = max(0.5, 1.0 - (factory.level - 1) * 0.02)
+        total_cost = (car_trim.manufacturing_cost * actual_qty + labor_cost) * efficiency_factor + logistics_cost
+        if company:
+            company.record_cost("labor", labor_cost)
+            company.record_cost("manufacturing", max(0.0, total_cost - labor_cost))
+            company.monthly_units_produced += actual_qty
+
+        car_trim.is_in_production = True
+        if car_trim.production_start_turn is None:
+            car_trim.production_start_turn = current_turn
+
+        quality = self._record_assembly_quality(factory, car_trim, actual_qty, current_turn)
+
+        return {
+            "line_id": line.id,
+            "factory_id": factory.id,
+            "type": "assembly",
+            "car_trim_id": car_trim.id,
+            "planned_quantity": planned_qty,
+            "quantity": actual_qty,
+            "components_used": {
+                f"engine_{car_trim.engine_id}": actual_qty,
+                f"chassis_{car_trim.chassis_id}": actual_qty
+            },
+            "materials_used": materials_used,
+            "total_cost": round(total_cost, 2),
+            "logistics_cost": round(logistics_cost, 2),
+            "events": events,
+            **quality
+        }
+
+    def _calculate_line_weekly_quantity(
+        self,
+        line: ProductionLine,
+        factory: Factory,
+        company: Optional[Company],
+        car_trim: CarTrim,
+        current_week: int
+    ) -> int:
+        base_qty = self._split_monthly_quantity(line.monthly_capacity, current_week)
+        if base_qty <= 0 or not factory.is_operational:
+            return 0
+
+        factory_efficiency = max(0.0, float(factory.efficiency_score or 0.0) / 100.0)
+        company_efficiency = max(0.0, float(company.production_efficiency if company else 1.0))
+        familiarity_efficiency = 1.0 + self._get_familiarity_efficiency_bonus(factory, car_trim)
+        adjusted = base_qty * factory_efficiency * company_efficiency * familiarity_efficiency
+        if adjusted <= 0:
+            return 0
+        return max(1, int(math.floor(adjusted)))
+
+    @staticmethod
+    def _split_monthly_quantity(monthly_quantity: int, current_week: int) -> int:
+        monthly_quantity = max(0, int(monthly_quantity or 0))
+        current_week = min(4, max(1, int(current_week or 1)))
+        base = monthly_quantity // 4
+        remainder = monthly_quantity % 4
+        return base + (1 if current_week <= remainder else 0)
+
+    def _get_or_create_inventory(self, factory: Factory) -> Inventory:
+        inventory = self.db.query(Inventory).filter(Inventory.factory_id == factory.id).first()
+        if inventory:
+            return inventory
+
+        inventory = Inventory(
+            game_id=factory.game_id,
+            factory_id=factory.id,
+            raw_materials={},
+            finished_components={},
+            completed_cars={},
+            total_inventory_value=0.0
+        )
+        self.db.add(inventory)
+        self.db.flush()
+        return inventory
+
+    @staticmethod
+    def _sum_materials(*material_sets: Dict[str, float]) -> Dict[str, float]:
+        total: Dict[str, float] = {}
+        for materials in material_sets:
+            for material, amount in materials.items():
+                total[material] = total.get(material, 0.0) + float(amount or 0.0)
+        return total
+
+    @staticmethod
+    def _merge_into(target: Dict[str, float], source: Dict[str, float]) -> None:
+        for key, amount in source.items():
+            target[key] = target.get(key, 0.0) + float(amount or 0.0)
+
+    def _material_limited_quantity(
+        self,
+        inventory: Inventory,
+        per_unit_materials: Dict[str, float],
+        target_qty: int
+    ) -> Tuple[int, List[Dict[str, Any]]]:
+        target_qty = max(0, int(target_qty or 0))
+        actual_qty = target_qty
+        shortages: List[Dict[str, Any]] = []
+
+        for material, unit_amount in per_unit_materials.items():
+            unit_amount = float(unit_amount or 0.0)
+            if unit_amount <= 0:
+                continue
+            needed = unit_amount * target_qty
+            available = inventory.get_material_quantity(material)
+            if available + 1e-9 < needed:
+                possible_qty = int(available // unit_amount)
+                actual_qty = min(actual_qty, possible_qty)
+                shortages.append({
+                    "kind": "material",
+                    "item": material,
+                    "needed": round(needed, 4),
+                    "available": round(available, 4)
+                })
+
+        return max(0, actual_qty), shortages
+
+    def _company_component_available(
+        self,
+        company_id: int,
+        game_id: int,
+        component_type: str,
+        component_id: int
+    ) -> int:
+        factories = self.db.query(Factory).filter(
+            Factory.game_id == game_id,
+            Factory.company_id == company_id
+        ).all()
+        if not factories:
+            return 0
+        factory_ids = [factory.id for factory in factories]
+        inventories = self.db.query(Inventory).filter(Inventory.factory_id.in_(factory_ids)).all()
+        return sum(
+            inventory.get_component_quantity(component_id, component_type)
+            for inventory in inventories
+        )
+
+    def _deduct_company_component(
+        self,
+        company_id: int,
+        game_id: int,
+        destination_factory: Factory,
+        component_type: str,
+        component_id: int,
+        quantity: int
+    ) -> float:
+        factories = self.db.query(Factory).filter(
+            Factory.game_id == game_id,
+            Factory.company_id == company_id
+        ).all()
+        factories_by_id = {factory.id: factory for factory in factories}
+        factory_ids = list(factories_by_id.keys())
+        if not factory_ids:
+            raise ValueError("No company factories available for component deduction")
+
+        inventories = self.db.query(Inventory).filter(Inventory.factory_id.in_(factory_ids)).all()
+        inventories.sort(key=lambda inventory: (
+            0 if factories_by_id[inventory.factory_id].region_id == destination_factory.region_id else 1,
+            0 if inventory.factory_id == destination_factory.id else 1,
+            inventory.factory_id
+        ))
+
+        remaining = quantity
+        logistics_cost = 0.0
+        for inventory in inventories:
+            if remaining <= 0:
+                break
+            available = inventory.get_component_quantity(component_id, component_type)
+            if available <= 0:
+                continue
+            taken = min(remaining, available)
+            if not inventory.deduct_component(component_type, component_id, taken):
+                continue
+            source_factory = factories_by_id[inventory.factory_id]
+            if source_factory.id != destination_factory.id:
+                logistics_cost += self.auto_logistics(source_factory, destination_factory, taken)
+            remaining -= taken
+
+        if remaining > 0:
+            raise ValueError(f"Insufficient {component_type}_{component_id} inventory")
+        return logistics_cost
+
+    def _get_familiarity_efficiency_bonus(self, factory: Factory, car_trim: CarTrim) -> float:
+        from backend.core.production.factory_familiarity import FactoryFamiliaritySystem
+        from backend.models.factory_familiarity import FactoryProcessFamiliarity
+
+        checks: List[Tuple[str, str]] = []
+        if factory.factory_type == FactoryType.COMPONENT.value:
+            checks.append((
+                FactoryFamiliaritySystem.get_process_type(car_trim.engine),
+                "ENGINE_MANUFACTURING"
+            ))
+            checks.append((
+                FactoryFamiliaritySystem.get_chassis_process_type(car_trim.chassis),
+                "CHASSIS_MANUFACTURING"
+            ))
+        elif factory.factory_type == FactoryType.ASSEMBLY.value:
+            checks.append(("ASSEMBLY_GENERAL", "ASSEMBLY"))
+
+        bonus = 0.0
+        for process_type, category in checks:
+            familiarity = self.db.query(FactoryProcessFamiliarity).filter(
+                FactoryProcessFamiliarity.factory_id == factory.id,
+                FactoryProcessFamiliarity.process_type == process_type,
+                FactoryProcessFamiliarity.category == category
+            ).first()
+            if familiarity:
+                bonus += float(familiarity.production_efficiency_bonus or 0.0)
+
+        return min(0.10, bonus)
+
+    def _record_component_familiarity(
+        self,
+        factory: Factory,
+        car_trim: CarTrim,
+        quantity: int,
+        current_turn: int
+    ) -> None:
+        from backend.core.production.factory_familiarity import FactoryFamiliaritySystem
+
+        engine_materials = self.calculate_engine_material_requirements(car_trim.engine)
+        engine_process = FactoryFamiliaritySystem.get_process_type(car_trim.engine)
+        FactoryFamiliaritySystem.add_process_experience(
+            self.db, factory.id, engine_process, "ENGINE_MANUFACTURING",
+            quantity, current_turn, factory.game_id
+        )
+        for material_type, application in FactoryFamiliaritySystem.get_material_types(car_trim.engine):
+            kg_processed = engine_materials.get(material_type, 0.0) * quantity
+            if kg_processed > 0:
+                FactoryFamiliaritySystem.add_material_experience(
+                    self.db, factory.id, material_type, application,
+                    kg_processed, current_turn, factory.game_id
+                )
+
+        chassis_materials = self.calculate_chassis_material_requirements(car_trim.chassis)
+        chassis_process = FactoryFamiliaritySystem.get_chassis_process_type(car_trim.chassis)
+        FactoryFamiliaritySystem.add_process_experience(
+            self.db, factory.id, chassis_process, "CHASSIS_MANUFACTURING",
+            quantity, current_turn, factory.game_id
+        )
+        for material_type, application in FactoryFamiliaritySystem.get_chassis_material_types(car_trim.chassis):
+            kg_processed = chassis_materials.get(material_type, 0.0) * quantity
+            if kg_processed > 0:
+                FactoryFamiliaritySystem.add_material_experience(
+                    self.db, factory.id, material_type, application,
+                    kg_processed, current_turn, factory.game_id
+                )
+
+    def _record_assembly_quality(
+        self,
+        factory: Factory,
+        car_trim: CarTrim,
+        quantity: int,
+        current_turn: int
+    ) -> Dict[str, Any]:
+        from backend.core.production.reliability_growth import ReliabilityGrowthSystem
+        from backend.core.production.factory_familiarity import FactoryFamiliaritySystem
+
+        production_history = ReliabilityGrowthSystem.get_or_create_production_history(
+            self.db, car_trim.company_id, car_trim.id, factory.id, factory.game_id
+        )
+        factory_reliability_bonus = FactoryFamiliaritySystem.get_factory_reliability_bonus(
+            self.db, factory.id, car_trim.engine
+        )
+        defect_rate = max(0.001, 0.02 * (1.0 - factory_reliability_bonus * 2.0))
+        ReliabilityGrowthSystem.update_reliability_from_production(
+            production_history, quantity, current_turn, defect_rate
+        )
+        ReliabilityGrowthSystem.apply_reliability_growth_to_car_trim(
+            self.db, car_trim, production_history
+        )
+        FactoryFamiliaritySystem.add_process_experience(
+            self.db, factory.id, "ASSEMBLY_GENERAL", "ASSEMBLY",
+            quantity, current_turn, factory.game_id
+        )
+        return {
+            "reliability_multiplier": production_history.current_reliability_multiplier,
+            "quality_stage": production_history.quality_ramp_up_stage
+        }
+
+    @staticmethod
+    def _add_factory_capacity(
+        factory_stats: Dict[int, Dict[str, Any]],
+        factory: Factory,
+        capacity: int
+    ) -> None:
+        stats = factory_stats.setdefault(
+            factory.id,
+            {"factory": factory, "capacity": 0, "produced": 0}
+        )
+        stats["capacity"] += max(0, int(capacity or 0))
+
+    @staticmethod
+    def _add_factory_output(
+        factory_stats: Dict[int, Dict[str, Any]],
+        factory: Factory,
+        quantity: int
+    ) -> None:
+        stats = factory_stats.setdefault(
+            factory.id,
+            {"factory": factory, "capacity": 0, "produced": 0}
+        )
+        stats["produced"] += max(0, int(quantity or 0))
+
+    @staticmethod
+    def _production_shortage_event(
+        factory: Factory,
+        line: ProductionLine,
+        car_trim: CarTrim,
+        planned_qty: int,
+        actual_qty: int,
+        shortages: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        status = "停产" if actual_qty <= 0 else "降产"
+        return {
+            "event_type": "PRODUCTION",
+            "severity": "WARNING",
+            "related_company_id": factory.company_id,
+            "message": (
+                f"{factory.name} / {line.name or ('Line ' + str(line.id))} "
+                f"因库存不足{status}: 计划 {planned_qty}, 实产 {actual_qty}"
+            ),
+            "extra_data": {
+                "factory_id": factory.id,
+                "line_id": line.id,
+                "car_trim_id": car_trim.id,
+                "planned_quantity": planned_qty,
+                "actual_quantity": actual_qty,
+                "shortages": shortages
+            }
+        }
+
     def produce_component(
         self,
         factory: Factory,
@@ -400,7 +958,8 @@ class ProductionManager:
             component_inventory = assembly_inventory
         
         # 6. 检查零部件库存
-        engine_available = component_inventory.get_component_quantity(car_trim.engine_id)
+        engine_available = component_inventory.get_component_quantity(car_trim.engine_id, "engine")
+        chassis_available = component_inventory.get_component_quantity(car_trim.chassis_id, "chassis")
         # 简化：暂不考虑变速箱等其他零部件，只检查引擎
         
         if engine_available < quantity:
@@ -410,6 +969,12 @@ class ProductionManager:
             ), {}
         
         # 7. 检查车身材料（装配厂需要车身材料）
+        if chassis_available < quantity:
+            return False, (
+                f"搴曠洏搴撳瓨涓嶈冻: 闇€瑕?{quantity} 濂? "
+                f"搴撳瓨 {chassis_available} 濂?(搴曠洏ID: {car_trim.chassis_id})"
+            ), {}
+
         body_materials_needed = self.calculate_car_body_material_requirements(car_trim)
         total_body_materials = {}
         for material, unit_amount in body_materials_needed.items():
@@ -439,8 +1004,9 @@ class ProductionManager:
             ), {}
 
         # 9. 扣减零部件和材料
-        success = component_inventory.deduct_component("engine", car_trim.engine_id, quantity)
-        if not success:
+        engine_success = component_inventory.deduct_component("engine", car_trim.engine_id, quantity)
+        chassis_success = component_inventory.deduct_component("chassis", car_trim.chassis_id, quantity)
+        if not engine_success or not chassis_success:
             return False, "扣减引擎库存失败（并发冲突？）", {}
         
         for material, amount in total_body_materials.items():
@@ -508,7 +1074,8 @@ class ProductionManager:
             "car_name": car_trim.name,
             "quantity": quantity,
             "components_used": {
-                f"engine_{car_trim.engine_id}": quantity
+                f"engine_{car_trim.engine_id}": quantity,
+                f"chassis_{car_trim.chassis_id}": quantity
             },
             "body_materials_used": total_body_materials,
             "total_cost": round(total_cost, 2),

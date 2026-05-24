@@ -1,8 +1,7 @@
 /**
  * Executive and diplomacy API service.
  */
-
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import { apiPaths, apiUrl } from './apiClient';
 
 export type StaffPosition = 'CEO' | 'CTO' | 'CFO' | 'COO' | 'CMO' | 'ENGINEER' | 'DESIGNER';
 
@@ -69,7 +68,7 @@ async function errorFromResponse(response: Response): Promise<Error> {
 
 export async function getCompanyStaff(companyId: number): Promise<StaffMember[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/staff/list?company_id=${companyId}`);
+    const response = await fetch(apiUrl(apiPaths.scoped('staff', '/list'), { company_id: companyId }));
     if (!response.ok) {
       throw await errorFromResponse(response);
     }
@@ -91,7 +90,7 @@ export async function getStaffCandidates(
       params.set('position', position);
     }
 
-    const response = await fetch(`${API_BASE_URL}/staff/candidates?${params.toString()}`);
+    const response = await fetch(apiUrl(apiPaths.scoped('staff', '/candidates')) + `?${params.toString()}`);
     if (!response.ok) {
       throw await errorFromResponse(response);
     }
@@ -109,7 +108,7 @@ export async function fireStaff(
   severanceMultiplier = 1
 ): Promise<StaffMutationResult> {
   try {
-    const response = await fetch(`${API_BASE_URL}/staff/fire`, {
+    const response = await fetch(apiUrl(apiPaths.scoped('staff', '/fire')), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -141,7 +140,7 @@ export async function hireCandidateStaff(
   offeredSalary?: number
 ): Promise<StaffMutationResult> {
   try {
-    const response = await fetch(`${API_BASE_URL}/staff/hire`, {
+    const response = await fetch(apiUrl(apiPaths.scoped('staff', '/hire')), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -169,7 +168,7 @@ export async function hireCandidateStaff(
 
 export async function getCompanyRelations(companyId: number): Promise<CompanyRelation[]> {
   try {
-    const response = await fetch(`${API_BASE_URL}/diplomacy/relations?company_id=${companyId}`);
+    const response = await fetch(apiUrl(apiPaths.scoped('diplomacy', '/relations'), { company_id: companyId }));
     if (!response.ok) {
       throw await errorFromResponse(response);
     }
@@ -186,7 +185,7 @@ export async function performDiplomacyAction(
   action: DiplomacyAction
 ): Promise<{ success: boolean; result?: string; relation_change?: number; error?: string }> {
   try {
-    const response = await fetch(`${API_BASE_URL}/diplomacy/action`, {
+    const response = await fetch(apiUrl(apiPaths.scoped('diplomacy', '/action')), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

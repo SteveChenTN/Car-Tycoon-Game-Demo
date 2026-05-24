@@ -3,8 +3,7 @@
  * 使用 API 调用后端 EngineeringCore 进行硬核物理计算
  */
 import { useState, useEffect, useCallback, useRef } from 'react';
-
-const API_BASE_URL = 'http://localhost:8000/api/v1';
+import { apiPaths, apiUrl } from '../services/apiClient';
 
 export interface ChassisCalculationParams {
   /** 轴距 (mm) */
@@ -88,7 +87,7 @@ export function useChassisCalculations(params: UseChassisCalculationsParams): Ch
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/engineering/calculate-chassis`, {
+      const response = await fetch(apiUrl(apiPaths.scoped('engineering', '/calculate-chassis')), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -162,10 +162,19 @@ export interface RegionPricing {
   region_code: string;
   region_name: string;
   demand_tier: string;
+  demand_level?: number;
   market_share: number;
   rival_avg_price: number;
-  my_price: number;
+  my_price: number | null;
   estimated_profit: number;
+  estimated_sales?: number;
+  actual_sales?: number;
+  used_car_sales?: number;
+  lost_demand?: number;
+  gross_profit?: number;
+  stock_available?: number;
+  revenue?: number;
+  lost_reasons?: Record<string, number>;
   customer_feedback?: string;
 }
 
@@ -173,6 +182,8 @@ export interface MarketHeatmapCell {
   region_id: number;
   region_code: string;
   sales_intensity: number; // 0-1 scale
+  intensity?: number;
+  sales_volume?: number;
   color: string;
 }
 

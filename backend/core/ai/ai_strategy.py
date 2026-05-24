@@ -1,641 +1,1533 @@
 """
-AI竞争对手决策系统
-实现基于个性矩阵的AI CEO决策逻辑
-"""
-from typing import List, Dict, Optional, Tuple
-from dataclasses import dataclass
-from sqlalchemy.orm import Session
-from enum import Enum
-import random
-import math
+AI competitor strategy system.
 
+The AI layer has two separate steps:
+1. CEO personalities generate decisions.
+2. Organization size queues those decisions for delayed execution.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass
+import hashlib
+import json
+import random
+from typing import Any, Dict, List, Optional, Tuple
+
+from sqlalchemy.orm import Session
+
+from backend.models.ai_decision import AIDecisionQueue
+from backend.models.company import Company
+from backend.models.engineering import CarTrim
+from backend.models.history import FinancialHistory
+from backend.models.inventory import DealershipInventory
 from backend.models.market import (
-    MarketingCampaign, DistributionNetwork, BrandPerception,
-    MarketingFocus, ConsumerSegment, DistributionType
+    BrandPerception,
+    DistributionNetwork,
+    MarketingCampaign,
+    MarketingFocus,
+    ConsumerSegment,
+    DistributionType,
 )
-from backend.models.production import Factory, FactoryType
-from backend.models.engineering import Engine, Chassis, CarTrim
+from backend.models.production import Factory, FactoryType, ProductionLine
 from backend.models.region import Region
+from backend.models.technology import CompanyTechnology, TechNode
 from backend.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
 
-# ========== AI人格特征 ==========
+PERSONALITY_KEYS = (
+    "aggression",
+    "innovation",
+    "risk_tolerance",
+    "loyalty",
+    "foresight",
+)
+
+NEW_ENERGY_KEYWORDS = ("HYBRID", "ELECTRIC", "EV", "BATTERY", "FUEL_CELL")
+
+COMPANY_SIZE_ORDER = {
+    "SMALL": 0,
+    "MEDIUM": 1,
+    "LARGE": 2,
+    "GIANT": 3,
+}
+
+DECISION_DELAY_RANGES = {
+    "SMALL": (1, 2),
+    "MEDIUM": (2, 4),
+    "LARGE": (4, 8),
+    "GIANT": (8, 16),
+}
+
+STRATEGY_SIZE_FLOORS = {
+    "MULTINATIONAL": "GIANT",
+    "TECH_GIANT": "LARGE",
+    "VOLUME": "LARGE",
+    "LUXURY_BRAND": "LARGE",
+    "TRADITIONAL": "LARGE",
+    "AGILE": "SMALL",
+    "NICHE": "SMALL",
+    "EXOTIC": "SMALL",
+}
+
+STRATEGY_TRAIT_DEFAULTS: Dict[str, Dict[str, int]] = {
+    "AGGRESSIVE": {
+        "aggression": 82,
+        "innovation": 55,
+        "risk_tolerance": 75,
+        "loyalty": 45,
+        "foresight": 55,
+    },
+    "CONSERVATIVE": {
+        "aggression": 35,
+        "innovation": 45,
+        "risk_tolerance": 30,
+        "loyalty": 80,
+        "foresight": 65,
+    },
+    "BALANCED": {
+        "aggression": 55,
+        "innovation": 55,
+        "risk_tolerance": 55,
+        "loyalty": 55,
+        "foresight": 55,
+    },
+    "INNOVATION": {
+        "aggression": 55,
+        "innovation": 88,
+        "risk_tolerance": 65,
+        "loyalty": 50,
+        "foresight": 82,
+    },
+    "MASS_MARKET": {
+        "aggression": 70,
+        "innovation": 45,
+        "risk_tolerance": 60,
+        "loyalty": 60,
+        "foresight": 50,
+    },
+    "TECH_GIANT": {
+        "aggression": 65,
+        "innovation": 90,
+        "risk_tolerance": 70,
+        "loyalty": 55,
+        "foresight": 85,
+    },
+    "MULTINATIONAL": {
+        "aggression": 60,
+        "innovation": 60,
+        "risk_tolerance": 55,
+        "loyalty": 70,
+        "foresight": 75,
+    },
+    "VOLUME": {
+        "aggression": 72,
+        "innovation": 45,
+        "risk_tolerance": 58,
+        "loyalty": 60,
+        "foresight": 55,
+    },
+    "LUXURY_BRAND": {
+        "aggression": 45,
+        "innovation": 62,
+        "risk_tolerance": 45,
+        "loyalty": 82,
+        "foresight": 72,
+    },
+    "TRADITIONAL": {
+        "aggression": 42,
+        "innovation": 40,
+        "risk_tolerance": 35,
+        "loyalty": 85,
+        "foresight": 58,
+    },
+    "AGILE": {
+        "aggression": 68,
+        "innovation": 72,
+        "risk_tolerance": 76,
+        "loyalty": 42,
+        "foresight": 62,
+    },
+    "NICHE": {
+        "aggression": 48,
+        "innovation": 68,
+        "risk_tolerance": 50,
+        "loyalty": 72,
+        "foresight": 62,
+    },
+    "EXOTIC": {
+        "aggression": 58,
+        "innovation": 82,
+        "risk_tolerance": 70,
+        "loyalty": 45,
+        "foresight": 70,
+    },
+}
+
 
 @dataclass
 class CEOPersonality:
-    """
-    CEO人格矩阵
-    每个特征0-100分
-    """
-    aggression: int      # 侵略性：价格战、快速扩张
-    innovation: int      # 创新性：前沿技术、冒险
-    risk_tolerance: int  # 风险承受：杠杆、大赌注
-    loyalty: int         # 忠诚度：团队稳定性
-    
-    def __post_init__(self):
-        """验证范围"""
-        for attr in ['aggression', 'innovation', 'risk_tolerance', 'loyalty']:
+    """Five-dimension CEO personality matrix. Each trait is 0-100."""
+
+    aggression: int
+    innovation: int
+    risk_tolerance: int
+    loyalty: int
+    foresight: int
+
+    def __post_init__(self) -> None:
+        for attr in PERSONALITY_KEYS:
             value = getattr(self, attr)
             if not 0 <= value <= 100:
-                raise ValueError(f"{attr}必须在0-100之间，当前值: {value}")
+                raise ValueError(f"{attr} must be between 0 and 100, got {value}")
 
 
 @dataclass
 class CompanySituation:
-    """公司当前状况评估"""
+    """Current company situation snapshot used by the AI CEO."""
+
     company_id: int
     cash_balance: float
     monthly_burn_rate: float
     cash_runway_months: float
-    
-    market_share_trend: float  # 近期市场份额变化（-1到+1）
+    market_share_trend: float
     profit_margin: float
-    brand_health: float        # 品牌健康度（0-100）
-    
-    production_utilization: float  # 产能利用率（0-1）
-    competitor_threats: List[Dict]  # 竞争威胁列表
-    market_opportunities: List[Dict]  # 市场机会列表
+    brand_health: float
+    production_utilization: float
+    competitor_threats: List[Dict[str, Any]]
+    market_opportunities: List[Dict[str, Any]]
+    trailing_units_sold: int = 0
+    trailing_revenue: float = 0.0
 
 
 @dataclass
 class AIDecision:
-    """AI决策"""
-    decision_type: str  # MARKETING/PRODUCTION/RD/PRICING/EXPANSION
-    action: str         # 具体行动
-    parameters: Dict    # 行动参数
-    reasoning: str      # 决策理由（用于日志）
-    priority: int       # 优先级（1-10）
+    """AI decision payload generated by a CEO and later executed from a queue."""
+
+    decision_type: str
+    action: str
+    parameters: Dict[str, Any]
+    reasoning: str
+    priority: int
 
 
-# ========== 主AI决策类 ==========
+@dataclass
+class AIDecisionResult:
+    """Result returned after attempting to execute an AI decision."""
+
+    decision_type: str
+    action: str
+    success: bool
+    message: str
+    metadata: Dict[str, Any]
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "type": self.decision_type,
+            "action": self.action,
+            "success": self.success,
+            "message": self.message,
+            "metadata": self.metadata,
+        }
+
+
+def _clamp_int(value: Any, default: int = 50) -> int:
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        parsed = default
+    return max(0, min(100, parsed))
+
+
+def _strategy_default_traits(strategy: Optional[str]) -> Dict[str, int]:
+    strategy_key = (strategy or "BALANCED").upper()
+    defaults = STRATEGY_TRAIT_DEFAULTS.get(strategy_key, STRATEGY_TRAIT_DEFAULTS["BALANCED"])
+    return {key: int(defaults[key]) for key in PERSONALITY_KEYS}
+
+
+def _parse_stored_traits(company: Company) -> Optional[Dict[str, Any]]:
+    if not company.ai_personality_traits:
+        return None
+    try:
+        parsed = json.loads(company.ai_personality_traits)
+    except (TypeError, json.JSONDecodeError):
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def _normalize_personality_traits(raw_traits: Dict[str, Any], fallback: Dict[str, int]) -> Dict[str, int]:
+    normalized: Dict[str, int] = {}
+    for key in PERSONALITY_KEYS:
+        normalized[key] = _clamp_int(raw_traits.get(key), fallback.get(key, 50))
+    return normalized
+
+
+def get_or_create_company_personality(company: Company) -> CEOPersonality:
+    """Read persisted AI traits, or derive deterministic safe defaults from strategy."""
+
+    fallback = _strategy_default_traits(company.ai_strategy)
+    stored_traits = _parse_stored_traits(company)
+    if stored_traits is None:
+        traits = fallback
+        company.set_ai_personality(traits)
+    else:
+        traits = _normalize_personality_traits(stored_traits, fallback)
+        if any(stored_traits.get(key) != traits[key] for key in PERSONALITY_KEYS):
+            company.set_ai_personality(traits)
+
+    return CEOPersonality(
+        aggression=traits["aggression"],
+        innovation=traits["innovation"],
+        risk_tolerance=traits["risk_tolerance"],
+        loyalty=traits["loyalty"],
+        foresight=traits["foresight"],
+    )
+
+
+def personality_from_company(company: Company) -> CEOPersonality:
+    """Build a CEOPersonality from Company.ai_personality_traits."""
+
+    return get_or_create_company_personality(company)
+
+
+def _money_to_millions(value: Optional[float]) -> float:
+    value = float(value or 0.0)
+    if abs(value) > 10_000:
+        return value / 1_000_000.0
+    return value
+
+
+def classify_company_size(company: Company) -> str:
+    """Classify organization size for decision inertia."""
+
+    size = "SMALL"
+
+    financial_m = max(
+        _money_to_millions(company.cash),
+        _money_to_millions(company.total_assets),
+    )
+    if financial_m >= 150:
+        size = "GIANT"
+    elif financial_m >= 60:
+        size = "LARGE"
+    elif financial_m >= 25:
+        size = "MEDIUM"
+
+    employees = int(company.total_employees or 0)
+    if employees >= 50_000:
+        size = _max_size(size, "GIANT")
+    elif employees >= 10_000:
+        size = _max_size(size, "LARGE")
+    elif employees >= 1_000:
+        size = _max_size(size, "MEDIUM")
+
+    share = float(company.market_share_global or 0.0)
+    if share >= 0.15:
+        size = _max_size(size, "GIANT")
+    elif share >= 0.07:
+        size = _max_size(size, "LARGE")
+    elif share >= 0.02:
+        size = _max_size(size, "MEDIUM")
+
+    strategy_floor = STRATEGY_SIZE_FLOORS.get((company.ai_strategy or "").upper())
+    if strategy_floor:
+        size = _max_size(size, strategy_floor)
+
+    return size
+
+
+def _max_size(left: str, right: str) -> str:
+    return left if COMPANY_SIZE_ORDER[left] >= COMPANY_SIZE_ORDER[right] else right
+
+
+def decision_target_key(decision: AIDecision) -> str:
+    """Return a stable target key for queue dedupe and delay hashing."""
+
+    params = decision.parameters or {}
+    for key, prefix in (
+        ("tech_node_id", "tech"),
+        ("region_id", "region"),
+        ("car_trim_id", "trim"),
+        ("campaign_id", "campaign"),
+    ):
+        if params.get(key) is not None:
+            return f"{prefix}:{params[key]}"
+    normalized = json.dumps(params, sort_keys=True, default=str)
+    digest = hashlib.sha256(normalized.encode("utf-8")).hexdigest()[:12]
+    return f"global:{digest}"
+
+
+def calculate_decision_delay(company: Company, decision: AIDecision, current_turn: int) -> int:
+    """Return deterministic organization delay in turns."""
+
+    size = classify_company_size(company)
+    low, high = DECISION_DELAY_RANGES[size]
+    target_key = decision_target_key(decision)
+    seed = f"{company.id}:{current_turn}:{decision.decision_type}:{decision.action}:{target_key}"
+    digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()
+    return low + (int(digest[:8], 16) % (high - low + 1))
+
 
 class AI_CEO:
-    """
-    AI CEO决策引擎
-    根据个性和公司状况做出战略决策
-    """
-    
-    def __init__(
-        self,
-        db: Session,
-        company_id: int,
-        personality: CEOPersonality
-    ):
+    """AI CEO decision engine based on personality and current situation."""
+
+    def __init__(self, db: Session, company_id: int, personality: CEOPersonality):
         self.db = db
         self.company_id = company_id
         self.personality = personality
         self.logger = get_logger(f"AI_CEO_{company_id}")
-    
-    # ========== 主决策循环 ==========
-    
-    def make_turn_decisions(
-        self,
-        game_id: int,
-        current_turn: int
-    ) -> List[AIDecision]:
-        """
-        每回合决策入口
-        
-        Args:
-            game_id: 游戏ID
-            current_turn: 当前回合
-        
-        Returns:
-            决策列表
-        """
-        self.logger.info(f"AI公司 {self.company_id} 开始第 {current_turn} 回合决策")
-        
-        # 阶段1：评估当前状况
+
+    def make_turn_decisions(self, game_id: int, current_turn: int) -> List[AIDecision]:
         situation = self._assess_situation(game_id, current_turn)
-        
-        # 阶段2：生成决策
-        decisions = []
-        
-        # 决策优先级（按顺序）
-        # 1. 生存决策（现金危机）
+        decisions: List[AIDecision] = []
+
         if situation.cash_runway_months < 6:
             decisions.extend(self._make_survival_decisions(situation))
-        
-        # 2. 市场营销决策
-        marketing_decisions = self._make_marketing_decisions(situation, current_turn, game_id)
-        decisions.extend(marketing_decisions)
-        
-        # 3. 生产与扩张决策
-        production_decisions = self._make_production_decisions(situation, game_id)
-        decisions.extend(production_decisions)
-        
-        # 4. 研发决策
-        rd_decisions = self._make_rd_decisions(situation, game_id)
-        decisions.extend(rd_decisions)
-        
-        # 5. 定价策略决策
-        pricing_decisions = self._make_pricing_decisions(situation)
-        decisions.extend(pricing_decisions)
-        
-        # 记录决策
+
+        decisions.extend(self._make_marketing_decisions(situation, current_turn, game_id))
+        decisions.extend(self._make_production_decisions(situation, game_id))
+        decisions.extend(self._make_expansion_decisions(situation, game_id))
+        decisions.extend(self._make_rd_decisions(situation, game_id))
+        decisions.extend(self._make_pricing_decisions(situation))
+
         for decision in decisions:
             self.logger.info(
-                f"  决策: {decision.decision_type} - {decision.action} | "
-                f"理由: {decision.reasoning}"
+                "AI decision: %s/%s | priority=%s | %s",
+                decision.decision_type,
+                decision.action,
+                decision.priority,
+                decision.reasoning,
             )
-        
+
         return decisions
-    
-    # ========== 阶段1：状况评估 ==========
-    
+
     def _assess_situation(self, game_id: int, current_turn: int) -> CompanySituation:
-        """
-        评估公司当前状况
-        
-        Returns:
-            状况评估结果
-        """
-        # TODO: 这里需要Company模型，当前简化处理
-        # 假设有基础数据
-        
-        # 简化版本：使用模拟数据
-        situation = CompanySituation(
-            company_id=self.company_id,
-            cash_balance=50000000.0,  # 5000万
-            monthly_burn_rate=1000000.0,  # 100万/月
-            cash_runway_months=50.0,
-            market_share_trend=random.uniform(-0.1, 0.1),
-            profit_margin=0.10,
-            brand_health=random.uniform(40.0, 80.0),
-            production_utilization=random.uniform(0.5, 0.95),
-            competitor_threats=[],
-            market_opportunities=[]
+        company = self.db.query(Company).filter(Company.id == self.company_id).first()
+        if not company:
+            raise ValueError(f"Company {self.company_id} not found")
+
+        recent_financials = self.db.query(FinancialHistory).filter(
+            FinancialHistory.game_id == game_id,
+            FinancialHistory.company_id == self.company_id,
+            FinancialHistory.turn_number <= current_turn,
+        ).order_by(FinancialHistory.turn_number.desc()).limit(4).all()
+
+        current_costs = company.get_monthly_total_costs() if hasattr(company, "get_monthly_total_costs") else 0.0
+        historical_costs = [
+            self._financial_cost_total(record)
+            for record in recent_financials
+            if self._financial_cost_total(record) > 0
+        ]
+        monthly_burn = max(
+            float(current_costs or 0.0),
+            sum(historical_costs) / len(historical_costs) if historical_costs else 0.0,
+            1.0,
         )
-        
-        # 计算产能利用率（真实数据）
+        cash_runway = float(company.cash or 0.0) / monthly_burn if monthly_burn > 0 else 999.0
+
         factories = self.db.query(Factory).filter(
             Factory.company_id == self.company_id,
             Factory.game_id == game_id,
-            Factory.is_operational == True
+            Factory.is_operational == True,
         ).all()
-        
         if factories:
-            total_capacity = sum(f.get_effective_capacity() for f in factories)
-            # TODO: 计算实际使用量
-            # 这里简化为随机
-            situation.production_utilization = random.uniform(0.6, 0.95)
-        
-        return situation
-    
-    # ========== 阶段2：决策生成 ==========
-    
+            total_capacity = sum(max(0, int(factory.capacity_units_per_month or 0)) for factory in factories)
+            if total_capacity > 0:
+                production_utilization = sum(
+                    max(0.0, min(1.0, float(factory.current_utilization_rate or 0.0)))
+                    * max(0, int(factory.capacity_units_per_month or 0))
+                    for factory in factories
+                ) / total_capacity
+            else:
+                production_utilization = 0.0
+        else:
+            production_utilization = 0.0
+
+        latest_financial = recent_financials[0] if recent_financials else None
+        revenue = float(company.monthly_revenue or (latest_financial.revenue_vehicles if latest_financial else 0.0) or company.quarterly_revenue or 1.0)
+        profit = float(company.monthly_profit or (latest_financial.net_income if latest_financial else 0.0) or company.quarterly_profit or 0.0)
+        profit_margin = profit / max(revenue, 1.0)
+        brand_health = self._calculate_brand_health(company, game_id)
+        trailing_units_sold = int(company.monthly_units_sold or 0) + sum(
+            int(record.units_sold or 0)
+            for record in recent_financials
+        )
+        trailing_revenue = float(company.monthly_revenue or 0.0) + sum(
+            float(record.revenue_vehicles or 0.0)
+            for record in recent_financials
+        )
+
+        return CompanySituation(
+            company_id=self.company_id,
+            cash_balance=float(company.cash or 0.0),
+            monthly_burn_rate=monthly_burn,
+            cash_runway_months=cash_runway,
+            market_share_trend=self._calculate_market_share_trend(company, recent_financials),
+            profit_margin=profit_margin,
+            brand_health=brand_health,
+            production_utilization=production_utilization,
+            competitor_threats=self._find_competitor_threats(company, game_id),
+            market_opportunities=self._find_market_opportunities(game_id),
+            trailing_units_sold=trailing_units_sold,
+            trailing_revenue=trailing_revenue,
+        )
+
+    @staticmethod
+    def _normalize_share(value: Optional[float]) -> float:
+        share = float(value or 0.0)
+        if share > 1.0:
+            return share / 100.0
+        return max(0.0, share)
+
+    @staticmethod
+    def _financial_cost_total(record: FinancialHistory) -> float:
+        return sum(
+            float(getattr(record, field) or 0.0)
+            for field in (
+                "cost_manufacturing",
+                "cost_materials",
+                "cost_labor",
+                "cost_rd",
+                "cost_marketing",
+                "cost_admin",
+                "cost_depreciation",
+                "cost_interest",
+            )
+        )
+
+    def _calculate_market_share_trend(
+        self,
+        company: Company,
+        recent_financials: List[FinancialHistory],
+    ) -> float:
+        if not recent_financials:
+            return 0.0
+
+        latest_share = self._normalize_share(recent_financials[0].market_share_global)
+        if company.market_share_global:
+            latest_share = self._normalize_share(company.market_share_global)
+
+        baseline_record = recent_financials[min(len(recent_financials) - 1, 1)]
+        baseline_share = self._normalize_share(baseline_record.market_share_global)
+        return latest_share - baseline_share
+
+    def _calculate_brand_health(self, company: Company, game_id: int) -> float:
+        company_signal = max(
+            float(company.prestige_score or 0.0),
+            float(company.brand_power or 0.0) * 100.0,
+            float(company.reputation_quality or 0.0),
+            float(company.reputation_innovation or 0.0),
+        )
+
+        perceptions = self.db.query(BrandPerception).filter(
+            BrandPerception.game_id == game_id,
+            BrandPerception.company_id == self.company_id,
+        ).all()
+        if not perceptions:
+            return max(0.0, min(100.0, company_signal))
+
+        perception_scores: List[float] = []
+        for perception in perceptions:
+            awareness = float(perception.overall_awareness or 0.0)
+            if awareness <= 1.0:
+                awareness *= 100.0
+            attribute_score = sum(
+                float(getattr(perception, field) or 0.0)
+                for field in (
+                    "reliability_score",
+                    "sportiness_score",
+                    "luxury_score",
+                    "eco_friendly_score",
+                    "innovation_score",
+                    "value_for_money_score",
+                )
+            ) / 6.0
+            perception_scores.append((awareness + attribute_score) / 2.0)
+
+        market_signal = sum(perception_scores) / len(perception_scores)
+        return max(0.0, min(100.0, (company_signal + market_signal) / 2.0))
+
+    def _find_competitor_threats(self, company: Company, game_id: int) -> List[Dict[str, Any]]:
+        own_share = self._normalize_share(company.market_share_global)
+        competitors = self.db.query(Company).filter(
+            Company.game_id == game_id,
+            Company.id != company.id,
+            Company.is_bankrupt == False,
+        ).order_by(Company.market_share_global.desc()).limit(3).all()
+        return [
+            {
+                "company_id": competitor.id,
+                "name": competitor.name,
+                "market_share": self._normalize_share(competitor.market_share_global),
+            }
+            for competitor in competitors
+            if self._normalize_share(competitor.market_share_global) > own_share
+        ]
+
+    def _find_market_opportunities(self, game_id: int) -> List[Dict[str, Any]]:
+        regions = self.db.query(Region).filter(Region.game_id == game_id).all()
+        return [
+            {
+                "region_id": region.id,
+                "code": region.code,
+                "annual_sales_potential": int(region.annual_sales_potential or 0),
+            }
+            for region in sorted(
+                regions,
+                key=lambda item: int(item.annual_sales_potential or 0),
+                reverse=True,
+            )[:3]
+        ]
+
     def _make_survival_decisions(self, situation: CompanySituation) -> List[AIDecision]:
-        """
-        生存模式决策（现金危机）
-        """
-        decisions = []
-        
-        # 削减成本
-        decisions.append(AIDecision(
-            decision_type="COST_CUT",
-            action="REDUCE_MARKETING",
-            parameters={"reduction_ratio": 0.5},
-            reasoning="现金跑道不足6个月，削减营销预算50%",
-            priority=10
-        ))
-        
-        # 降价促销
+        decisions = [
+            AIDecision(
+                decision_type="COST_CUT",
+                action="REDUCE_MARKETING",
+                parameters={"reduction_ratio": 0.5},
+                reasoning="Cash runway under six turns; cutting marketing budget.",
+                priority=10,
+            )
+        ]
+
         if self.personality.aggression > 50:
-            decisions.append(AIDecision(
-                decision_type="PRICING",
-                action="EMERGENCY_DISCOUNT",
-                parameters={"discount_percent": 15.0},
-                reasoning="现金危机，紧急降价促销回笼资金",
-                priority=9
-            ))
-        
+            decisions.append(
+                AIDecision(
+                    decision_type="PRICING",
+                    action="EMERGENCY_DISCOUNT",
+                    parameters={"discount_percent": 15.0},
+                    reasoning="Cash pressure triggers emergency discounting.",
+                    priority=9,
+                )
+            )
+
         return decisions
-    
+
     def _make_marketing_decisions(
         self,
         situation: CompanySituation,
         current_turn: int,
-        game_id: int
+        game_id: int,
     ) -> List[AIDecision]:
-        """
-        市场营销决策
-        """
-        decisions = []
-        
-        # 检查是否需要启动营销活动
-        # 条件1：市场份额下降
-        if situation.market_share_trend < -0.05:
-            if situation.cash_balance > 5000000:  # 有足够现金
-                # 获取所有地区
-                regions = self.db.query(Region).filter(
-                    Region.game_id == game_id
-                ).all()
-                
-                for region in regions:
-                    # 检查是否已有活跃营销活动
-                    existing_campaigns = self.db.query(MarketingCampaign).filter(
-                        MarketingCampaign.company_id == self.company_id,
-                        MarketingCampaign.region_id == region.id,
-                        MarketingCampaign.is_active == True
-                    ).count()
-                    
-                    if existing_campaigns == 0:
-                        # 决定目标细分
-                        target = self._choose_target_segment()
-                        
-                        # 决定营销焦点
-                        focus = self._choose_marketing_focus()
-                        
-                        # 计算预算
-                        budget = self._calculate_marketing_budget(situation)
-                        
-                        decisions.append(AIDecision(
-                            decision_type="MARKETING",
-                            action="LAUNCH_CAMPAIGN",
-                            parameters={
-                                "region_id": region.id,
-                                "target_bucket": target,
-                                "focus": focus,
-                                "budget": budget,
-                                "duration_turns": 3  # 3个月活动
-                            },
-                            reasoning=f"市场份额下降{abs(situation.market_share_trend)*100:.1f}%，启动营销反击",
-                            priority=7
-                        ))
-        
-        # 条件2：品牌健康度低
-        elif situation.brand_health < 50:
-            if situation.cash_balance > 3000000:
-                decisions.append(AIDecision(
-                    decision_type="MARKETING",
-                    action="BRAND_REPAIR_CAMPAIGN",
-                    parameters={
-                        "focus": MarketingFocus.RELIABILITY.value,
-                        "budget": 2000000
-                    },
-                    reasoning=f"品牌健康度仅{situation.brand_health:.1f}，启动品牌修复",
-                    priority=8
-                ))
-        
-        return decisions
-    
-    def _make_production_decisions(
-        self,
-        situation: CompanySituation,
-        game_id: int
-    ) -> List[AIDecision]:
-        """
-        生产与扩张决策
-        """
-        decisions = []
-        
-        # 产能利用率高 + 有现金 = 扩张
-        if situation.production_utilization > 0.90:
-            # 高风险承受度的CEO更愿意扩张
-            expansion_threshold = 100 - self.personality.risk_tolerance
-            
-            if situation.cash_runway_months > expansion_threshold / 2.0:
-                # 决定扩张地区
-                best_region = self._find_best_expansion_region(game_id)
-                
-                if best_region:
-                    decisions.append(AIDecision(
-                        decision_type="EXPANSION",
-                        action="BUILD_FACTORY",
+        decisions: List[AIDecision] = []
+
+        if situation.market_share_trend < -0.05 and situation.cash_balance > 5_000_000:
+            candidate_regions = []
+            for region in self.db.query(Region).filter(Region.game_id == game_id).all():
+                existing_campaigns = self.db.query(MarketingCampaign).filter(
+                    MarketingCampaign.game_id == game_id,
+                    MarketingCampaign.company_id == self.company_id,
+                    MarketingCampaign.region_id == region.id,
+                    MarketingCampaign.is_active == True,
+                ).count()
+                if existing_campaigns:
+                    continue
+                candidate_regions.append(region)
+
+            if candidate_regions:
+                region = max(candidate_regions, key=lambda item: int(item.annual_sales_potential or 0))
+                decisions.append(
+                    AIDecision(
+                        decision_type="MARKETING",
+                        action="LAUNCH_CAMPAIGN",
+                        parameters={
+                            "region_id": region.id,
+                            "target_bucket": self._choose_target_segment(),
+                            "focus": self._choose_marketing_focus(),
+                            "budget": self._calculate_marketing_budget(situation),
+                            "duration_turns": 3,
+                        },
+                        reasoning=f"Market share trend is down {abs(situation.market_share_trend) * 100:.1f}%.",
+                        priority=7,
+                    )
+                )
+
+        elif situation.brand_health < 50 and situation.cash_balance > 3_000_000:
+            best_region = self._find_best_market_entry_region(game_id)
+            if best_region:
+                decisions.append(
+                    AIDecision(
+                        decision_type="MARKETING",
+                        action="BRAND_REPAIR_CAMPAIGN",
                         parameters={
                             "region_id": best_region.id,
-                            "factory_type": FactoryType.ASSEMBLY.value,
-                            "capacity": 50000
+                            "focus": MarketingFocus.RELIABILITY.value,
+                            "target_bucket": ConsumerSegment.PRACTICAL.value,
+                            "budget": 2_000_000,
+                            "duration_turns": 4,
                         },
-                        reasoning=f"产能利用率{situation.production_utilization*100:.1f}%，在{best_region.name}建厂",
-                        priority=6
-                    ))
-        
-        # 产能闲置 + 侵略性高 = 价格战
-        elif situation.production_utilization < 0.60 and self.personality.aggression > 70:
-            decisions.append(AIDecision(
-                decision_type="PRICING",
-                action="AGGRESSIVE_PRICING",
-                parameters={"discount_percent": 10.0},
-                reasoning=f"产能闲置{(1-situation.production_utilization)*100:.1f}%，启动价格战",
-                priority=7
-            ))
-        
+                        reasoning=f"Brand health is weak at {situation.brand_health:.1f}.",
+                        priority=8,
+                    )
+                )
+
         return decisions
-    
-    def _make_rd_decisions(
-        self,
-        situation: CompanySituation,
-        game_id: int
-    ) -> List[AIDecision]:
-        """
-        研发决策
-        """
-        decisions = []
-        
-        # 高创新性CEO更愿意投资R&D
-        if self.personality.innovation > 60:
-            # 检查是否有正在研发的项目
-            # TODO: 需要RDProject模型
-            
-            # 简化：如果现金充足且没有最新技术引擎
-            if situation.cash_balance > 20000000:
-                # 随机决定是否启动新引擎研发
-                if random.random() < self.personality.innovation / 200.0:
-                    decisions.append(AIDecision(
-                        decision_type="RD",
-                        action="START_ENGINE_PROJECT",
-                        parameters={
-                            "tech_level": random.randint(5, 8),
-                            "budget": 10000000
-                        },
-                        reasoning=f"创新性{self.personality.innovation}，启动新引擎研发",
-                        priority=5
-                    ))
-        
+
+    def _make_production_decisions(self, situation: CompanySituation, game_id: int) -> List[AIDecision]:
+        decisions: List[AIDecision] = []
+        if situation.production_utilization <= 0.90:
+            if situation.production_utilization < 0.60 and self.personality.aggression > 70:
+                decisions.append(
+                    AIDecision(
+                        decision_type="PRICING",
+                        action="AGGRESSIVE_PRICING",
+                        parameters={"discount_percent": 10.0},
+                        reasoning=f"Unused capacity is {(1 - situation.production_utilization) * 100:.1f}%.",
+                        priority=7,
+                    )
+                )
+            return decisions
+
+        expansion_threshold = 100 - self.personality.risk_tolerance
+        if situation.cash_runway_months <= expansion_threshold / 2.0:
+            return decisions
+
+        best_region = self._find_best_factory_region(game_id)
+        if best_region:
+            decisions.append(
+                AIDecision(
+                    decision_type="EXPANSION",
+                    action="BUILD_FACTORY",
+                    parameters={
+                        "region_id": best_region.id,
+                        "factory_type": FactoryType.ASSEMBLY.value,
+                        "capacity": 50_000,
+                    },
+                    reasoning=f"Capacity utilization is {situation.production_utilization * 100:.1f}%.",
+                    priority=6,
+                )
+            )
+
         return decisions
-    
-    def _make_pricing_decisions(
-        self,
-        situation: CompanySituation
-    ) -> List[AIDecision]:
-        """
-        定价策略决策
-        """
-        decisions = []
-        
-        # 根据市场份额和侵略性调整价格
+
+    def _make_expansion_decisions(self, situation: CompanySituation, game_id: int) -> List[AIDecision]:
+        if situation.cash_balance < 4_000_000:
+            return []
+
+        best_region = self._find_best_market_entry_region(game_id)
+        if not best_region:
+            return []
+
+        entry_score = (
+            self.personality.risk_tolerance
+            + self.personality.foresight
+            + self.personality.aggression * 0.5
+            - self.personality.loyalty * 0.25
+        )
+        if entry_score < 120 and situation.market_share_trend >= 0.0:
+            return []
+
+        return [
+            AIDecision(
+                decision_type="EXPANSION",
+                action="ENTER_REGION",
+                parameters={
+                    "region_id": best_region.id,
+                    "distribution_type": DistributionType.FRANCHISE.value,
+                    "coverage_level": 0.20 + self.personality.aggression / 500.0,
+                },
+                reasoning=f"Region {best_region.code} looks attractive for market entry.",
+                priority=5,
+            )
+        ]
+
+    def _make_rd_decisions(self, situation: CompanySituation, game_id: int) -> List[AIDecision]:
+        if self.personality.innovation <= 55 or situation.cash_balance <= 1_000_000:
+            return []
+
+        tech = self._choose_technology_target(game_id)
+        if not tech:
+            return []
+
+        return [
+            AIDecision(
+                decision_type="RD",
+                action="START_TECH_PROJECT",
+                parameters={
+                    "tech_node_id": tech.id,
+                    "tech_code": tech.tech_code,
+                    "budget": tech.base_research_cost,
+                    "base_weeks": tech.base_research_time,
+                    "trend_signal": self._is_new_energy_tech(tech),
+                },
+                reasoning=(
+                    f"Foresight {self.personality.foresight} identifies "
+                    f"{tech.tech_code} as a strategic technology."
+                ),
+                priority=6 if self._is_new_energy_tech(tech) else 5,
+            )
+        ]
+
+    def _make_pricing_decisions(self, situation: CompanySituation) -> List[AIDecision]:
         if situation.market_share_trend < 0 and self.personality.aggression > 60:
-            # 侵略性反击：降价
             discount = min(15.0, self.personality.aggression / 100.0 * 15.0)
-            
-            decisions.append(AIDecision(
-                decision_type="PRICING",
-                action="INCREASE_DISCOUNTS",
-                parameters={"discount_percent": discount},
-                reasoning=f"市场份额下降，侵略性CEO发起降价反击",
-                priority=7
-            ))
-        
-        elif situation.market_share_trend > 0.05 and situation.profit_margin < 0.15:
-            # 市场份额上升，提价增利
-            decisions.append(AIDecision(
-                decision_type="PRICING",
-                action="INCREASE_PRICES",
-                parameters={"increase_percent": 5.0},
-                reasoning="市场份额上升，适度提价增加利润率",
-                priority=4
-            ))
-        
-        return decisions
-    
-    # ========== 辅助方法 ==========
-    
+            return [
+                AIDecision(
+                    decision_type="PRICING",
+                    action="INCREASE_DISCOUNTS",
+                    parameters={"discount_percent": discount},
+                    reasoning="Market share is sliding; aggressive CEO increases incentives.",
+                    priority=7,
+                )
+            ]
+
+        if situation.market_share_trend > 0.05 and situation.profit_margin < 0.15:
+            return [
+                AIDecision(
+                    decision_type="PRICING",
+                    action="INCREASE_PRICES",
+                    parameters={"increase_percent": 5.0},
+                    reasoning="Share is improving but margin remains low.",
+                    priority=4,
+                )
+            ]
+
+        return []
+
     def _choose_target_segment(self) -> str:
-        """根据个性选择目标市场细分"""
+        if self.personality.foresight > 75 and self.personality.innovation > 65:
+            return ConsumerSegment.ECO_CONSCIOUS.value
         if self.personality.innovation > 70:
-            # 创新型CEO喜欢年轻市场
             return ConsumerSegment.YOUTH.value
-        elif self.personality.risk_tolerance < 30:
-            # 保守型CEO喜欢家庭市场
+        if self.personality.risk_tolerance < 30:
             return ConsumerSegment.FAMILY.value
-        elif self.personality.aggression > 70:
-            # 侵略型CEO喜欢运动市场
+        if self.personality.aggression > 70:
             return ConsumerSegment.SPORTS.value
-        else:
-            return ConsumerSegment.PRACTICAL.value
-    
+        return ConsumerSegment.PRACTICAL.value
+
     def _choose_marketing_focus(self) -> str:
-        """根据个性选择营销焦点"""
+        if self.personality.foresight > 75 and self.personality.innovation > 65:
+            return MarketingFocus.ECO_FRIENDLY.value
         if self.personality.aggression > 70:
             return MarketingFocus.SALES_PUSH.value
-        elif self.personality.innovation > 70:
+        if self.personality.innovation > 70:
             return MarketingFocus.MOTORSPORT.value
-        else:
-            return MarketingFocus.BRAND_AWARENESS.value
-    
+        return MarketingFocus.BRAND_AWARENESS.value
+
     def _calculate_marketing_budget(self, situation: CompanySituation) -> float:
-        """计算营销预算"""
-        # 基于现金余额的比例
-        base_budget = situation.cash_balance * 0.02  # 2%
-        
-        # 侵略性调整
+        base_budget = situation.cash_balance * 0.02
         aggression_multiplier = 0.5 + (self.personality.aggression / 100.0)
-        
-        budget = base_budget * aggression_multiplier
-        
-        return min(budget, 5000000)  # 最高500万
-    
-    def _find_best_expansion_region(self, game_id: int) -> Optional[Region]:
-        """
-        寻找最佳扩张地区
-        
-        Returns:
-            最佳地区或None
-        """
-        regions = self.db.query(Region).filter(
-            Region.game_id == game_id
-        ).all()
-        
-        # 检查哪些地区还没有工厂
-        regions_without_factory = []
-        
+        return min(base_budget * aggression_multiplier, 5_000_000)
+
+    def _find_best_factory_region(self, game_id: int) -> Optional[Region]:
+        regions = self.db.query(Region).filter(Region.game_id == game_id).all()
+        candidates: List[Region] = []
         for region in regions:
             factory_count = self.db.query(Factory).filter(
                 Factory.company_id == self.company_id,
                 Factory.region_id == region.id,
-                Factory.game_id == game_id
+                Factory.game_id == game_id,
             ).count()
-            
             if factory_count == 0:
-                regions_without_factory.append(region)
-        
-        if not regions_without_factory:
+                candidates.append(region)
+
+        if not candidates:
             return None
-        
-        # 选择最大市场
-        best_region = max(
-            regions_without_factory,
-            key=lambda r: r.annual_sales_potential
+
+        return max(candidates, key=lambda region: self._score_region_for_factory(region))
+
+    def _find_best_market_entry_region(self, game_id: int) -> Optional[Region]:
+        regions = self.db.query(Region).filter(Region.game_id == game_id).all()
+        candidates: List[Region] = []
+        for region in regions:
+            existing_network = self.db.query(DistributionNetwork).filter(
+                DistributionNetwork.company_id == self.company_id,
+                DistributionNetwork.region_id == region.id,
+                DistributionNetwork.game_id == game_id,
+                DistributionNetwork.is_active == True,
+            ).first()
+            if not existing_network:
+                candidates.append(region)
+
+        if not candidates:
+            return None
+
+        return max(candidates, key=lambda region: self._score_region_for_entry(region))
+
+    def _score_region_for_factory(self, region: Region) -> float:
+        return (
+            (region.annual_sales_potential or 0) / 100_000
+            + (region.infrastructure_quality or 0.0) * 20
+            + (region.skilled_labor_availability or 0.0) * 10
+            - (region.labor_cost_index or 1.0) * 5
         )
-        
-        return best_region
-    
-    def _identify_competitor_threats(
-        self,
-        game_id: int
-    ) -> List[Dict]:
-        """
-        识别竞争对手威胁
-        
-        Returns:
-            威胁列表
-        """
-        # TODO: 需要完整的Company模型和销售数据
-        # 这里返回空列表作为占位
-        return []
-    
-    def _identify_market_opportunities(
-        self,
-        game_id: int
-    ) -> List[Dict]:
-        """
-        识别市场机会
-        
-        Returns:
-            机会列表
-        """
-        # TODO: 分析未被满足的需求、空白市场等
-        return []
 
+    def _score_region_for_entry(self, region: Region) -> float:
+        current_market = (region.annual_sales_potential or 0) / 100_000
+        future_market = (
+            (region.gdp_growth_rate or 0.0) * 160
+            + (region.infrastructure_quality or 0.0) * 8
+            + (region.ev_subsidy_rate or 0.0) * 30
+            + (region.rare_earth_availability or 0.0) * 5
+            - (region.electricity_price or 0.0) * 12
+        )
+        foresight_weight = self.personality.foresight / 100.0
+        return current_market * (1.2 - foresight_weight * 0.5) + future_market * foresight_weight
 
-# ========== AI决策执行器 ==========
+    def _choose_technology_target(self, game_id: int) -> Optional[TechNode]:
+        game_state = self._get_game_state(game_id)
+        current_year = game_state.current_year if game_state else 1950
+        self._ensure_company_tech_records(game_id, current_year)
+        self._refresh_available_tech_records(game_id, current_year)
+
+        horizon_years = 1 + round(self.personality.foresight / 10)
+        techs = self.db.query(TechNode).filter(TechNode.game_id == game_id).all()
+        candidates: List[Tuple[float, TechNode]] = []
+
+        for tech in techs:
+            if self._is_tech_completed_or_researching(tech):
+                continue
+
+            visible = tech.min_year <= current_year
+            forecast_visible = tech.min_year <= current_year + horizon_years
+            if not visible and not forecast_visible:
+                continue
+
+            if forecast_visible and not visible:
+                prereq = self._first_researchable_missing_prerequisite(tech, current_year)
+                if prereq and not self._is_tech_completed_or_researching(prereq):
+                    score = self._score_tech(prereq, current_year, is_trend_proxy=True)
+                    candidates.append((score, prereq))
+                continue
+
+            if self._can_research_now(tech, current_year):
+                candidates.append((self._score_tech(tech, current_year), tech))
+
+        if not candidates:
+            return None
+
+        candidates.sort(key=lambda item: (item[0], -item[1].base_research_time), reverse=True)
+        return candidates[0][1]
+
+    def _score_tech(self, tech: TechNode, current_year: int, is_trend_proxy: bool = False) -> float:
+        new_energy_bonus = 35 if self._is_new_energy_tech(tech) else 0
+        trend_bonus = (self.personality.foresight / 100.0) * new_energy_bonus
+        innovation_bonus = (self.personality.innovation / 100.0) * max(1.0, tech.difficulty_rating) * 10
+        timing_bonus = max(0, 5 - abs((tech.min_year or current_year) - current_year))
+        proxy_bonus = 10 if is_trend_proxy else 0
+        return trend_bonus + innovation_bonus + timing_bonus + proxy_bonus
+
+    def _is_new_energy_tech(self, tech: TechNode) -> bool:
+        haystack = " ".join(
+            [
+                tech.tech_code or "",
+                tech.name or "",
+                tech.description or "",
+                tech.unlocks_parts or "",
+                tech.unlocks_features or "",
+            ]
+        ).upper()
+        return any(keyword in haystack for keyword in NEW_ENERGY_KEYWORDS)
+
+    def _first_researchable_missing_prerequisite(self, tech: TechNode, current_year: int) -> Optional[TechNode]:
+        for prereq_code in tech.get_prerequisites():
+            prereq = self.db.query(TechNode).filter(
+                TechNode.game_id == tech.game_id,
+                TechNode.tech_code == prereq_code,
+            ).first()
+            if not prereq or self._is_tech_completed(prereq):
+                continue
+            if self._can_research_now(prereq, current_year):
+                return prereq
+            nested = self._first_researchable_missing_prerequisite(prereq, current_year)
+            if nested:
+                return nested
+        return None
+
+    def _ensure_company_tech_records(self, game_id: int, current_year: int) -> None:
+        for tech in self.db.query(TechNode).filter(TechNode.game_id == game_id).all():
+            existing = self._get_company_tech(tech)
+            if existing:
+                continue
+
+            status = "AVAILABLE" if not tech.get_prerequisites() and tech.min_year <= current_year else "LOCKED"
+            self.db.add(
+                CompanyTechnology(
+                    company_id=self.company_id,
+                    tech_node_id=tech.id,
+                    status=status,
+                )
+            )
+        self.db.flush()
+
+    def _refresh_available_tech_records(self, game_id: int, current_year: int) -> None:
+        company_techs = self.db.query(CompanyTechnology).filter(
+            CompanyTechnology.company_id == self.company_id,
+            CompanyTechnology.status == "LOCKED",
+        ).all()
+        for company_tech in company_techs:
+            tech = self.db.query(TechNode).filter(TechNode.id == company_tech.tech_node_id).first()
+            if not tech or tech.game_id != game_id or tech.min_year > current_year:
+                continue
+            if all(self._is_tech_code_completed(game_id, code) for code in tech.get_prerequisites()):
+                company_tech.status = "AVAILABLE"
+        self.db.flush()
+
+    def _get_company_tech(self, tech: TechNode) -> Optional[CompanyTechnology]:
+        return self.db.query(CompanyTechnology).filter(
+            CompanyTechnology.company_id == self.company_id,
+            CompanyTechnology.tech_node_id == tech.id,
+        ).first()
+
+    def _can_research_now(self, tech: TechNode, current_year: int) -> bool:
+        if tech.min_year > current_year:
+            return False
+        company_tech = self._get_company_tech(tech)
+        if company_tech and company_tech.status != "AVAILABLE":
+            return False
+        return all(self._is_tech_code_completed(tech.game_id, code) for code in tech.get_prerequisites())
+
+    def _is_tech_completed(self, tech: TechNode) -> bool:
+        company_tech = self._get_company_tech(tech)
+        return bool(company_tech and company_tech.status in {"COMPLETED", "COMPLETE"})
+
+    def _is_tech_completed_or_researching(self, tech: TechNode) -> bool:
+        company_tech = self._get_company_tech(tech)
+        return bool(company_tech and company_tech.status in {"COMPLETED", "COMPLETE", "RESEARCHING"})
+
+    def _is_tech_code_completed(self, game_id: int, tech_code: str) -> bool:
+        prereq = self.db.query(TechNode).filter(
+            TechNode.game_id == game_id,
+            TechNode.tech_code == tech_code,
+        ).first()
+        return bool(prereq and self._is_tech_completed(prereq))
+
+    def _get_game_state(self, game_id: int):
+        from backend.models.game_state import GameState
+
+        return self.db.query(GameState).filter(GameState.id == game_id).first()
+
 
 class AIDecisionExecutor:
-    """
-    AI决策执行器
-    将决策转换为实际的数据库操作
-    """
-    
+    """Convert queued AI decisions into database changes."""
+
     def __init__(self, db: Session):
         self.db = db
         self.logger = get_logger("AIDecisionExecutor")
-    
+        self.last_error: Optional[str] = None
+        self.last_message: Optional[str] = None
+        self.last_metadata: Dict[str, Any] = {}
+
+    def _set_success(self, message: str, metadata: Optional[Dict[str, Any]] = None) -> bool:
+        self.last_error = None
+        self.last_message = message
+        self.last_metadata = metadata or {}
+        return True
+
     def execute_decision(
         self,
         decision: AIDecision,
         company_id: int,
         game_id: int,
-        current_turn: int
+        current_turn: int,
     ) -> bool:
-        """
-        执行单个决策
-        
-        Returns:
-            是否执行成功
-        """
+        self.last_error = None
+        self.last_message = None
+        self.last_metadata = {}
         try:
             if decision.decision_type == "MARKETING":
-                return self._execute_marketing_decision(
-                    decision, company_id, game_id, current_turn
-                )
-            elif decision.decision_type == "EXPANSION":
-                return self._execute_expansion_decision(
-                    decision, company_id, game_id, current_turn
-                )
-            elif decision.decision_type == "PRICING":
-                return self._execute_pricing_decision(
-                    decision, company_id, game_id
-                )
-            elif decision.decision_type == "RD":
-                return self._execute_rd_decision(
-                    decision, company_id, game_id, current_turn
-                )
-            elif decision.decision_type == "COST_CUT":
-                return self._execute_cost_cut_decision(
-                    decision, company_id, game_id
-                )
-            else:
-                self.logger.warning(f"未知决策类型: {decision.decision_type}")
-                return False
-        
-        except Exception as e:
-            self.logger.error(f"执行决策失败: {decision.decision_type} - {str(e)}")
+                return self._execute_marketing_decision(decision, company_id, game_id, current_turn)
+            if decision.decision_type == "EXPANSION":
+                return self._execute_expansion_decision(decision, company_id, game_id, current_turn)
+            if decision.decision_type == "PRICING":
+                return self._execute_pricing_decision(decision, company_id, game_id)
+            if decision.decision_type == "RD":
+                return self._execute_rd_decision(decision, company_id, game_id, current_turn)
+            if decision.decision_type == "COST_CUT":
+                return self._execute_cost_cut_decision(decision, company_id, game_id)
+
+            self.last_error = f"Unknown decision type: {decision.decision_type}"
             return False
-    
+        except Exception as exc:
+            self.last_error = str(exc)
+            self.logger.error("AI decision execution failed: %s", exc, exc_info=True)
+            return False
+
     def _execute_marketing_decision(
         self,
         decision: AIDecision,
         company_id: int,
         game_id: int,
-        current_turn: int
+        current_turn: int,
     ) -> bool:
-        """执行营销决策"""
-        if decision.action == "LAUNCH_CAMPAIGN":
-            params = decision.parameters
-            
-            campaign = MarketingCampaign(
-                game_id=game_id,
-                company_id=company_id,
-                region_id=params["region_id"],
-                name=f"AI Campaign {current_turn}",
-                target_bucket=params["target_bucket"],
-                focus=params["focus"],
-                budget=params["budget"],
-                start_turn=current_turn,
-                end_turn=current_turn + params.get("duration_turns", 3),
-                is_active=True
-            )
-            
-            self.db.add(campaign)
-            self.db.commit()
-            
-            self.logger.info(
-                f"AI公司 {company_id} 启动营销活动: "
-                f"地区{params['region_id']}, 预算{params['budget']:,.0f}"
-            )
-            return True
-        
-        return False
-    
+        params = decision.parameters
+        region_id = params.get("region_id")
+        if region_id is None:
+            region = self.db.query(Region).filter(Region.game_id == game_id).first()
+            if not region:
+                self.last_error = "No region available for marketing campaign"
+                return False
+            region_id = region.id
+
+        company = self.db.query(Company).filter(Company.id == company_id).first()
+        if not company:
+            self.last_error = "Company not found"
+            return False
+
+        budget = float(params.get("budget", 0.0))
+        if budget <= 0:
+            self.last_error = "Marketing budget must be positive"
+            return False
+        if company.cash < budget:
+            self.last_error = "Insufficient cash for marketing campaign"
+            return False
+
+        campaign = MarketingCampaign(
+            game_id=game_id,
+            company_id=company_id,
+            region_id=region_id,
+            name=f"AI {decision.action.title().replace('_', ' ')} {current_turn}",
+            target_bucket=params.get("target_bucket", ConsumerSegment.PRACTICAL.value),
+            focus=params.get("focus", MarketingFocus.BRAND_AWARENESS.value),
+            budget=budget,
+            start_turn=current_turn,
+            end_turn=current_turn + int(params.get("duration_turns", 3)),
+            is_active=True,
+        )
+        self.db.add(campaign)
+        company.record_cost("marketing", budget)
+        self.db.flush()
+        return self._set_success(
+            f"{company.name} launched a {campaign.focus.replace('_', ' ').lower()} campaign",
+            {
+                "campaign_id": campaign.id,
+                "region_id": region_id,
+                "budget": budget,
+                "duration_turns": int(params.get("duration_turns", 3)),
+            },
+        )
+
     def _execute_expansion_decision(
         self,
         decision: AIDecision,
         company_id: int,
         game_id: int,
-        current_turn: int
+        current_turn: int,
     ) -> bool:
-        """执行扩张决策"""
-        # TODO: 实现工厂建设逻辑
-        self.logger.info(f"AI公司 {company_id} 计划扩张（待实现）")
+        if decision.action == "ENTER_REGION":
+            return self._execute_enter_region(decision, company_id, game_id, current_turn)
+        if decision.action == "BUILD_FACTORY":
+            return self._execute_build_factory(decision, company_id, game_id, current_turn)
+
+        self.last_error = f"Unknown expansion action: {decision.action}"
         return False
-    
-    def _execute_pricing_decision(
+
+    def _execute_enter_region(
         self,
         decision: AIDecision,
         company_id: int,
-        game_id: int
+        game_id: int,
+        current_turn: int,
     ) -> bool:
-        """执行定价决策"""
-        # TODO: 实现价格调整逻辑
-        self.logger.info(f"AI公司 {company_id} 调整价格（待实现）")
-        return False
-    
+        params = decision.parameters
+        region_id = params.get("region_id")
+        region = self.db.query(Region).filter(Region.id == region_id, Region.game_id == game_id).first()
+        if not region:
+            self.last_error = f"Region {region_id} not found"
+            return False
+
+        existing = self.db.query(DistributionNetwork).filter(
+            DistributionNetwork.company_id == company_id,
+            DistributionNetwork.region_id == region_id,
+            DistributionNetwork.game_id == game_id,
+            DistributionNetwork.is_active == True,
+        ).first()
+        if existing:
+            self.last_error = "Distribution network already exists"
+            return False
+
+        coverage = max(0.05, min(1.0, float(params.get("coverage_level", 0.25))))
+        monthly_capacity = max(100, int((region.annual_sales_potential or 12_000) / 12 * coverage))
+        setup_cost = float(params.get("setup_cost", monthly_capacity * 25.0))
+        upkeep = float(params.get("monthly_upkeep", setup_cost * 0.03))
+
+        company = self.db.query(Company).filter(Company.id == company_id).first()
+        if company and company.cash < setup_cost:
+            self.last_error = "Insufficient cash for regional entry"
+            return False
+        if company:
+            company.record_cost("admin", setup_cost)
+
+        network = DistributionNetwork(
+            game_id=game_id,
+            company_id=company_id,
+            region_id=region_id,
+            type=params.get("distribution_type", DistributionType.FRANCHISE.value),
+            coverage_level=coverage,
+            quality_score=50.0,
+            monthly_capacity=monthly_capacity,
+            setup_cost=setup_cost,
+            monthly_upkeep=upkeep,
+            established_turn=current_turn,
+            is_active=True,
+        )
+        self.db.add(network)
+        self.db.flush()
+        return self._set_success(
+            f"{company.name if company else 'AI company'} entered {region.name}",
+            {
+                "distribution_network_id": network.id,
+                "region_id": region_id,
+                "coverage_level": coverage,
+                "setup_cost": setup_cost,
+            },
+        )
+
+    def _execute_build_factory(
+        self,
+        decision: AIDecision,
+        company_id: int,
+        game_id: int,
+        current_turn: int,
+    ) -> bool:
+        params = decision.parameters
+        region_id = params.get("region_id")
+        region = self.db.query(Region).filter(Region.id == region_id, Region.game_id == game_id).first()
+        if not region:
+            self.last_error = f"Region {region_id} not found"
+            return False
+
+        company = self.db.query(Company).filter(Company.id == company_id).first()
+        capacity = int(params.get("capacity", 50_000))
+        construction_cost = float(params.get("construction_cost", capacity * 500.0))
+        if company and company.cash < construction_cost:
+            self.last_error = "Insufficient cash for factory construction"
+            return False
+
+        if company:
+            company.record_cost("admin", construction_cost)
+
+        factory = Factory(
+            game_id=game_id,
+            company_id=company_id,
+            name=f"{region.name} AI Assembly {current_turn}",
+            factory_type=params.get("factory_type", FactoryType.ASSEMBLY.value),
+            level=int(params.get("level", 1)),
+            capacity_units_per_month=capacity,
+            current_utilization_rate=0.0,
+            region_id=region_id,
+            efficiency_score=70.0,
+            labor_cost_per_unit=region.labor_cost_index * 100.0,
+            overhead_cost_per_month=max(50_000.0, capacity * 2.0),
+            tech_level=company.tech_level if company else 1,
+            is_operational=True,
+            construction_completed_turn=current_turn,
+        )
+        self.db.add(factory)
+        self.db.flush()
+
+        line = ProductionLine(
+            game_id=game_id,
+            factory_id=factory.id,
+            name="AI Assembly Line A",
+            status="IDLE",
+            monthly_capacity=max(1_000, capacity // 4),
+        )
+        self.db.add(line)
+        self.db.flush()
+
+        return self._set_success(
+            f"{company.name if company else 'AI company'} opened {factory.name}",
+            {
+                "factory_id": factory.id,
+                "production_line_id": line.id,
+                "region_id": region_id,
+                "capacity": capacity,
+                "construction_cost": construction_cost,
+            },
+        )
+
+    def _execute_pricing_decision(self, decision: AIDecision, company_id: int, game_id: int) -> bool:
+        company = self.db.query(Company).filter(Company.id == company_id).first()
+        trims = self.db.query(CarTrim).filter(
+            CarTrim.game_id == game_id,
+            CarTrim.company_id == company_id,
+            CarTrim.is_in_production == True,
+        ).all()
+        if not trims:
+            trims = self.db.query(CarTrim).filter(
+                CarTrim.game_id == game_id,
+                CarTrim.company_id == company_id,
+            ).all()
+        if not trims:
+            self.last_error = "No active car trims to price"
+            return False
+
+        params = decision.parameters
+        adjustments: List[Dict[str, Any]] = []
+        if decision.action in {"INCREASE_DISCOUNTS", "AGGRESSIVE_PRICING", "EMERGENCY_DISCOUNT"}:
+            discount = float(params.get("discount_percent", 5.0))
+            for trim in trims:
+                old_msrp = float(trim.msrp or 0.0)
+                floor_price = float(trim.manufacturing_cost or 0.0) * 1.05
+                trim.msrp = max(floor_price, old_msrp * (1.0 - discount / 100.0))
+                adjustments.append({
+                    "trim_id": trim.id,
+                    "old_msrp": old_msrp,
+                    "new_msrp": trim.msrp,
+                })
+        elif decision.action == "INCREASE_PRICES":
+            increase = float(params.get("increase_percent", 5.0)) / 100.0
+            for trim in trims:
+                old_msrp = float(trim.msrp or 0.0)
+                floor_price = float(trim.manufacturing_cost or 0.0) * 1.05
+                trim.msrp = max(floor_price, old_msrp * (1.0 + increase))
+                adjustments.append({
+                    "trim_id": trim.id,
+                    "old_msrp": old_msrp,
+                    "new_msrp": trim.msrp,
+                })
+        else:
+            self.last_error = f"Unknown pricing action: {decision.action}"
+            return False
+
+        for adjustment in adjustments:
+            inventories = self.db.query(DealershipInventory).filter(
+                DealershipInventory.game_id == game_id,
+                DealershipInventory.company_id == company_id,
+                DealershipInventory.car_trim_id == adjustment["trim_id"],
+            ).all()
+            for inventory in inventories:
+                inventory.current_msrp = adjustment["new_msrp"]
+                inventory.update_effective_price()
+
+        self.db.flush()
+        return self._set_success(
+            f"{company.name if company else 'AI company'} adjusted vehicle pricing",
+            {
+                "adjusted_count": len(adjustments),
+                "adjustments": adjustments,
+            },
+        )
+
     def _execute_rd_decision(
         self,
         decision: AIDecision,
         company_id: int,
         game_id: int,
-        current_turn: int
+        current_turn: int,
     ) -> bool:
-        """执行研发决策"""
-        # TODO: 实现R&D项目启动逻辑
-        self.logger.info(f"AI公司 {company_id} 启动研发项目（待实现）")
-        return False
-    
-    def _execute_cost_cut_decision(
+        if decision.action != "START_TECH_PROJECT":
+            self.last_error = f"Unknown RD action: {decision.action}"
+            return False
+
+        from backend.logic.rd_manager import RDManager, ProjectType
+
+        params = decision.parameters
+        tech = self.db.query(TechNode).filter(
+            TechNode.id == params.get("tech_node_id"),
+            TechNode.game_id == game_id,
+        ).first()
+        if not tech:
+            self.last_error = "Tech node not found"
+            return False
+
+        company_tech = self.db.query(CompanyTechnology).filter(
+            CompanyTechnology.company_id == company_id,
+            CompanyTechnology.tech_node_id == tech.id,
+        ).first()
+        if not company_tech:
+            company_tech = CompanyTechnology(
+                company_id=company_id,
+                tech_node_id=tech.id,
+                status="AVAILABLE",
+            )
+            self.db.add(company_tech)
+            self.db.flush()
+
+        if company_tech.status in {"COMPLETED", "COMPLETE", "RESEARCHING"}:
+            self.last_error = f"Tech already {company_tech.status.lower()}"
+            return False
+        if company_tech.status == "LOCKED":
+            company_tech.status = "AVAILABLE"
+
+        rd_manager = RDManager(db=self.db, company_id=company_id, game_id=game_id)
+        success, message, project = rd_manager.start_project(
+            project_type=ProjectType.TECH,
+            payload={"tech_node_id": tech.id, "tech_code": tech.tech_code},
+            base_weeks=int(params.get("base_weeks", tech.base_research_time)),
+            base_cost=float(params.get("budget", tech.base_research_cost)),
+            current_turn=current_turn,
+        )
+        if not success:
+            self.last_error = message
+            return False
+
+        company_tech.status = "RESEARCHING"
+        company_tech.research_progress = 0.0
+        company_tech.research_started_turn = current_turn
+        company_tech.estimated_completion_turn = current_turn + int(params.get("base_weeks", tech.base_research_time))
+        company_tech.monthly_investment = float(params.get("budget", tech.base_research_cost))
+        company_tech.research_efficiency = 1.0
+        rd_manager.save_state()
+        self.db.flush()
+        if not project:
+            self.last_error = "RD manager did not return a project"
+            return False
+
+        return self._set_success(
+            f"AI R&D started {tech.name}",
+            {
+                "tech_node_id": tech.id,
+                "tech_code": tech.tech_code,
+                "budget": float(params.get("budget", tech.base_research_cost)),
+                "project_type": "TECH",
+            },
+        )
+
+    def _execute_cost_cut_decision(self, decision: AIDecision, company_id: int, game_id: int) -> bool:
+        company = self.db.query(Company).filter(Company.id == company_id).first()
+        reduction_ratio = max(0.0, min(1.0, float(decision.parameters.get("reduction_ratio", 0.5))))
+        campaigns = self.db.query(MarketingCampaign).filter(
+            MarketingCampaign.game_id == game_id,
+            MarketingCampaign.company_id == company_id,
+            MarketingCampaign.is_active == True,
+        ).all()
+        if campaigns:
+            for campaign in campaigns:
+                campaign.is_active = False
+            self.db.flush()
+            return self._set_success(
+                f"{company.name if company else 'AI company'} canceled {len(campaigns)} marketing campaign(s)",
+                {
+                    "canceled_campaign_ids": [campaign.id for campaign in campaigns],
+                    "reduction_ratio": reduction_ratio,
+                },
+            )
+
+        factories = self.db.query(Factory).filter(
+            Factory.game_id == game_id,
+            Factory.company_id == company_id,
+            Factory.is_operational == True,
+        ).all()
+        if not factories:
+            self.last_error = "No active campaigns or factories to cut costs"
+            return False
+
+        overhead_updates = []
+        for factory in factories:
+            old_overhead = float(factory.overhead_cost_per_month or 0.0)
+            factory.overhead_cost_per_month = max(0.0, old_overhead * (1.0 - reduction_ratio * 0.25))
+            overhead_updates.append({
+                "factory_id": factory.id,
+                "old_overhead": old_overhead,
+                "new_overhead": factory.overhead_cost_per_month,
+            })
+        self.db.flush()
+        return self._set_success(
+            f"{company.name if company else 'AI company'} reduced factory overhead",
+            {
+                "factory_count": len(factories),
+                "overhead_updates": overhead_updates,
+                "reduction_ratio": reduction_ratio,
+            },
+        )
+
+
+class AIDecisionQueueManager:
+    """Manage delayed AI decision generation and execution."""
+
+    def __init__(self, db: Session):
+        self.db = db
+        self.executor = AIDecisionExecutor(db)
+
+    def process_due_decisions(self, game_id: int, current_turn: int) -> Dict[str, Any]:
+        due_decisions = self.db.query(AIDecisionQueue).filter(
+            AIDecisionQueue.game_id == game_id,
+            AIDecisionQueue.status == "PENDING",
+            AIDecisionQueue.due_turn <= current_turn,
+        ).order_by(
+            AIDecisionQueue.due_turn.asc(),
+            AIDecisionQueue.priority.desc(),
+            AIDecisionQueue.id.asc(),
+        ).all()
+
+        results = {
+            "due_count": len(due_decisions),
+            "executed_count": 0,
+            "failed_count": 0,
+            "executed": [],
+            "failed": [],
+        }
+
+        for queued in due_decisions:
+            decision = AIDecision(
+                decision_type=queued.decision_type,
+                action=queued.action,
+                parameters=queued.get_parameters(),
+                reasoning=queued.reasoning,
+                priority=queued.priority,
+            )
+            success = self.executor.execute_decision(
+                decision=decision,
+                company_id=queued.company_id,
+                game_id=game_id,
+                current_turn=current_turn,
+            )
+            if success:
+                queued.mark_executed(current_turn)
+                results["executed_count"] += 1
+                results["executed"].append(queued.id)
+            else:
+                queued.mark_failed(current_turn, self.executor.last_error or "Unknown execution failure")
+                results["failed_count"] += 1
+                results["failed"].append({"id": queued.id, "reason": queued.failure_reason})
+
+        self.db.flush()
+        return results
+
+    def enqueue_decisions(
         self,
-        decision: AIDecision,
-        company_id: int,
-        game_id: int
-    ) -> bool:
-        """执行成本削减决策"""
-        # TODO: 实现成本削减逻辑
-        self.logger.info(f"AI公司 {company_id} 削减成本（待实现）")
-        return False
+        company: Company,
+        decisions: List[AIDecision],
+        current_turn: int,
+    ) -> List[AIDecisionQueue]:
+        queued_records: List[AIDecisionQueue] = []
+        for decision in decisions:
+            target_key = decision_target_key(decision)
+            if self._has_pending_duplicate(company.id, decision, target_key):
+                continue
 
+            delay = calculate_decision_delay(company, decision, current_turn)
+            queued = AIDecisionQueue(
+                game_id=company.game_id,
+                company_id=company.id,
+                decision_type=decision.decision_type,
+                action=decision.action,
+                parameters=decision.parameters,
+                reasoning=decision.reasoning,
+                priority=decision.priority,
+                target_key=target_key,
+                created_turn=current_turn,
+                due_turn=current_turn + delay,
+                status="PENDING",
+            )
+            self.db.add(queued)
+            queued_records.append(queued)
 
-# ========== 便捷函数 ==========
+        self.db.flush()
+        return queued_records
+
+    def _has_pending_duplicate(self, company_id: int, decision: AIDecision, target_key: str) -> bool:
+        return self.db.query(AIDecisionQueue).filter(
+            AIDecisionQueue.company_id == company_id,
+            AIDecisionQueue.decision_type == decision.decision_type,
+            AIDecisionQueue.action == decision.action,
+            AIDecisionQueue.target_key == target_key,
+            AIDecisionQueue.status == "PENDING",
+        ).first() is not None
+
 
 def create_random_personality() -> CEOPersonality:
-    """创建随机CEO人格"""
+    """Create a random CEO personality."""
+
     return CEOPersonality(
         aggression=random.randint(20, 80),
         innovation=random.randint(20, 80),
         risk_tolerance=random.randint(20, 80),
-        loyalty=random.randint(20, 80)
+        loyalty=random.randint(20, 80),
+        foresight=random.randint(20, 80),
     )
 
 
@@ -644,20 +1536,43 @@ def run_ai_turn_for_company(
     company_id: int,
     game_id: int,
     current_turn: int,
-    personality: CEOPersonality
-) -> List[AIDecision]:
-    """
-    便捷函数：运行单个AI公司的回合决策
-    """
+    personality: CEOPersonality,
+) -> List[AIDecisionResult]:
+    """Generate and immediately execute one company's AI turn decisions."""
+
     ai_ceo = AI_CEO(db, company_id, personality)
     decisions = ai_ceo.make_turn_decisions(game_id, current_turn)
-    
-    # 执行决策
     executor = AIDecisionExecutor(db)
+    results: List[AIDecisionResult] = []
+
     for decision in decisions:
-        executor.execute_decision(decision, company_id, game_id, current_turn)
-    
-    return decisions
+        success = executor.execute_decision(
+            decision=decision,
+            company_id=company_id,
+            game_id=game_id,
+            current_turn=current_turn,
+        )
+        results.append(
+            AIDecisionResult(
+                decision_type=decision.decision_type,
+                action=decision.action,
+                success=success,
+                message=(
+                    executor.last_message
+                    if success and executor.last_message
+                    else executor.last_error or decision.reasoning
+                ),
+                metadata={
+                    **(executor.last_metadata or {}),
+                    "reasoning": decision.reasoning,
+                    "priority": decision.priority,
+                    "parameters": decision.parameters,
+                },
+            )
+        )
+
+    db.flush()
+    return results
 
 
 __all__ = [
@@ -665,9 +1580,14 @@ __all__ = [
     "CEOPersonality",
     "CompanySituation",
     "AIDecision",
+    "AIDecisionResult",
     "AIDecisionExecutor",
+    "AIDecisionQueueManager",
+    "classify_company_size",
+    "calculate_decision_delay",
     "create_random_personality",
-    "run_ai_turn_for_company"
+    "decision_target_key",
+    "get_or_create_company_personality",
+    "personality_from_company",
+    "run_ai_turn_for_company",
 ]
-
-
